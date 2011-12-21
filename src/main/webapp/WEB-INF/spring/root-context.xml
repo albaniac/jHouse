@@ -11,13 +11,13 @@
 	<bean name="zwaveTransport" class="net.gregrapp.jhouse.transports.serial.SerialImpl">
 		<constructor-arg>
 			<list>
-				<value>/dev/tty.usb</value>
+				<value>/dev/tty.SLAB_USBtoUART</value>
 				<value>115200</value>
 			</list>
 		</constructor-arg>
 	</bean>
 	
-	<bean name="zwaveInterface" class="net.gregrapp.jhouse.interfaces.zwave.ZwaveImpl">
+	<bean name="zwaveInterface" class="net.gregrapp.jhouse.interfaces.zwave.ZwaveInterfaceImpl">
 		<property name="transport" ref="zwaveTransport"/>
 	</bean>
 	

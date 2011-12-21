@@ -13,6 +13,7 @@ import gnu.io.UnsupportedCommOperationException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.slf4j.Logger;
@@ -59,6 +60,7 @@ public class SerialImpl extends AbstractTransport
    */
   public void init()
   {
+    logger.info("Initialzing transport {}", this.getClass().getName());
     CommPort commPort = null;
     try
     {
@@ -101,11 +103,14 @@ public class SerialImpl extends AbstractTransport
    * 
    * @see net.gregrapp.jhouse.transports.Transport#write(byte[])
    */
-  public void write(byte[] buffer)
+  public void write(List<Integer> buffer)
   {
     try
     {
-      this.out.write(buffer);
+      for (int buf : buffer)
+      {
+        this.out.write(buf);        
+      }
     } catch (IOException e)
     {
       // TODO Auto-generated catch block
@@ -118,12 +123,16 @@ public class SerialImpl extends AbstractTransport
    * 
    * @see net.gregrapp.jhouse.transports.Transport#read(int)
    */
-  public byte[] read(int size)
+  public List<Integer> read(int size)
   {
-    byte[] bytesRead = new byte[size];
+    //int[] bytesRead = new int[size];
+    List<Integer> bytesRead = new ArrayList<Integer>();
     try
     {
-      int numBytesRead = in.read(bytesRead);
+      for (int i=0;i<size;i++)
+      {
+        bytesRead.add(in.read());
+      }
     } catch (IOException e)
     {
       // TODO Auto-generated catch block

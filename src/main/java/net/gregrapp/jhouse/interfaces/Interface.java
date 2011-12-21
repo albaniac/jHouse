@@ -25,6 +25,11 @@ public interface Interface
   public void setTransport(Transport transport);
 
   /**
+   * @return A Transport instance
+   */
+  public Transport getTransport();
+
+  /**
    * Destroy the Interface
    */
   public void destroy();

@@ -1,5 +1,7 @@
 package net.gregrapp.jhouse.transports;
 
+import java.util.List;
+
 /**
  * @author Greg Rapp
  * 
@@ -17,7 +19,7 @@ public interface Transport
    * @param buffer
    *          bytes to write
    */
-  public void write(byte[] buffer);
+  public void write(List<Integer> buffer);
 
   /**
    * Read bytes from the Transport
@@ -26,7 +28,7 @@ public interface Transport
    *          number of bytes to read
    * @return bytes read from the Transport
    */
-  public byte[] read(int size);
+  public List<Integer> read(int size);
 
   /**
    * Get number of bytes available to be read from the Transport
