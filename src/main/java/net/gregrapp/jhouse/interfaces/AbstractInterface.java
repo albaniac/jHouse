@@ -23,6 +23,7 @@ public abstract class AbstractInterface implements Interface
     logger.debug("Setting Transport on this Interface to instance of {}", transport.getClass().getName());
     this.transport = transport;
     transport.init();
+    this.init();
   }
   
   public Transport getTransport()

@@ -17,7 +17,7 @@
 		</constructor-arg>
 	</bean>
 	
-	<bean name="zwaveInterface" class="net.gregrapp.jhouse.interfaces.zwave.ZwaveInterfaceImpl">
+	<bean name="zwaveInterface" class="net.gregrapp.jhouse.interfaces.zwave.ZwaveInterface">
 		<property name="transport" ref="zwaveTransport"/>
 	</bean>
 	

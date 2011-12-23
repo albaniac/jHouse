@@ -13,7 +13,6 @@ import gnu.io.UnsupportedCommOperationException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.util.ArrayList;
 import java.util.List;
 
 import org.slf4j.Logger;
@@ -103,7 +102,7 @@ public class SerialImpl extends AbstractTransport
    * 
    * @see net.gregrapp.jhouse.transports.Transport#write(byte[])
    */
-  public void write(List<Integer> buffer)
+  public void write(int[] buffer)
   {
     try
     {
@@ -123,15 +122,16 @@ public class SerialImpl extends AbstractTransport
    * 
    * @see net.gregrapp.jhouse.transports.Transport#read(int)
    */
-  public List<Integer> read(int size)
-  {
-    //int[] bytesRead = new int[size];
-    List<Integer> bytesRead = new ArrayList<Integer>();
+  public int[] read(int size)
+  { 
+    int[] bytesRead = new int[size];
+    //List<Integer> bytesRead = new ArrayList<Integer>();
     try
     {
       for (int i=0;i<size;i++)
       {
-        bytesRead.add(in.read());
+        //bytesRead.add(in.read());
+        bytesRead[i] = in.read();
       }
     } catch (IOException e)
     {
