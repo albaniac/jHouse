@@ -45,7 +45,6 @@ public class SerialImpl extends AbstractTransport
   {
     super(config);
     logger.info("Instantiating SerialImpl instance");
-
     this.serialPort = this.config.get(0);
     logger.debug("Serial port set to {}", this.serialPort);
     this.serialBaud = Integer.valueOf(this.config.get(1)).intValue();
@@ -102,19 +101,21 @@ public class SerialImpl extends AbstractTransport
    * 
    * @see net.gregrapp.jhouse.transports.Transport#write(byte[])
    */
-  public void write(int[] buffer)
+  public int write(int[] buffer)
   {
     try
     {
       for (int buf : buffer)
       {
-        this.out.write(buf);        
+        this.out.write(buf);
       }
     } catch (IOException e)
     {
       // TODO Auto-generated catch block
       e.printStackTrace();
+      return 0;
     }
+    return buffer.length;
   }
 
   /*
@@ -122,24 +123,26 @@ public class SerialImpl extends AbstractTransport
    * 
    * @see net.gregrapp.jhouse.transports.Transport#read(int)
    */
-  public int[] read(int size)
+  public int read(int[] buffer)
   { 
-    int[] bytesRead = new int[size];
-    //List<Integer> bytesRead = new ArrayList<Integer>();
+    byte[] bytesRead = new byte[buffer.length];
+    int numBytes = 0;
     try
     {
-      for (int i=0;i<size;i++)
+      numBytes = in.read(bytesRead);
+      for (int i=0;i<numBytes;i++)
+        buffer[i] = bytesRead[i];
+      /*for (int i=0;i<size;i++)
       {
-        //bytesRead.add(in.read());
         bytesRead[i] = in.read();
-      }
+      }*/
     } catch (IOException e)
     {
       // TODO Auto-generated catch block
       e.printStackTrace();
     }
 
-    return bytesRead;
+    return numBytes;
   }
 
   /*
@@ -172,6 +175,12 @@ public class SerialImpl extends AbstractTransport
   {
     // TODO Auto-generated method stub
 
+  }
+
+  public boolean isOpen()
+  {
+    // TODO Auto-generated method stub
+    return true;
   }
 
 }

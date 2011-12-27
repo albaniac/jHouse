@@ -1,7 +1,7 @@
 /**
  * 
  */
-package net.gregrapp.jhouse.interfaces.zwave;
+package net.gregrapp.jhouse.legacy.interfaces.zwave;
 
 /**
  * @author Greg Rapp

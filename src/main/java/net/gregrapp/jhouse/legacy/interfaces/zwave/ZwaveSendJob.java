@@ -1,11 +1,11 @@
 /**
  * 
  */
-package net.gregrapp.jhouse.interfaces.zwave;
+package net.gregrapp.jhouse.legacy.interfaces.zwave;
 
 /**
  * @author Greg Rapp
- *
+ * 
  */
 public class ZwaveSendJob
 {
@@ -15,80 +15,111 @@ public class ZwaveSendJob
   private int sendCount = 0;
   private boolean sent = false;
   private boolean firstCallbackReceived = false;
-  private int timeout = 1000;
+  // Default timeout is 100ms
+  private int timeout = 100;
   private ZwaveFrame frame;
-  
-  
+
   public ZwaveSendJob(boolean response, ZwaveFrame frame)
   {
     this.response = response;
     this.frame = frame;
   }
-  
+
   public boolean isAwaitAck()
   {
     return awaitAck;
   }
+
   public void setAwaitAck(boolean awaitAck)
   {
     this.awaitAck = awaitAck;
   }
+
   public boolean isAwaitResponse()
   {
     return awaitResponse;
   }
+
   public void setAwaitResponse(boolean awaitResponse)
   {
     this.awaitResponse = awaitResponse;
   }
+
   public boolean isResponse()
   {
     return response;
   }
+
   public void setResponse(boolean response)
   {
     this.response = response;
   }
+
   public int getSendCount()
   {
     return sendCount;
   }
+
   public void setSendCount(int sendCount)
   {
     this.sendCount = sendCount;
   }
+
+  public void incrementSendCount()
+  {
+    this.sendCount++;
+  }
+
   public boolean isSent()
   {
     return sent;
   }
+
   public void setSent(boolean sent)
   {
     this.sent = sent;
   }
+
   public boolean isFirstCallbackReceived()
   {
     return firstCallbackReceived;
   }
+
   public void setFirstCallbackReceived(boolean firstCallbackReceived)
   {
     this.firstCallbackReceived = firstCallbackReceived;
   }
+
   public int getTimeout()
   {
     return timeout;
   }
+
   public void setTimeout(int timeout)
   {
     this.timeout = timeout;
   }
+
+  public void decrementTimeout(int time)
+  {
+    this.timeout = this.timeout - time;
+  }
+
   public ZwaveFrame getFrame()
   {
     return frame;
   }
+
   public void setFrame(ZwaveFrame frame)
   {
     this.frame = frame;
   }
 
-  
+  public int getCallback()
+  {
+    if (this.frame == null)
+      return 0;
+    else
+      return this.frame.getCallback();
+  }
 }

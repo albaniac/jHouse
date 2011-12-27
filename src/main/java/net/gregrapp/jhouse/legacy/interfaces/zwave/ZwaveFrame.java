@@ -1,7 +1,7 @@
 /**
  * 
  */
-package net.gregrapp.jhouse.interfaces.zwave;
+package net.gregrapp.jhouse.legacy.interfaces.zwave;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -42,6 +42,7 @@ public class ZwaveFrame
     int[] buf = Arrays.copyOfRange(payload, 0, length - 1);
     newFrame.setBuffer(buf);
 
+    // TODO Verify this should be set to 0
     newFrame.setCallback(0);
 
     newFrame.setChecksum(payload[payload.length - 1]);

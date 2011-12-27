@@ -1,19 +1,16 @@
 /**
  * 
  */
-package net.gregrapp.jhouse.interfaces.zwave;
+package net.gregrapp.jhouse.legacy.interfaces.zwave;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Queue;
-import java.util.concurrent.LinkedBlockingQueue;
+
+import net.gregrapp.jhouse.interfaces.AbstractInterface;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import net.gregrapp.jhouse.interfaces.AbstractInterface;
-import net.gregrapp.jhouse.interfaces.InterfaceWriter;
 
 /**
  * @author Greg Rapp
@@ -29,6 +26,9 @@ public class ZwaveInterface extends AbstractInterface
 
   private int currentCallback = 0;
 
+  private int nodeId = -1;
+  
+  private int nodeCount = 0;
   /**
    * 
    */
@@ -43,7 +43,7 @@ public class ZwaveInterface extends AbstractInterface
    */
   public void init()
   {
-    new Thread(new ZwaveInterfaceReader(this, sendQueue)).start();
+    new Thread(new ZwaveInterfaceReader(this)).start();
   }
 
   /*
@@ -68,5 +68,45 @@ public class ZwaveInterface extends AbstractInterface
     ZwaveSendJob job = new ZwaveSendJob(response, frame);
     this.sendQueue.add(job);
   }
+  
+  public List<ZwaveSendJob> getSendQueue()
+  {
+    return this.sendQueue;
+  }
 
+  /**
+   * Get this interface's Zwave node ID
+   * @return the node ID
+   */
+  public int getNodeId()
+  {
+    return nodeId;
+  }
+
+  /**
+   * Set the Zwave node ID of this interface
+   * @param nodeId the node ID to set
+   */
+  public void setNodeId(int nodeId)
+  {
+    this.nodeId = nodeId;
+  }
+
+  /**
+   * Get the number of nodes discovered by this interface
+   * @return the node count
+   */
+  public int getNodeCount()
+  {
+    return nodeCount;
+  }
+
+  /**
+   * Set the number of nodes discovered by this interface
+   * @param nodeCount the node count to set
+   */
+  public void setNodeCount(int nodeCount)
+  {
+    this.nodeCount = nodeCount;
+  }
 }
