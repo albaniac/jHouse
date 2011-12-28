@@ -158,8 +158,10 @@ public class Constants
     // </summary>
     ResMissing(0x06);
 
+    private DataPacket[] responses = null;
+    
     private int value;
-
+    
     TXStatus(int value)
     {
       this.value = value;
@@ -169,7 +171,27 @@ public class Constants
     {
       return this.value;
     }
+    
+    public DataPacket getResponse()
+    {
+      return this.responses[0];
+    }
 
+    public DataPacket[] getResponses()
+    {
+      return this.responses;
+    }
+
+    public void setResponse(DataPacket response)
+    {
+      this.responses = new DataPacket[1];
+      this.responses[0] = response;
+    }
+    
+    public void setResponses(DataPacket[] responses)
+    {
+      this.responses = responses;
+    }
   }
 
   // <summary>

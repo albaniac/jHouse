@@ -19,6 +19,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import net.gregrapp.jhouse.transports.AbstractTransport;
+import net.gregrapp.jhouse.transports.TransportException;
 
 /**
  * @author Greg Rapp
@@ -101,7 +102,7 @@ public class SerialImpl extends AbstractTransport
    * 
    * @see net.gregrapp.jhouse.transports.Transport#write(byte[])
    */
-  public int write(int[] buffer)
+  public int write(int[] buffer) throws TransportException
   {
     try
     {
@@ -111,9 +112,7 @@ public class SerialImpl extends AbstractTransport
       }
     } catch (IOException e)
     {
-      // TODO Auto-generated catch block
-      e.printStackTrace();
-      return 0;
+      throw new TransportException("Transport write error", e);
     }
     return buffer.length;
   }
@@ -123,7 +122,7 @@ public class SerialImpl extends AbstractTransport
    * 
    * @see net.gregrapp.jhouse.transports.Transport#read(int)
    */
-  public int read(int[] buffer)
+  public int read(int[] buffer) throws TransportException
   { 
     byte[] bytesRead = new byte[buffer.length];
     int numBytes = 0;
@@ -138,8 +137,7 @@ public class SerialImpl extends AbstractTransport
       }*/
     } catch (IOException e)
     {
-      // TODO Auto-generated catch block
-      e.printStackTrace();
+      throw new TransportException("Transport read error", e);
     }
 
     return numBytes;

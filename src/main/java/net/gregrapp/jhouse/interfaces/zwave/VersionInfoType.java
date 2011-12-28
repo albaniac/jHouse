@@ -15,55 +15,24 @@
 //
 //          Description:   
 //
-//          Author:   Morten Damsgaard, Linkage A/S
+//          Author:   Jette Christensen
 //
 //          Last Changed By:  $Author: jrm $
-//          Revision:         $Revision: 1.3 $
-//          Last Changed:     $Date: 2006/07/24 09:14:16 $
+//          Revision:         $Revision: 1.14 $
+//          Last Changed:     $Date: 2007/03/02 12:12:21 $
 //
 //////////////////////////////////////////////////////////////////////////////////////////////
 
 package net.gregrapp.jhouse.interfaces.zwave;
 
-import net.gregrapp.jhouse.transports.Transport;
+import net.gregrapp.jhouse.interfaces.zwave.Constants.Library;
 
 /**
  * @author Greg Rapp
  *
  */
-// <summary>
-// Summary description for FrameLayer.
-// </summary>
-public interface FrameLayer
+public final class VersionInfoType
 {
-  // <summary>
-  // 
-  // </summary>
-  void open(Transport transport);
-  // <summary>
-  // 
-  // </summary>
-  void close();
-
-  // <summary>
-  // 
-  // </summary>
-  boolean write(DataFrame frame) throws FrameLayerException;
-
-  // <summary>
-  // 
-  // </summary>
-  void setCallbackHandler(FrameLayerAsyncCallback handler);
-
-  // <summary>
-  // 
-  // </summary>
-  FrameStatistics getStatistics();
-
-  // <summary>
-  // Enable tracing
-  // </summary>
-  void enableTracing(boolean enable);
+  String ver;
+  Library lib;
 }
-
-

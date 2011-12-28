@@ -47,8 +47,9 @@ public class DataPacket
   {
     this.idx = 0;
     this.buffer = new int[BUFFER_SIZE];
+    this.sequenceNumber = 0;
   }
-  
+    
   // <summary>
   // DataPacket(int[] payload)
   // </summary>
@@ -91,7 +92,7 @@ public class DataPacket
   }
 
   // <summary>
-  // int[] GetPayload()
+  // int[] getPayload()
   // </summary>
   // <returns></returns>
   public int[] getPayload()
@@ -108,7 +109,7 @@ public class DataPacket
   {
     return idx;
   }
-
+  
   // <summary>
   // 
   // </summary>
@@ -145,7 +146,8 @@ public class DataPacket
   // String
   // </summary>
   // <returns></returns>
-  public String ToString()
+  @Override
+  public String toString()
   {
     StringBuilder sb = new StringBuilder(100);
 

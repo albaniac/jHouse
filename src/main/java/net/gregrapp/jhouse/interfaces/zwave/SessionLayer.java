@@ -67,7 +67,7 @@ public interface SessionLayer
   // <param name="cmd"></param>
   // <param name="request"></param>
   // <returns></returns>
-  boolean requestWithNoResponse(DataFrame.CommandType cmd, DataPacket request);
+  boolean requestWithNoResponse(DataFrame.CommandType cmd, DataPacket request) throws FrameLayerException;
   // <summary>
   // 
   // </summary>
@@ -78,7 +78,7 @@ public interface SessionLayer
   // <param name="timeout"></param>
   // <returns></returns>
   TXStatus requestWithResponse(DataFrame.CommandType cmd, DataPacket request, 
-     DataPacket response, boolean sequenceCheck, int timeout);
+     boolean sequenceCheck, int timeout) throws FrameLayerException;
   // <summary>
   // 
   // </summary>
@@ -88,69 +88,68 @@ public interface SessionLayer
   // <param name="sequenceCheck"></param>
   // <returns></returns>
   TXStatus requestWithResponse(DataFrame.CommandType cmd, DataPacket request, 
-     DataPacket response, boolean sequenceCheck);
+     boolean sequenceCheck) throws FrameLayerException;
   // <summary>
   // 
   // </summary>
   // <param name="cmd"></param>
   // <param name="request"></param>
-  // <param name="response"></param>
   // <returns></returns>
-  TXStatus requestWithResponse(DataFrame.CommandType cmd, DataPacket request, DataPacket response);
+  TXStatus requestWithResponse(DataFrame.CommandType cmd, DataPacket request) throws FrameLayerException;
 
   // <summary>
   // 
   // </summary>
   // <param name="cmd"></param>
   // <param name="request"></param>
-  // <param name="responses"></param>
+  // <param name="maxResponses"></param>
   // <returns></returns>
   TXStatus requestWithMultipleResponses(DataFrame.CommandType cmd,
     DataPacket request,
-    DataPacket[] responses);
+    int maxResponses) throws FrameLayerException;
   // <summary>
   // 
   // </summary>
   // <param name="cmd"></param>
   // <param name="request"></param>
-  // <param name="responses"></param>
+  // <param name="maxResponses"></param>
   // <param name="sequenceCheck"></param>
   // <returns></returns>
   TXStatus requestWithMultipleResponses(DataFrame.CommandType cmd,
     DataPacket request,
-    DataPacket[] responses,
-    boolean sequenceCheck);
+    int maxResponses,
+    boolean sequenceCheck) throws FrameLayerException;
   // <summary>
   // 
   // </summary>
   // <param name="cmd"></param>
   // <param name="request"></param>
-  // <param name="responses"></param>
+  // <param name="maxResponses"></param>
   // <param name="sequenceCheck"></param>
   // <param name="timeout"></param>
   // <returns></returns>
   TXStatus requestWithMultipleResponses(DataFrame.CommandType cmd,
     DataPacket request,
-    DataPacket[] responses,
+    int maxResponses,
     boolean sequenceCheck,
-    int timeout);
+    int timeout) throws FrameLayerException;
   // <summary>
   // Requests a command which may give different numbers of callbacks.
   // Supply with Responses array that have room for worst case number of callbacks
   // </summary>
   // <param name="cmd">Zwave Cmd</param>
   // <param name="request">Parms for command</param>
-  // <param name="responses">Max number of responses</param>
+  // <param name="maxResponses">Max number of responses</param>
   // <param name="breakVal">Values to end one</param>
   // <param name="sequenceCheck">if true use sequence check</param>
   // <param name="timeout">Timeout in ms</param>
   // <returns></returns>
   TXStatus requestWithVariableResponses(DataFrame.CommandType cmd,
       DataPacket request,
-      DataPacket[] responses,
+      int maxResponses,
       int[] breakVal,
       boolean sequenceCheck,
-      int timeout);
+ int timeout) throws FrameLayerException;
  
 
    // <summary>
@@ -159,15 +158,15 @@ public interface SessionLayer
   // </summary>
   // <param name="cmd">Zwave Cmd</param>
   // <param name="request">Parms for command</param>
-  // <param name="responses">Max number of responses</param>
+  // <param name="maxResponses">Max number of responses</param>
   // <param name="breakVal">Values to end one</param>
   // <param name="sequenceCheck">if true use sequence check</param>
   // <param name="timeout">Timeout in ms</param>
   // <returns></returns>
   TXStatus requestWithVariableReturnsAndResponses(DataFrame.CommandType cmd,
       DataPacket request,
-      DataPacket[] responses,
+      int maxResponses,
       int[] breakVal,
       boolean sequenceCheck,
-      int timeout);
+      int timeout) throws FrameLayerException;
 }

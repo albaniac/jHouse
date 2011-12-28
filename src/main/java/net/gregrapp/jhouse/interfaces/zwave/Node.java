@@ -31,16 +31,16 @@ package net.gregrapp.jhouse.interfaces.zwave;
  */
 public class Node
 {
-  private int id;
-  private int capability;
-  private int security;
-  private int reserved;
-  private int basic;
-  private int generic;
-  private int specific;
-  private boolean isVirtual;
-  private int[] cmdClasses;
   private static final int LISTENING_SUPPORT = 0x80;
+  private int basic;
+  private int capability;
+  private int[] cmdClasses;
+  private int generic;
+  private int id;
+  private boolean isVirtual;
+  private int reserved;
+  private int security;
+  private int specific;
 
   // <summary>
   //
@@ -117,6 +117,70 @@ public class Node
   }
 
   // <summary>
+  //
+  // </summary>
+  public int getBasic()
+  {
+    return basic;
+  }
+
+  // <summary>
+  //
+  // </summary>
+  public int getCapability()
+  {
+    return capability;
+  }
+
+  // <summary>
+  // Get Generic and specific Device Type
+  // </summary>
+  public int getGeneric()
+  {
+    return generic;
+  }
+
+  // <summary>
+  // get Node Id
+  // </summary>
+  public int getId()
+  {
+    return id;
+  }
+
+  // <summary>
+  //
+  // </summary>
+  public int getReserved()
+  {
+    return reserved;
+  }
+
+  // <summary>
+  //
+  // </summary>
+  public int getSecurity()
+  {
+    return security;
+  }
+
+  // <summary>
+  //
+  // </summary>
+  public int getSpecific()
+  {
+    return specific;
+  }
+
+  // <summary>
+  //
+  // </summary>
+  public int[] getSupportedCmdClasses()
+  {
+    return cmdClasses;
+  }
+
+  // <summary>
   // Verify if node is a listening node
   // </summary>
   // <returns>True is Node is a listening device, False if Node is not a
@@ -137,35 +201,9 @@ public class Node
   // <summary>
   //
   // </summary>
-  public void setVirtual(boolean value)
+  public void setBasic(int value)
   {
-    isVirtual = value;
-  }
-
-  // <summary>
-  //
-  // </summary>
-  // <returns></returns>
-  public String ToString()
-  {
-    return "Node. Id: " + id + " Type: " + basic + " Cap: " + capability
-        + " Sec: " + security + " Res: " + reserved;
-  }
-
-  // <summary>
-  // get Node Id
-  // </summary>
-  public int getId()
-  {
-    return id;
-  }
-
-  // <summary>
-  //
-  // </summary>
-  public int getCapability()
-  {
-    return capability;
+    basic = value;
   }
 
   // <summary>
@@ -174,62 +212,6 @@ public class Node
   public void setCapability(int value)
   {
     capability = value;
-  }
-
-  // <summary>
-  //
-  // </summary>
-  public int getSecurity()
-  {
-    return security;
-  }
-
-  // <summary>
-  //
-  // </summary>
-  public void setSecurity(int value)
-  {
-    security = value;
-  }
-
-  // <summary>
-  //
-  // </summary>
-  public int getReserved()
-  {
-    return reserved;
-  }
-
-  // <summary>
-  //
-  // </summary>
-  public void setReserved(int value)
-  {
-    reserved = value;
-  }
-
-  // <summary>
-  //
-  // </summary>
-  public int getBasic()
-  {
-    return basic;
-  }
-
-  // <summary>
-  //
-  // </summary>
-  public void setBasic(int value)
-  {
-    basic = value;
-  }
-
-  // <summary>
-  // Get Generic and specific Device Type
-  // </summary>
-  public int getGeneric()
-  {
-    return generic;
   }
 
   // <summary>
@@ -243,9 +225,17 @@ public class Node
   // <summary>
   //
   // </summary>
-  public int getSpecific()
+  public void setReserved(int value)
   {
-    return specific;
+    reserved = value;
+  }
+
+  // <summary>
+  //
+  // </summary>
+  public void setSecurity(int value)
+  {
+    security = value;
   }
 
   // <summary>
@@ -259,17 +249,28 @@ public class Node
   // <summary>
   //
   // </summary>
-  public int[] getSupportedCmdClasses()
+  public void setSupportedCmdClasses(int[] value)
   {
-    return cmdClasses;
+    cmdClasses = value;
   }
 
   // <summary>
   //
   // </summary>
-  public void setSupportedCmdClasses(int[] value)
+  public void setVirtual(boolean value)
   {
-    cmdClasses = value;
+    isVirtual = value;
+  }
+
+  // <summary>
+  //
+  // </summary>
+  // <returns></returns>
+  @Override
+  public String toString()
+  {
+    return "Node. Id: " + id + " Type: " + basic + " Cap: " + capability
+        + " Sec: " + security + " Res: " + reserved;
   }
 
 }

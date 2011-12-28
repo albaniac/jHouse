@@ -80,7 +80,7 @@ class DataPacketQueue
     return packet;
   }
 
-  public void Clear()
+  public void clear()
   {
     synchronized (rxQueue)
     {

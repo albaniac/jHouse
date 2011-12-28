@@ -32,7 +32,7 @@ import java.util.concurrent.TimeUnit;
 
 /**
  * @author Greg Rapp
- *
+ * 
  */
 class TimeoutEvent
 {
@@ -40,10 +40,11 @@ class TimeoutEvent
   private ScheduledFuture<?> retransmissionTimeoutExecutorFuture;
 
   private boolean timertimeout;
-  
+
   public TimeoutEvent()
   {
-    this.retransmissionTimeoutExecutor = Executors.newSingleThreadScheduledExecutor();
+    this.retransmissionTimeoutExecutor = Executors
+        .newSingleThreadScheduledExecutor();
   }
 
   public boolean wait(int timeout)
@@ -60,7 +61,7 @@ class TimeoutEvent
             timerCallbackHandler();
           }
         }, timeout, TimeUnit.MILLISECONDS);
-    
+
     // Clear the timeout flag...
     timertimeout = false;
 
@@ -73,10 +74,10 @@ class TimeoutEvent
       // TODO Auto-generated catch block
       e.printStackTrace();
     }
-    
+
     // Disable the timer
     retransmissionTimeoutExecutorFuture.cancel(false);
-    
+
     return !timertimeout;
   }
 

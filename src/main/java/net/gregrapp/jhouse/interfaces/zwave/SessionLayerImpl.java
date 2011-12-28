@@ -38,6 +38,7 @@ public class SessionLayerImpl implements SessionLayer, FrameLayerAsyncCallback
   private static final int DEFAULT_TIMEOUT = 10000; // How long in ms to wait
                                                     // for an response
 
+  private static final int MAX_SEQUENCE_NUMBER = 127;
   // ---- Note ----
   // Sequence numbers are appended to the data frame at the _last_ position in
   // the payload,
@@ -47,38 +48,15 @@ public class SessionLayerImpl implements SessionLayer, FrameLayerAsyncCallback
   // position in
   // the payload, just after the command ID
   private static final int MIN_SEQUENCE_NUMBER = 1;
-  private static final int MAX_SEQUENCE_NUMBER = 127;
-  private int sequenceNumber = MIN_SEQUENCE_NUMBER;
-  private FrameLayer frameLayer;
-  private DataPacket request;
-  private DataFrame.CommandType command;
-  private SessionLayerAsyncCallback asyncCallback;
-  private SessionStatistics stats;
-  private DataPacketQueue queue;
-  private DataFrame lastDataFrame = null;
   private boolean _isReady;
-
-  /*
-   * (non-Javadoc)
-   * 
-   * @see
-   * net.gregrapp.jhouse.interfaces.zwave.SessionLayer#open(net.gregrapp.jhouse
-   * .interfaces.zwave.FrameLayer, net.gregrapp.jhouse.transports.Transport)
-   */
-  public void open(FrameLayer frameLayer, Transport transport)
-  {
-    if (frameLayer == null)
-    {
-      throw new NullPointerException("frameLayer");
-    }
-    this.sequenceNumber = MIN_SEQUENCE_NUMBER;
-    this.frameLayer = frameLayer;
-    frameLayer.open(transport);
-    frameLayer.setCallbackHandler(this);
-    queue = new DataPacketQueue();
-    stats = new SessionStatistics();
-
-  }
+  private SessionLayerAsyncCallback asyncCallback;
+  private DataFrame.CommandType command;
+  private FrameLayer frameLayer;
+  private DataFrame lastDataFrame = null;
+  private DataPacketQueue queue;
+  private DataPacket request;
+  private int sequenceNumber = MIN_SEQUENCE_NUMBER;
+  private SessionStatistics stats;
 
   /*
    * (non-Javadoc)
@@ -88,176 +66,6 @@ public class SessionLayerImpl implements SessionLayer, FrameLayerAsyncCallback
   public void close()
   {
     frameLayer.close();
-  }
-
-  /*
-   * (non-Javadoc)
-   * 
-   * @see
-   * net.gregrapp.jhouse.interfaces.zwave.SessionLayer#setCallbackHandler(net
-   * .gregrapp.jhouse.interfaces.zwave.SessionLayerAsyncCallback)
-   */
-  public void setCallbackHandler(SessionLayerAsyncCallback handler)
-  {
-    this.asyncCallback = handler;
-  }
-
-  /*
-   * (non-Javadoc)
-   * 
-   * @see net.gregrapp.jhouse.interfaces.zwave.SessionLayer#getStatistics()
-   */
-  public SessionStatistics getStatistics()
-  {
-    synchronized (stats)
-    {
-      return new SessionStatistics(stats);
-    }
-  }
-
-  /*
-   * (non-Javadoc)
-   * 
-   * @see
-   * net.gregrapp.jhouse.interfaces.zwave.SessionLayer#requestWithNoResponse
-   * (net.gregrapp.jhouse.interfaces.zwave.DataFrame.CommandType,
-   * net.gregrapp.jhouse.interfaces.zwave.DataPacket)
-   */
-  public boolean requestWithNoResponse(CommandType cmd, DataPacket request)
-  {
-    // TODO Auto-generated method stub
-    return false;
-  }
-
-  /*
-   * (non-Javadoc)
-   * 
-   * @see
-   * net.gregrapp.jhouse.interfaces.zwave.SessionLayer#requestWithResponse(net
-   * .gregrapp.jhouse.interfaces.zwave.DataFrame.CommandType,
-   * net.gregrapp.jhouse.interfaces.zwave.DataPacket,
-   * net.gregrapp.jhouse.interfaces.zwave.DataPacket, boolean, int)
-   */
-  public TXStatus requestWithResponse(CommandType cmd, DataPacket request,
-      DataPacket response, boolean sequenceCheck, int timeout)
-  {
-    // TODO Auto-generated method stub
-    return null;
-  }
-
-  /*
-   * (non-Javadoc)
-   * 
-   * @see
-   * net.gregrapp.jhouse.interfaces.zwave.SessionLayer#requestWithResponse(net
-   * .gregrapp.jhouse.interfaces.zwave.DataFrame.CommandType,
-   * net.gregrapp.jhouse.interfaces.zwave.DataPacket,
-   * net.gregrapp.jhouse.interfaces.zwave.DataPacket, boolean)
-   */
-  public TXStatus requestWithResponse(CommandType cmd, DataPacket request,
-      DataPacket response, boolean sequenceCheck)
-  {
-    // TODO Auto-generated method stub
-    return null;
-  }
-
-  /*
-   * (non-Javadoc)
-   * 
-   * @see
-   * net.gregrapp.jhouse.interfaces.zwave.SessionLayer#requestWithResponse(net
-   * .gregrapp.jhouse.interfaces.zwave.DataFrame.CommandType,
-   * net.gregrapp.jhouse.interfaces.zwave.DataPacket,
-   * net.gregrapp.jhouse.interfaces.zwave.DataPacket)
-   */
-  public TXStatus requestWithResponse(CommandType cmd, DataPacket request,
-      DataPacket response)
-  {
-    // TODO Auto-generated method stub
-    return null;
-  }
-
-  /*
-   * (non-Javadoc)
-   * 
-   * @see
-   * net.gregrapp.jhouse.interfaces.zwave.SessionLayer#requestWithMultipleResponses
-   * (net.gregrapp.jhouse.interfaces.zwave.DataFrame.CommandType,
-   * net.gregrapp.jhouse.interfaces.zwave.DataPacket,
-   * net.gregrapp.jhouse.interfaces.zwave.DataPacket[])
-   */
-  public TXStatus requestWithMultipleResponses(CommandType cmd,
-      DataPacket request, DataPacket[] responses)
-  {
-    // TODO Auto-generated method stub
-    return null;
-  }
-
-  /*
-   * (non-Javadoc)
-   * 
-   * @see
-   * net.gregrapp.jhouse.interfaces.zwave.SessionLayer#requestWithMultipleResponses
-   * (net.gregrapp.jhouse.interfaces.zwave.DataFrame.CommandType,
-   * net.gregrapp.jhouse.interfaces.zwave.DataPacket,
-   * net.gregrapp.jhouse.interfaces.zwave.DataPacket[], boolean)
-   */
-  public TXStatus requestWithMultipleResponses(CommandType cmd,
-      DataPacket request, DataPacket[] responses, boolean sequenceCheck)
-  {
-    // TODO Auto-generated method stub
-    return null;
-  }
-
-  /*
-   * (non-Javadoc)
-   * 
-   * @see
-   * net.gregrapp.jhouse.interfaces.zwave.SessionLayer#requestWithMultipleResponses
-   * (net.gregrapp.jhouse.interfaces.zwave.DataFrame.CommandType,
-   * net.gregrapp.jhouse.interfaces.zwave.DataPacket,
-   * net.gregrapp.jhouse.interfaces.zwave.DataPacket[], boolean, int)
-   */
-  public TXStatus requestWithMultipleResponses(CommandType cmd,
-      DataPacket request, DataPacket[] responses, boolean sequenceCheck,
-      int timeout)
-  {
-    // TODO Auto-generated method stub
-    return null;
-  }
-
-  /*
-   * (non-Javadoc)
-   * 
-   * @see
-   * net.gregrapp.jhouse.interfaces.zwave.SessionLayer#requestWithVariableResponses
-   * (net.gregrapp.jhouse.interfaces.zwave.DataFrame.CommandType,
-   * net.gregrapp.jhouse.interfaces.zwave.DataPacket,
-   * net.gregrapp.jhouse.interfaces.zwave.DataPacket[], int[], boolean, int)
-   */
-  public TXStatus requestWithVariableResponses(CommandType cmd,
-      DataPacket request, DataPacket[] responses, int[] breakVal,
-      boolean sequenceCheck, int timeout)
-  {
-    // TODO Auto-generated method stub
-    return null;
-  }
-
-  /*
-   * (non-Javadoc)
-   * 
-   * @see net.gregrapp.jhouse.interfaces.zwave.SessionLayer#
-   * requestWithVariableReturnsAndResponses
-   * (net.gregrapp.jhouse.interfaces.zwave.DataFrame.CommandType,
-   * net.gregrapp.jhouse.interfaces.zwave.DataPacket,
-   * net.gregrapp.jhouse.interfaces.zwave.DataPacket[], int[], boolean, int)
-   */
-  public TXStatus requestWithVariableReturnsAndResponses(CommandType cmd,
-      DataPacket request, DataPacket[] responses, int[] breakVal,
-      boolean sequenceCheck, int timeout)
-  {
-    // TODO Auto-generated method stub
-    return null;
   }
 
   public void frameReceived(DataFrame frame)
@@ -318,18 +126,17 @@ public class SessionLayerImpl implements SessionLayer, FrameLayerAsyncCallback
 
   }
 
-  private int getSequenceNumber()
+  /*
+   * (non-Javadoc)
+   * 
+   * @see net.gregrapp.jhouse.interfaces.zwave.SessionLayer#getStatistics()
+   */
+  public SessionStatistics getStatistics()
   {
-    return sequenceNumber;
-  }
-
-  private void setSequenceNumber(int value)
-  {
-    // Test if sequence number should wrap-around...
-    if (sequenceNumber == MAX_SEQUENCE_NUMBER)
-      sequenceNumber = MIN_SEQUENCE_NUMBER;
-    else
-      sequenceNumber = value;
+    synchronized (stats)
+    {
+      return new SessionStatistics(stats);
+    }
   }
 
   /*
@@ -342,11 +149,438 @@ public class SessionLayerImpl implements SessionLayer, FrameLayerAsyncCallback
     return _isReady;
   }
 
+  /*
+   * (non-Javadoc)
+   * 
+   * @see
+   * net.gregrapp.jhouse.interfaces.zwave.SessionLayer#open(net.gregrapp.jhouse
+   * .interfaces.zwave.FrameLayer, net.gregrapp.jhouse.transports.Transport)
+   */
+  public void open(FrameLayer frameLayer, Transport transport)
+  {
+    if (frameLayer == null)
+    {
+      throw new NullPointerException("frameLayer");
+    }
+    this.sequenceNumber = MIN_SEQUENCE_NUMBER;
+    this.frameLayer = frameLayer;
+    frameLayer.open(transport);
+    frameLayer.setCallbackHandler(this);
+    queue = new DataPacketQueue();
+    stats = new SessionStatistics();
+  }
+
+  public TXStatus requestWithMultipleResponses(CommandType cmd,
+      DataPacket request, int maxResponses) throws FrameLayerException
+  {
+    if (request == null)
+    {
+      throw new NullPointerException("request");
+    }
+    return requestWithMultipleResponses(cmd, request, maxResponses, false,
+        DEFAULT_TIMEOUT);
+  }
+
+  public TXStatus requestWithMultipleResponses(CommandType cmd,
+      DataPacket request, int maxResponses, boolean sequenceCheck)
+      throws FrameLayerException
+  {
+    if (request == null)
+    {
+      throw new NullPointerException("request");
+    }
+    return requestWithMultipleResponses(cmd, request, maxResponses,
+        sequenceCheck, DEFAULT_TIMEOUT);
+  }
+
+  public TXStatus requestWithMultipleResponses(CommandType cmd,
+      DataPacket request, int maxResponses, boolean sequenceCheck, int timeout)
+      throws FrameLayerException
+  {
+    if (request == null)
+    {
+      throw new NullPointerException("request");
+    }
+    if (maxResponses < 1)
+    {
+      throw new IllegalArgumentException("maxResponses");
+    }
+    setReady(false);
+    synchronized (this)
+    {
+      if (sequenceCheck)
+        request.setSequenceNumber(incrementSequenceNumber());
+
+      lastDataFrame = null;
+      queue.clear();
+
+      // Store the command...
+      this.command = cmd;
+
+      // Store the request...
+      this.request = request;
+
+      requestWithNoResponse(cmd, request);
+
+      DataPacket[] responses = new DataPacket[maxResponses];
+
+      // Wait for reponse from peer or timeout...
+      for (int i = 0; i < maxResponses; i++)
+      {
+        responses[i] = queue.poll(timeout);
+        if (responses[i] != null)
+        {
+          // Strip the sequence number if used by the request
+          // The sequence number is placed as the first byte in the payload
+          if (sequenceCheck
+              && responses[i].getSequenceNumber() > 0
+              && responses[i].getSequenceNumber() != request
+                  .getSequenceNumber())
+          {
+            setReady(true);
+            TXStatus txStatus = TXStatus.ResMissing;
+            txStatus.setResponses(responses);
+            return txStatus;
+          }
+        } else
+        {
+          synchronized (stats)
+          {
+            stats.receiveTimeouts++;
+          }
+          setReady(true);
+          return TXStatus.NoAcknowledge;
+        }
+      } // for
+      setReady(true);
+      TXStatus txStatus = TXStatus.CompleteOk;
+      txStatus.setResponses(responses);
+      return txStatus;
+    } // lock
+  }
+
+  /*
+   * (non-Javadoc)
+   * 
+   * @see
+   * net.gregrapp.jhouse.interfaces.zwave.SessionLayer#requestWithNoResponse
+   * (net.gregrapp.jhouse.interfaces.zwave.DataFrame.CommandType,
+   * net.gregrapp.jhouse.interfaces.zwave.DataPacket)
+   */
+  public boolean requestWithNoResponse(CommandType cmd, DataPacket request)
+      throws FrameLayerException
+  {
+    try
+    {
+      if (request == null)
+      {
+        throw new NullPointerException("request");
+      }
+      synchronized (this)
+      {
+        // Construct and setup the new data frame...
+        DataFrame frame = new DataFrame();
+        frame.setFrameType(DataFrame.FrameType.Request);
+        frame.setCommand(cmd);
+        // Add the data payload...
+        frame.addPayload(request.getPayload());
+        // Check if the sequence number should be appended at the last payload
+        // position...
+        if (request.getSequenceNumber() > 0)
+          frame.addPayload(request.getSequenceNumber());
+        stats.transmittedPackets++;
+        return frameLayer.write(frame);
+      }
+    } catch (FrameLayerException e)
+    {
+      throw new FrameLayerException("Error in requestWithNoRepsonse :"
+          + e.getMessage());
+    }
+  }
+
+  public TXStatus requestWithResponse(CommandType cmd, DataPacket request)
+      throws FrameLayerException
+  {
+    if (request == null)
+    {
+      throw new NullPointerException("request");
+    }
+    return requestWithResponse(cmd, request, false, DEFAULT_TIMEOUT);
+  }
+
+  /*
+   * (non-Javadoc)
+   * 
+   * @see
+   * net.gregrapp.jhouse.interfaces.zwave.SessionLayer#requestWithResponse(net
+   * .gregrapp.jhouse.interfaces.zwave.DataFrame.CommandType,
+   * net.gregrapp.jhouse.interfaces.zwave.DataPacket,
+   * net.gregrapp.jhouse.interfaces.zwave.DataPacket, boolean)
+   */
+  public TXStatus requestWithResponse(CommandType cmd, DataPacket request,
+      boolean sequenceCheck) throws FrameLayerException
+  {
+    if (request == null)
+    {
+      throw new NullPointerException("request");
+    }
+
+    return requestWithResponse(cmd, request, sequenceCheck, DEFAULT_TIMEOUT);
+  }
+
+  /*
+   * (non-Javadoc)
+   * 
+   * @see
+   * net.gregrapp.jhouse.interfaces.zwave.SessionLayer#requestWithResponse(net
+   * .gregrapp.jhouse.interfaces.zwave.DataFrame.CommandType,
+   * net.gregrapp.jhouse.interfaces.zwave.DataPacket,
+   * net.gregrapp.jhouse.interfaces.zwave.DataPacket, boolean, int)
+   */
+  public TXStatus requestWithResponse(CommandType cmd, DataPacket request,
+      boolean sequenceCheck, int timeout) throws FrameLayerException
+  {
+    if (request == null)
+    {
+      throw new NullPointerException("request");
+    }
+
+    setReady(false);
+    synchronized (this)
+    {
+      if (sequenceCheck)
+        request.setSequenceNumber(incrementSequenceNumber());
+
+      lastDataFrame = null;
+      queue.clear();
+
+      // Store the command...
+      this.command = cmd;
+
+      // Store the request...
+      this.request = request;
+
+      requestWithNoResponse(cmd, request);
+
+      DataPacket response = null;
+
+      // Wait for reponse from peer or timeout...
+      response = queue.poll(timeout);
+      if (response != null)
+      {
+        this.command = CommandType.None;
+        // Sequence number check...
+        if (sequenceCheck
+            && response.getSequenceNumber() != request.getSequenceNumber())
+        {
+          setReady(true);
+          TXStatus txStatus = TXStatus.ResMissing;
+          txStatus.setResponse(response);
+          return txStatus;
+        }
+      } else
+      {
+        synchronized (stats)
+        {
+          stats.receiveTimeouts++;
+        }
+        setReady(true);
+        return TXStatus.NoAcknowledge;
+      }
+      setReady(true);
+      TXStatus txStatus = TXStatus.CompleteOk;
+      txStatus.setResponse(response);
+      return txStatus;
+    } // lock
+  }
+
+  public TXStatus requestWithVariableResponses(CommandType cmd,
+      DataPacket request, int maxResponses, int[] breakVal,
+      boolean sequenceCheck, int timeout) throws FrameLayerException
+  {
+    if (request == null)
+    {
+      throw new NullPointerException("request");
+    }
+    if (maxResponses < 1)
+    {
+      throw new IllegalArgumentException("maxResponses");
+    }
+
+    setReady(false);
+    synchronized (this)
+    {
+      if (sequenceCheck)
+        request.setSequenceNumber(incrementSequenceNumber());
+
+      lastDataFrame = null;
+      queue.clear();
+
+      // Store the command...
+      this.command = cmd;
+
+      // Store the request...
+      this.request = request;
+
+      requestWithNoResponse(cmd, request);
+
+      DataPacket[] responses = new DataPacket[maxResponses];
+
+      // Wait for reponse from peer or timeout...
+      for (int i = 0; i < maxResponses; i++)
+      {
+        responses[i] = queue.poll(timeout);
+        if (responses[i] != null)
+        {
+          // Strip the sequence number if used by the request
+          // The sequence number is placed as the first byte in the payload
+          if (sequenceCheck
+              && responses[i].getSequenceNumber() > 0
+              && responses[i].getSequenceNumber() != request
+                  .getSequenceNumber())
+          {
+            setReady(true);
+            TXStatus txStatus = TXStatus.ResMissing;
+            txStatus.setResponses(responses);
+            return txStatus;
+          }
+          if (i > 0)
+          {
+            for (int n = 0; n < breakVal.length; n++)
+            {
+              if (responses[i].getPayload()[0] == breakVal[n])
+              {
+                TXStatus txStatus = TXStatus.CompleteFail;
+                txStatus.setResponses(responses);
+                return txStatus;
+              }
+            }
+          }
+        } else
+        {
+          synchronized (stats)
+          {
+            stats.receiveTimeouts++;
+          }
+          setReady(true);
+          return TXStatus.NoAcknowledge;
+        }
+      } // for
+      setReady(true);
+      TXStatus txStatus = TXStatus.CompleteOk;
+      txStatus.setResponses(responses);
+      return txStatus;
+    } // lock
+  }
+
+  public TXStatus requestWithVariableReturnsAndResponses(CommandType cmd,
+      DataPacket request, int maxResponses, int[] breakVal,
+      boolean sequenceCheck, int timeout) throws FrameLayerException
+  {
+    if (request == null)
+    {
+      throw new NullPointerException("request");
+    }
+    if (maxResponses < 1)
+    {
+      throw new IllegalArgumentException("maxResponses");
+    }
+    setReady(false);
+    synchronized (this)
+    {
+      if (sequenceCheck)
+        request.setSequenceNumber(incrementSequenceNumber());
+
+      lastDataFrame = null;
+      queue.clear();
+
+      // Store the command...
+      this.command = cmd;
+
+      // Store the request...
+      this.request = request;
+
+      requestWithNoResponse(cmd, request);
+
+      DataPacket[] responses = new DataPacket[maxResponses];
+
+      // Wait for reponse from peer or timeout...
+      for (int i = 0; i < maxResponses; i++)
+      {
+        responses[i] = queue.poll(timeout);
+        if (responses[i] != null)
+        {
+          // Strip the sequence number if used by the request
+          // The sequence number is placed as the first byte in the payload
+          if (sequenceCheck
+              && responses[i].getSequenceNumber() > 0
+              && responses[i].getSequenceNumber() != request
+                  .getSequenceNumber())
+          {
+            setReady(true);
+            TXStatus txStatus = TXStatus.ResMissing;
+            txStatus.setResponses(responses);
+            return txStatus;
+          }
+          if (i >= 0)
+          {
+            for (int n = 0; n < breakVal.length; n++)
+            {
+              if (responses[i].getPayload()[0] == breakVal[n])
+              {
+                TXStatus txStatus = TXStatus.CompleteFail;
+                txStatus.setResponses(responses);
+                return txStatus;
+              }
+            }
+          }
+        } else
+        {
+          synchronized (stats)
+          {
+            stats.receiveTimeouts++;
+          }
+          setReady(true);
+
+          return TXStatus.NoAcknowledge;
+        }
+      } // for
+      setReady(true);
+
+      TXStatus txStatus = TXStatus.CompleteOk;
+      txStatus.setResponses(responses);
+      return txStatus;
+    } // lock
+  }
+
+  /*
+   * (non-Javadoc)
+   * 
+   * @see
+   * net.gregrapp.jhouse.interfaces.zwave.SessionLayer#setCallbackHandler(net
+   * .gregrapp.jhouse.interfaces.zwave.SessionLayerAsyncCallback)
+   */
+  public void setCallbackHandler(SessionLayerAsyncCallback handler)
+  {
+    this.asyncCallback = handler;
+  }
+
   // / <summary>
   // /
   // / </summary>
   public void setReady(boolean value)
   {
     _isReady = value;
+  }
+
+  private int incrementSequenceNumber()
+  {
+    sequenceNumber++;
+
+    // Test if sequence number should wrap-around...
+    if (sequenceNumber >= MAX_SEQUENCE_NUMBER)
+      sequenceNumber = MIN_SEQUENCE_NUMBER;
+
+    return sequenceNumber;
   }
 }

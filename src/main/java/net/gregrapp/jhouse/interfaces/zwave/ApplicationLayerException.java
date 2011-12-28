@@ -15,55 +15,51 @@
 //
 //          Description:   
 //
-//          Author:   Morten Damsgaard, Linkage A/S
+//          Author:   Jette Christensen
 //
 //          Last Changed By:  $Author: jrm $
-//          Revision:         $Revision: 1.3 $
-//          Last Changed:     $Date: 2006/07/24 09:14:16 $
+//          Revision:         $Revision: 1.14 $
+//          Last Changed:     $Date: 2007/03/02 12:12:21 $
 //
 //////////////////////////////////////////////////////////////////////////////////////////////
 
 package net.gregrapp.jhouse.interfaces.zwave;
 
-import net.gregrapp.jhouse.transports.Transport;
-
 /**
  * @author Greg Rapp
- *
+ * 
  */
-// <summary>
-// Summary description for FrameLayer.
-// </summary>
-public interface FrameLayer
+public class ApplicationLayerException extends Exception
 {
-  // <summary>
-  // 
-  // </summary>
-  void open(Transport transport);
-  // <summary>
-  // 
-  // </summary>
-  void close();
+  /**
+   * 
+   */
+  private static final long serialVersionUID = 1L;
 
   // <summary>
-  // 
+  //
   // </summary>
-  boolean write(DataFrame frame) throws FrameLayerException;
+  public ApplicationLayerException()
+  {
+
+  }
 
   // <summary>
-  // 
+  //
   // </summary>
-  void setCallbackHandler(FrameLayerAsyncCallback handler);
+  public ApplicationLayerException(String describe)
+  {
+    super(describe);
+  }
 
   // <summary>
-  // 
+  //
   // </summary>
-  FrameStatistics getStatistics();
+  public ApplicationLayerException(String describe, Exception innerException)
+  {
+    // Add any type-specific logic for inner exceptions.
 
-  // <summary>
-  // Enable tracing
-  // </summary>
-  void enableTracing(boolean enable);
+    super(describe, innerException);
+  }
+
 }
-
-

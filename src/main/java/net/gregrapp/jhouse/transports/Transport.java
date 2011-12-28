@@ -17,8 +17,9 @@ public interface Transport
    * @param buffer
    *          bytes to write
    * @return number of bytes successfully written
+   * @throws TransportException 
    */
-  public int write(int[] buffer);
+  public int write(int[] buffer) throws TransportException;
 
   /**
    * Read bytes from the Transport
@@ -26,8 +27,9 @@ public interface Transport
    * @param buffer
    *          bytes read
    * @return number of bytes read from the Transport
+   * @throws TransportException 
    */
-  public int read(int[] buffer);
+  public int read(int[] buffer) throws TransportException;
 
   /**
    * Get number of bytes available to be read from the Transport

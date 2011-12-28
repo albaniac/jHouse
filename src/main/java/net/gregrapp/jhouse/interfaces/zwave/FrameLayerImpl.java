@@ -32,6 +32,7 @@ import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
 import net.gregrapp.jhouse.transports.Transport;
+import net.gregrapp.jhouse.transports.TransportException;
 
 /**
  * @author Greg Rapp
@@ -131,24 +132,30 @@ public class FrameLayerImpl implements FrameLayer
    * net.gregrapp.jhouse.interfaces.zwave.FrameLayer#write(net.gregrapp.jhouse
    * .interfaces.zwave.DataFrame)
    */
-  public boolean write(DataFrame frame)
+  public boolean write(DataFrame frame) throws FrameLayerException
   {
-    // TODO Implement logging
-    // log.Write(resourceManager.GetString("Transmitted") + frame.ToString());
-    TransmittedDataFrame tdf = new TransmittedDataFrame(frame);
-    int bytesWritten = 0;
-    synchronized (this)
+    try
     {
-      retransmissionStack.push(tdf);
-
-      // Transmit the frame to the peer...
-      int[] data = frame.getFrameBuffer();
-      bytesWritten = transport.write(data);
-      stats.transmittedFrames++;
-      // Reset the retransmission timer...
-      resetRetransmissionTimeoutTimer();
-
-      return bytesWritten == data.length;
+      // TODO Implement logging
+      // log.Write(resourceManager.GetString("Transmitted") + frame.ToString());
+      TransmittedDataFrame tdf = new TransmittedDataFrame(frame);
+      int bytesWritten = 0;
+      synchronized (this)
+      {
+        retransmissionStack.push(tdf);
+  
+        // Transmit the frame to the peer...
+        int[] data = frame.getFrameBuffer();
+        bytesWritten = transport.write(data);
+        stats.transmittedFrames++;
+        // Reset the retransmission timer...
+        resetRetransmissionTimeoutTimer();
+  
+        return bytesWritten == data.length;
+      }
+    } catch (TransportException e)
+    {
+      throw new FrameLayerException("Error in Transport: " + e.getLocalizedMessage());
     }
   }
 
@@ -210,7 +217,14 @@ public class FrameLayerImpl implements FrameLayer
   {
     // TODO Implement logging
     // log.Write(resourceManager.GetString("TransmitAcknowledge"));
-    transport.write(new int[] { (int) DataFrame.HeaderType.Acknowledge.get() });
+    try
+    {
+      transport.write(new int[] { (int) DataFrame.HeaderType.Acknowledge.get() });
+    } catch (TransportException e)
+    {
+      // TODO Auto-generated catch block
+      e.printStackTrace();
+    }
     synchronized (stats)
     {
       stats.transmittedAcks++;
@@ -221,8 +235,15 @@ public class FrameLayerImpl implements FrameLayer
   {
     // TODO Implement logging
     // log.Write(resourceManager.GetString("TransmitNoAcknowledge"));
-    transport.write(new int[] { (int) DataFrame.HeaderType.NotAcknowledged
-        .get() });
+    try
+    {
+      transport.write(new int[] { (int) DataFrame.HeaderType.NotAcknowledged
+          .get() });
+    } catch (TransportException e)
+    {
+      // TODO Auto-generated catch block
+      e.printStackTrace();
+    }
     synchronized (stats)
     {
       stats.transmittedNaks++;
@@ -384,7 +405,7 @@ public class FrameLayerImpl implements FrameLayer
         parserState = FrameReceiveState.FRS_DATA;
     } else if (parserState == FrameReceiveState.FRS_DATA)
     {
-      if (!currentDataFrame.AddPayload(buffer))
+      if (!currentDataFrame.addPayload(buffer))
         parserState = FrameReceiveState.FRS_SOF_HUNT;
       else if (currentDataFrame.isPayloadFull())
         parserState = FrameReceiveState.FRS_CHECKSUM;
