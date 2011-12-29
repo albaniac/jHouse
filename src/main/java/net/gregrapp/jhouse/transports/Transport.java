@@ -46,6 +46,18 @@ public interface Transport
   public boolean isOpen();
 
   /**
+   * Get number of bytes transmitted by this Transport
+   * @return number of bytes
+   */
+  public int getTransmittedBytes();
+  
+  /**
+   * Get number of bytes received by this Transport
+   * @return number of bytes
+   */
+  public int getReceivedBytes();
+  
+  /**
    * Shutdown the Transport
    */
   public void destroy();

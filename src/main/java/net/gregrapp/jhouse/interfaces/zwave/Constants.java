@@ -192,6 +192,14 @@ public class Constants
     {
       this.responses = responses;
     }
+    
+    public static TXStatus getByVal(int value)
+    {
+      for (TXStatus s : TXStatus.class.getEnumConstants())
+        if (s.get() == value)
+          return s;
+      return null;
+    }
   }
 
   // <summary>
@@ -379,7 +387,14 @@ public class Constants
     {
       return this.value;
     }
-
+    
+    public static LearnMode getByVal(int value)
+    {
+      for (LearnMode m : LearnMode.class.getEnumConstants())
+        if (m.get() == value)
+          return m;
+      return null;
+    }
   }
 
   // <summary>
@@ -511,6 +526,13 @@ public class Constants
       return this.value;
     }
 
+    public static NodeStatus getByVal(int value)
+    {
+      for (NodeStatus s : NodeStatus.class.getEnumConstants())
+        if (s.get() == value)
+          return s;
+      return null;
+    }
   }
 
   // <summary>

@@ -109,6 +109,7 @@ public class SerialImpl extends AbstractTransport
       for (int buf : buffer)
       {
         this.out.write(buf);
+        incrementTransmittedBytes();
       }
     } catch (IOException e)
     {
@@ -130,7 +131,10 @@ public class SerialImpl extends AbstractTransport
     {
       numBytes = in.read(bytesRead);
       for (int i=0;i<numBytes;i++)
+      {        
         buffer[i] = bytesRead[i];
+        incrementReceivedBytes();
+      }
       /*for (int i=0;i<size;i++)
       {
         bytesRead[i] = in.read();

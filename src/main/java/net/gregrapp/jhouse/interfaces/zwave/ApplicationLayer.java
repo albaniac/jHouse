@@ -30,6 +30,7 @@ import java.util.ArrayList;
 import net.gregrapp.jhouse.interfaces.zwave.Constants.ChipType;
 import net.gregrapp.jhouse.interfaces.zwave.Constants.ControllerChangeMode;
 import net.gregrapp.jhouse.interfaces.zwave.Constants.CreateNewPrimaryControllerMode;
+import net.gregrapp.jhouse.interfaces.zwave.Constants.Library;
 import net.gregrapp.jhouse.interfaces.zwave.Constants.Mode;
 import net.gregrapp.jhouse.interfaces.zwave.Constants.NodeStatus;
 import net.gregrapp.jhouse.interfaces.zwave.Constants.RequestNeighbor;
@@ -59,17 +60,17 @@ public interface ApplicationLayer
   // 
   // </summary>
   // <returns></returns>
-  SessionLayer GetSessionLayer { get;}
+  SessionLayer getSessionLayer();
   // <summary>
   // 
   // </summary>
   // <returns></returns>
-  FrameLayer GetFrameLayer();
+  FrameLayer getFrameLayer();
   // <summary>
   // 
   // </summary>
   // <returns></returns>
-  Transport GetTransportLayer { get;}
+  Transport getTransport();
 
   // <summary>
   // Returns statistics about the communication
@@ -110,7 +111,7 @@ public interface ApplicationLayer
   // </summary>
   // <returns>number of nodes</returns>
   //int GetNodeCount();
-  int GetNodeCount { get; }
+  int getNodeCount();
   // <summary>
   // Return the ZWave Chiptype
   // </summary>
@@ -158,7 +159,7 @@ public interface ApplicationLayer
   // <param name="txOptions">Transmit options (TRANSMIT_OPTION_xxx)</param>
   // <param name="timeout">Response timeout in ms</param>
   // <returns>Transmit Result</returns>
-  TXStatus ZWaveSendSlaveData(int sourceId, int destinationId, int[] data, TXOption txOptions, int timeout);
+  TXStatus zwaveSendSlaveData(int sourceId, int destinationId, int[] data, TXOption txOptions, int timeout);
 
   // <summary>
   // Z-wave rediscovery needed.
@@ -279,7 +280,7 @@ public interface ApplicationLayer
   // Stores the specified buffer in ZWaveModule Nonvolatile memory
   // </summary>
   // <param name="offset">Application offset start address</param>
-  // <param name="buffer">Buffer to write</param>
+  // <param name="buffer">Buffer to write</param>`
   // <param name="length">number of bytes to write</param>
   void zwaveMemoryPutBuffer(long offset, int[] buffer, long length);
   // <summary>
@@ -373,7 +374,12 @@ public interface ApplicationLayer
   // </summary>
   // <param name="slaveController"></param>
   // <returns></returns>
-  int[] zwaveGetControllerCapabilities(out boolean slaveController);
+  /// Capabilities flag:
+  /// Bit 0: 0 = Controller API; 1 = Slave API
+  /// Bit 1: 0 = Timer functions not supported; 1 = Timer functions supported.
+  /// Bit 2: 0 = Primary Controller; 1 = Secondary Controller
+  /// Bit 3-7: reserved   
+  int[] zwaveGetControllerCapabilities(out boolean slaveController) throws ApplicationLayerException;
   // <summary>
   // Get the Capabilities of the ZWave module serialAPI (supported functions)
   // </summary>
@@ -457,41 +463,41 @@ public interface ApplicationLayer
   // <summary>
   // Returns true if a SIS is available
   // </summary>
-  boolean NodeIdServerPresent { get;}
+  boolean isNodeIdServerPresent();
   // <summary>
   // 
   // </summary>
-  boolean ControllerIsRealPrimary { get;}
+  boolean isControllerIsRealPrimary();
   // <summary>
   // 
   // </summary>
-  boolean ControllerIsSis { get;}
+  boolean isControllerIsSis();
   // <summary>
   // 
   // </summary>
-  boolean ControllerOnOtherNetwork { get;}
+  boolean isControllerOnOtherNetwork();
   // <summary>
   // 
   // </summary>
-  boolean ControllerIsSuc { get;}
+  boolean isControllerIsSuc();
   // <summary>
   // 
   // </summary>
-  boolean IsRealTimeSystem { get;}
+  boolean isRealTimeSystem();
   // <summary>
   // 
   // </summary>
-  Library LibraryType { get;}
+  Library getLibraryType();
   // <summary>
   // 
   // </summary>
-  String LibraryVersion { get; }
+  String getLibraryVersion();
 
   // <summary>
   // Gets the node list.
   // </summary>
   // <value>The node list.</value>
-  Node[] NodeList { get; }
+  Node[] getNodeList();
 
 
   // region ZWaveINSTALLER
