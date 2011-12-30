@@ -27,15 +27,23 @@ package net.gregrapp.jhouse.interfaces.zwave;
 
 import java.util.ArrayList;
 import java.util.Hashtable;
+import java.util.List;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
+import net.gregrapp.jhosue.utils.CollectionUtils;
 import net.gregrapp.jhouse.interfaces.zwave.Constants.ChipType;
 import net.gregrapp.jhouse.interfaces.zwave.Constants.ControllerChangeMode;
 import net.gregrapp.jhouse.interfaces.zwave.Constants.CreateNewPrimaryControllerMode;
 import net.gregrapp.jhouse.interfaces.zwave.Constants.LearnMode;
 import net.gregrapp.jhouse.interfaces.zwave.Constants.Library;
 import net.gregrapp.jhouse.interfaces.zwave.Constants.Mode;
+import net.gregrapp.jhouse.interfaces.zwave.Constants.NodeFailedReturnValue;
+import net.gregrapp.jhouse.interfaces.zwave.Constants.NodeFailedStatus;
 import net.gregrapp.jhouse.interfaces.zwave.Constants.NodeStatus;
 import net.gregrapp.jhouse.interfaces.zwave.Constants.RequestNeighbor;
+import net.gregrapp.jhouse.interfaces.zwave.Constants.SetSucReturnValue;
 import net.gregrapp.jhouse.interfaces.zwave.Constants.TXOption;
 import net.gregrapp.jhouse.interfaces.zwave.Constants.TXStatus;
 import net.gregrapp.jhouse.interfaces.zwave.Constants.ZWaveRediscoveryNeededReturnValue;
@@ -74,8 +82,7 @@ public class ApplicationLayerImpl implements ApplicationLayer,
    */
   public int chipRev()
   {
-    // TODO Auto-generated method stub
-    return 0;
+    return chipRev;
   }
 
   /*
@@ -85,8 +92,7 @@ public class ApplicationLayerImpl implements ApplicationLayer,
    */
   public ChipType chipType()
   {
-    // TODO Auto-generated method stub
-    return null;
+    return ChipType.getByVal(chipType);
   }
 
   /*
@@ -398,7 +404,6 @@ public class ApplicationLayerImpl implements ApplicationLayer,
   {
     synchronized (this)
     {
-        DataPacket res;
         DataPacket req = new DataPacket();
 
         TXStatus rc = sessionLayer.requestWithResponse(DataFrame.CommandType.CmdSerialApiGetInitData, req);
@@ -427,7 +432,7 @@ public class ApplicationLayerImpl implements ApplicationLayer,
         for (int i = 0; i < len; i++)
         {
             int availabilityMask = payload[3 + i];
-            for (byte bit = 0; bit < 8; bit++)
+            for (int bit = 0; bit < 8; bit++)
             {
                 nodeIdx++;
                 if ((availabilityMask & (1 << bit)) > 0)
@@ -441,6 +446,26 @@ public class ApplicationLayerImpl implements ApplicationLayer,
         return nodeTable.getList();
     }
   }
+  
+  public NodeMask zwaveGetVirtualNodes()
+  {
+      NodeMask nodeMask;
+      if (libraryType.lib == Library.ControllerBridgeLib)
+      {
+          DataPacket req = new DataPacket();
+
+          TXStatus rc = sessionLayer.requestWithResponse(DataFrame.CommandType.CmdZWaveGetVirtualNodes, req);
+          if (rc != TXStatus.CompleteOk) throw new ApplicationLayerException("CMD_ZWaveGET_VIRTUAL_NODES");
+
+          nodeMask = new NodeMask(rc.getResponse().getPayload());
+      }
+      else
+      {
+          nodeMask = new NodeMask();
+      }
+      return nodeMask;
+  }
+  
 
   /*
    * (non-Javadoc)
@@ -692,10 +717,9 @@ public class ApplicationLayerImpl implements ApplicationLayer,
    * @see
    * net.gregrapp.jhouse.interfaces.zwave.ApplicationLayer#serialApiVersion()
    */
-  public int serialApiVersion()
+  public int getSerialApiVersion()
   {
-    // TODO Auto-generated method stub
-    return 0;
+    return serialAPIver;
   }
 
   /*
@@ -707,8 +731,13 @@ public class ApplicationLayerImpl implements ApplicationLayer,
    */
   public NodeStatus zwaveAddNodeToNetwork(Mode mode)
   {
-    // TODO Auto-generated method stub
-    return null;
+    DataPacket req = new DataPacket();
+    req.addPayload(mode.get());
+    TXStatus rc = sessionLayer.requestWithResponse(DataFrame.CommandType.CmdZWaveAddNodeToNetwork, req, true);
+    if (rc != TXStatus.CompleteOk)
+        throw new ApplicationLayerException("CMD_ZWaveADD_NODE_TO_NETWORK:" + mode.toString());
+
+    return NodeStatus.getByVal(rc.getResponse().getPayload()[0]);
   }
 
   /*
@@ -720,8 +749,18 @@ public class ApplicationLayerImpl implements ApplicationLayer,
    */
   public TXStatus zwaveAssignReturnRoute(int sourceNodeId, int destinationNodeId)
   {
-    // TODO Auto-generated method stub
-    return null;
+    DataPacket req = new DataPacket();
+    req.addPayload(sourceNodeId);
+    req.addPayload(destinationNodeId);
+    TXStatus rc = sessionLayer.requestWithMultipleResponses(DataFrame.CommandType.CmdZWaveAssignReturnRoute, req, 2, true);
+    if (rc == TXStatus.CompleteOk)
+    {
+      return TXStatus.getByVal(rc.getResponses()[1].getPayload()[0]);
+    }
+    else
+    {
+        return rc;
+    }
   }
 
   /*
@@ -733,8 +772,18 @@ public class ApplicationLayerImpl implements ApplicationLayer,
    */
   public TXStatus zwaveAssignSucReturnRoute(int destinationNodeId)
   {
-    // TODO Auto-generated method stub
-    return null;
+    DataPacket req = new DataPacket();
+    req.addPayload(destinationNodeId);
+    req.addPayload(0);
+    TXStatus rc = sessionLayer.requestWithMultipleResponses(DataFrame.CommandType.CmdZWaveAssignSucReturnRoute, req, 2, true);
+    if (rc == TXStatus.CompleteOk)
+    {
+      return TXStatus.getByVal(rc.getResponses()[1].getPayload()[0]);
+    }
+    else
+    {
+        return rc;
+    }
   }
 
   /*
@@ -746,8 +795,12 @@ public class ApplicationLayerImpl implements ApplicationLayer,
    */
   public NodeStatus zwaveControllerChange(ControllerChangeMode mode)
   {
-    // TODO Auto-generated method stub
-    return null;
+    DataPacket req = new DataPacket();
+    req.addPayload(mode.get());
+    TXStatus rc = sessionLayer.requestWithResponse(DataFrame.CommandType.CmdZWaveControllerChange, req, true);
+    if (rc != TXStatus.CompleteOk) throw new ApplicationLayerException("CMD_ZWaveCONTROLLER_CHANGE");
+    NodeStatus status = NodeStatus.getByVal(rc.getResponse().getPayload()[0]);
+    return status;
   }
 
   /*
@@ -762,8 +815,12 @@ public class ApplicationLayerImpl implements ApplicationLayer,
   public NodeStatus zwaveCreateNewPrimaryCtrl(
       CreateNewPrimaryControllerMode mode)
   {
-    // TODO Auto-generated method stub
-    return null;
+    DataPacket req = new DataPacket();
+    req.addPayload(mode.get());
+    TXStatus rc = sessionLayer.requestWithResponse(DataFrame.CommandType.CmdZWaveCreateNewPrimary, req, true);
+    if (rc != TXStatus.CompleteOk) throw new ApplicationLayerException("CMD_ZWaveCREATE_NEW_PRIMARY");
+    NodeStatus status = NodeStatus.getByVal(rc.getResponse().getPayload()[0]);
+    return status;
   }
 
   /*
@@ -775,8 +832,17 @@ public class ApplicationLayerImpl implements ApplicationLayer,
    */
   public TXStatus zwaveDeleteReturnRoute(int sourceNodeId)
   {
-    // TODO Auto-generated method stub
-    return null;
+    DataPacket req = new DataPacket();
+    req.addPayload(sourceNodeId);
+    TXStatus rc = sessionLayer.requestWithMultipleResponses(DataFrame.CommandType.CmdZWaveDeleteReturnRoute, req, 2, true);
+    if (rc == TXStatus.CompleteOk)
+    {
+        return TXStatus.getByVal(rc.getResponses()[1].getPayload()[0]);
+    }
+    else
+    {
+        return rc;
+    }
   }
 
   /*
@@ -788,8 +854,17 @@ public class ApplicationLayerImpl implements ApplicationLayer,
    */
   public TXStatus zwaveDeleteSucReturnRoute(int sourceNodeId)
   {
-    // TODO Auto-generated method stub
-    return null;
+    DataPacket req = new DataPacket();
+    req.addPayload(sourceNodeId);
+    TXStatus rc = sessionLayer.requestWithMultipleResponses(DataFrame.CommandType.CmdZWaveDeleteSucReturnRoute, req, 2, true);
+    if (rc == TXStatus.CompleteOk)
+    {
+      return TXStatus.getByVal(rc.getResponses()[1].getPayload()[0]);
+    }
+    else
+    {
+        return rc;
+    }
   }
 
   /*
@@ -801,8 +876,60 @@ public class ApplicationLayerImpl implements ApplicationLayer,
    */
   public boolean zwaveEnableSuc(boolean enable, int capabilities)
   {
-    // TODO Auto-generated method stub
+    DataPacket res;
+    DataPacket req = new DataPacket();
+    req.addPayload(enable?1:0);
+    req.addPayload(capabilities);
+    TXStatus rc = sessionLayer.requestWithResponse(DataFrame.CommandType.CmdZWaveEnableSuc, req);
+    if (rc == TXStatus.CompleteOk)
+    {
+        if (rc.getResponse().getPayload()[0] != 0)
+        {
+            return true;
+        }
+    }
+
     return false;
+  }
+
+  private boolean thisSUCNodeId(int nodeId, boolean sucState, TXOption txOptions, int capabilities)
+  {
+      DataPacket req = addPayloadToSUCNodeId(nodeId, sucState, txOptions, capabilities);
+      TXStatus rc = sessionLayer.requestWithResponse(DataFrame.CommandType.CmdZWaveSetSucNodeId, req);
+      DataPacket res = rc.getResponse();
+      if ((rc == TXStatus.CompleteOk) && ((nodeId == _controllerNodeId) || ((res.getLength() >= 1) && (res.getPayload()[0] == SetSucReturnValue.SucSetSucceeded.get()))))
+      {
+          return true;
+      }
+      else
+      {
+          return false;
+      }
+  }
+
+  private boolean otherSUCNodeId(int nodeId, boolean sucState, TXOption txOptions, int capabilities)
+  {
+      DataPacket[] res = new DataPacket[2];
+      DataPacket req = addPayloadToSUCNodeId(nodeId, sucState, txOptions, capabilities);
+      TXStatus rc = sessionLayer.requestWithMultipleResponses(DataFrame.CommandType.CmdZWaveSetSucNodeId, req, 2, true);
+      if ((rc == TXStatus.CompleteOk))
+      {
+          if (((rc.getResponses()[1].getLength() >= 1) && (rc.getResponses()[1].getPayload()[0] == SetSucReturnValue.SucSetSucceeded.get())))
+          {
+              return true;
+          }
+      }
+      return false;
+  }
+
+  private DataPacket addPayloadToSUCNodeId(int nodeId, boolean sucState, TXOption txOptions, int capabilities)
+  {
+      DataPacket req = new DataPacket();
+      req.addPayload(nodeId);
+      req.addPayload(sucState?1:0);
+      req.addPayload(txOptions.get());
+      req.addPayload(capabilities);
+      return req;
   }
 
   /*
@@ -813,7 +940,6 @@ public class ApplicationLayerImpl implements ApplicationLayer,
    */
   public int[] zwaveGetControllerCapabilities(out boolean slaveController) throws ApplicationLayerException
   {
-    DataPacket res;
     DataPacket req = new DataPacket();
 
     TXStatus rc = sessionLayer.requestWithResponse(DataFrame.CommandType.CmdZWaveGetControllerCapabilities, req);
@@ -833,8 +959,30 @@ public class ApplicationLayerImpl implements ApplicationLayer,
    */
   public Node zwaveGetNodeProtocolInfo(int nodeId)
   {
-    // TODO Auto-generated method stub
-    return null;
+    return zwaveGetNodeProtocolInfo(nodeId, false);
+  }
+
+  public Node zwaveGetNodeProtocolInfo(int nodeId, boolean checkIfVirtual)
+  {
+      DataPacket req = new DataPacket();
+      req.addPayload(nodeId);
+
+      TXStatus rc = sessionLayer.requestWithResponse(DataFrame.CommandType.CmdZWaveGetNodeProtocolInfo, req);
+      if (rc != TXStatus.CompleteOk) throw new ApplicationLayerException("CMD_ZWaveGET_NODE_PROTOCOL_INFO");
+      int[] payload = rc.getResponse().getPayload();
+
+      boolean isVirtual = false;
+      if (checkIfVirtual)
+      {
+          isVirtual = zwaveIsVirtualNode(nodeId);
+      }
+      //capability    : payload[0];
+      //security      : payload[1];
+      //reserved      : payload[2];
+      //type basic    : payload[3];
+      //type generic  : payload[4];
+      //type specific : payload[5];
+      return new Node(nodeId, payload[0], payload[1], payload[2], payload[3], payload[4], payload[5], null, isVirtual);
   }
 
   /*
@@ -845,9 +993,11 @@ public class ApplicationLayerImpl implements ApplicationLayer,
    */
   public int zwaveGetSucNodeId()
   {
-    // TODO Auto-generated method stub
-    return 0;
-  }
+    DataPacket req = new DataPacket();
+    TXStatus rc = sessionLayer.requestWithResponse(DataFrame.CommandType.CmdZWaveGetSucNodeId, req);
+    if (rc != TXStatus.CompleteOk) throw new ApplicationLayerException("CMD_ZWaveGET_SUC_NODE_ID");
+    return rc.getResponse().getPayload()[0];
+ }
 
   /*
    * (non-Javadoc)
@@ -858,8 +1008,13 @@ public class ApplicationLayerImpl implements ApplicationLayer,
    */
   public boolean zwaveIsFailedNode(int nodeId)
   {
-    // TODO Auto-generated method stub
-    return false;
+    DataPacket res;
+    DataPacket req = new DataPacket();
+    req.addPayload(nodeId);
+
+    TXStatus rc = sessionLayer.requestWithResponse(DataFrame.CommandType.CmdZWaveIsFailedNode, req);
+    if (rc != TXStatus.CompleteOk) throw new ApplicationLayerException("CMD_ZWaveIS_FAILED_NODE");
+    return rc.getResponse().getPayload()[0]==0?false:true;
   }
 
   /*
@@ -871,7 +1026,16 @@ public class ApplicationLayerImpl implements ApplicationLayer,
    */
   public boolean zwaveIsVirtualNode(int nodeId)
   {
-    // TODO Auto-generated method stub
+    if (libraryType.lib == Library.ControllerBridgeLib)
+    {
+        DataPacket req = new DataPacket();
+        req.addPayload(nodeId);
+
+        TXStatus rc = sessionLayer.requestWithResponse(DataFrame.CommandType.CmdZWaveIsVirtualNode, req);
+        if (rc != TXStatus.CompleteOk) throw new ApplicationLayerException("CMD_ZWaveIS_VIRTUAL_NODE");
+
+        return (rc.getResponse().getPayload()[0] != 0);
+    }
     return false;
   }
 
@@ -883,8 +1047,10 @@ public class ApplicationLayerImpl implements ApplicationLayer,
    */
   public void zwaveLockRoutes(int nodeId)
   {
-    // TODO Auto-generated method stub
-
+    DataPacket req = new DataPacket();
+    req.addPayload(nodeId);
+    boolean rc = sessionLayer.requestWithNoResponse(DataFrame.CommandType.CmdLockRouteResponse, req);
+    if (!rc) throw new ApplicationLayerException("CMD_LOCK_ROUTE_RESPONSE");
   }
 
   /*
@@ -896,8 +1062,13 @@ public class ApplicationLayerImpl implements ApplicationLayer,
    */
   public int[] zwaveMemoryGetBuffer(long offset, int len)
   {
-    // TODO Auto-generated method stub
-    return null;
+    DataPacket req = new DataPacket();
+    req.addPayload((int)(offset >> 8));
+    req.addPayload((int)(offset & 0xFF));
+    req.addPayload(len);
+    TXStatus rc = sessionLayer.requestWithResponse(DataFrame.CommandType.CmdMemoryGetBuffer, req);
+    if (rc != TXStatus.CompleteOk) throw new ApplicationLayerException("CMD_MEMORY_GET_BUFFER");
+    return rc.getResponse().getPayload();
   }
 
   /*
@@ -909,8 +1080,12 @@ public class ApplicationLayerImpl implements ApplicationLayer,
    */
   public int zwaveMemoryGetByte(long offset)
   {
-    // TODO Auto-generated method stub
-    return 0;
+    DataPacket req = new DataPacket();
+    req.addPayload((int)(offset >> 8));
+    req.addPayload((int)(offset & 0xFF));
+    TXStatus rc = sessionLayer.requestWithResponse(DataFrame.CommandType.CmdMemoryGetByte, req);
+    if (rc != TXStatus.CompleteOk) throw new ApplicationLayerException("CMD_MEMORY_GET_BYTE");
+    return rc.getResponse().getPayload()[0];
   }
 
   /*
@@ -922,8 +1097,15 @@ public class ApplicationLayerImpl implements ApplicationLayer,
    */
   public void zwaveMemoryPutBuffer(long offset, int[] buffer, long length)
   {
-    // TODO Auto-generated method stub
-
+    if (length > 66) length = 66;
+    DataPacket req = new DataPacket();
+    req.addPayload((int)(offset >> 8));
+    req.addPayload((int)(offset & 0xFF));
+    req.addPayload((int)(length >> 8));
+    req.addPayload((int)(length & 0xFF));
+    req.addPayload(buffer);
+    TXStatus rc = sessionLayer.requestWithMultipleResponses(DataFrame.CommandType.CmdMemoryPutBuffer, req, 2, true);
+    if (rc != TXStatus.CompleteOk) throw new ApplicationLayerException("CMD_MEMORY_PUT_BUFFER");
   }
 
   /*
@@ -935,10 +1117,15 @@ public class ApplicationLayerImpl implements ApplicationLayer,
    */
   public TXStatus zwaveMemoryPutByte(long offset, int value)
   {
-    // TODO Auto-generated method stub
-    return null;
+    DataPacket req = new DataPacket();
+    req.addPayload((int)(offset >> 8));
+    req.addPayload((int)(offset & 0xFF));
+    req.addPayload(value);
+    TXStatus rc = sessionLayer.requestWithResponse(DataFrame.CommandType.CmdMemoryPutByte, req);
+    return rc;
   }
 
+  
   /*
    * (non-Javadoc)
    * 
@@ -948,8 +1135,28 @@ public class ApplicationLayerImpl implements ApplicationLayer,
    */
   public ZWaveRediscoveryNeededReturnValue zwaveRediscoveryNeeded(int nodeId)
   {
-    // TODO Auto-generated method stub
-    return null;
+    //DataPacket[] res = new DataPacket[3]; // We are receiving 2 responses...
+    DataPacket req = new DataPacket();
+    req.addPayload(nodeId);
+    TXStatus rc = sessionLayer.requestWithVariableResponses(DataFrame.CommandType.CmdZWaveRediscoveryNeeded, req, 3, new int[] { 1, 4 }, true, 60000);
+    ZWaveRediscoveryNeededReturnValue st = ZWaveRediscoveryNeededReturnValue.getByVal(rc.getResponses()[1].getPayload()[0]);
+    if (rc == TXStatus.CompleteOk)
+    {
+        if (st == ZWaveRediscoveryNeededReturnValue.LostAccepted)
+        {
+            return ZWaveRediscoveryNeededReturnValue.getByVal(rc.getResponses()[2].getPayload()[0]);
+        }
+        else
+        {
+            return st;
+        }
+
+    }
+    else
+    {
+        return ZWaveRediscoveryNeededReturnValue.LostFailed;
+    }
+
   }
 
   /*
@@ -961,8 +1168,27 @@ public class ApplicationLayerImpl implements ApplicationLayer,
    */
   public DataPacket[] zwaveRemoveFailedNodeId(int nodeId)
   {
-    // TODO Auto-generated method stub
-    return null;
+    DataPacket req = new DataPacket();
+    req.addPayload(nodeId);
+    TXStatus rc = sessionLayer.requestWithVariableReturnsAndResponses(DataFrame.CommandType.CmdZWaveRemoveFailedNodeId, req, 2, new int[] { 1, 2, 4, 5, 8, 16 }, true, TIMEOUT);
+    if (NodeFailedReturnValue.getByVal(rc.getResponses()[0].getPayload()[0]) == NodeFailedReturnValue.FailedNodeRemoveStarted)
+    {
+        try
+        {
+            if (NodeFailedStatus.getByVal(rc.getResponses()[1].getPayload()[0]) == NodeFailedStatus.NodeRemoved)
+            {
+                if (nodeTable.contains(nodeId))
+                {
+                    nodeTable.remove(nodeId);
+                }
+            }
+        }
+        catch (NullPointerException e)
+        {
+            return rc.getResponses();
+        }
+    }
+    return rc.getResponses();
   }
 
   /*
@@ -974,8 +1200,39 @@ public class ApplicationLayerImpl implements ApplicationLayer,
    */
   public NodeStatus zwaveRemoveNodeFromNetwork(Mode mode)
   {
-    // TODO Auto-generated method stub
-    return null;
+    DataPacket req = new DataPacket();
+    req.addPayload(mode.get());
+    NodeStatus status = NodeStatus.Done;
+    if (mode == Mode.NodeStop)
+    {
+        boolean sent = sessionLayer.requestWithNoResponse(DataFrame.CommandType.CmdZWaveRemoveNodeFromNetwork, req);
+        if (!sent)
+        {
+            status = NodeStatus.Failed;
+        }
+    }
+    else
+    {
+        TXStatus rc = sessionLayer.requestWithResponse(DataFrame.CommandType.CmdZWaveRemoveNodeFromNetwork, req, true);
+        if (rc != TXStatus.CompleteOk)
+        {
+            throw new ApplicationLayerException("CMD_ZWaveREMOVE_NODE_FROM_NETWORK");
+        }
+        status = NodeStatus.getByVal(rc.getResponse().getPayload()[0]);
+    }
+    return status;
+  }
+
+  public TXStatus zwaveMemoryGetId(out int homeId, out int controllerNode)
+  {
+      DataPacket req = new DataPacket();
+
+      TXStatus rc = sessionLayer.RequestWithResponse(DataFrame.CommandType.CmdMemoryGetId, req);
+      if (rc != TXStatus.CompleteOk) throw new ApplicationLayerException("CMD_MEMORY_GET_ID");
+      int[] payload = rc.getResponse().getPayload();
+      homeId = (int)payload[0] << 24 | (int)payload[1] << 16 | (int)payload[2] << 8 | (int)payload[3];
+      controllerNode = payload[4];
+      return rc;
   }
 
   /*
@@ -987,8 +1244,53 @@ public class ApplicationLayerImpl implements ApplicationLayer,
    */
   public boolean zwaveReplaceFailedNode(int nodeId)
   {
-    // TODO Auto-generated method stub
-    return false;
+    DataPacket req = new DataPacket();
+    req.addPayload(nodeId);
+    boolean rc = sessionLayer.requestWithNoResponse(DataFrame.CommandType.CmdZWaveReplaceFailedNode, req);
+    if (!rc) throw new ApplicationLayerException("CMD_ZWaveReplaceFailedNode");
+    return rc;
+  }
+
+  public void clockSet(Time time)
+  {
+      if (time == null)
+      {
+          throw new NullPointerException("time");
+      }
+      DataPacket res;
+      DataPacket req = new DataPacket();
+      req.addPayload(time.weekday);
+      req.addPayload(time.hour);
+      req.addPayload(time.minute);
+      TXStatus rc = sessionLayer.requestWithResponse(DataFrame.CommandType.CmdClockSet, req);
+      if (rc != TXStatus.CompleteOk) throw new ApplicationLayerException("CMD_CLOCK_SET");
+  }
+
+  public Time clockGet()
+  {
+      DataPacket req = new DataPacket();
+      TXStatus rc = sessionLayer.requestWithResponse(DataFrame.CommandType.CmdClockGet, req);
+      if (rc != TXStatus.CompleteOk) throw new ApplicationLayerException("CMD_CLOCK_GET");
+      int[] payload = rc.getResponse().getPayload();
+      return new Time(payload[0], payload[1], payload[2]);
+  }
+
+  public boolean clockCompare(Time time)
+  {
+      if (time == null)
+      {
+          throw new NullPointerException("time");
+      }
+      DataPacket res;
+      DataPacket req = new DataPacket();
+      req.addPayload(time.weekday);
+      req.addPayload(time.hour);
+      req.addPayload(time.minute);
+
+      TXStatus rc = sessionLayer.requestWithResponse(DataFrame.CommandType.CmdClockCompare, req);
+      if (rc != TXStatus.CompleteOk) throw new ApplicationLayerException("CMD_CLOCK_CMP");
+      int[] payload = rc.getResponse().getPayload();
+      return payload[0]==0?false:true;
   }
 
   /*
@@ -999,8 +1301,9 @@ public class ApplicationLayerImpl implements ApplicationLayer,
    */
   public void zwaveReplicationReceiveComplete()
   {
-    // TODO Auto-generated method stub
-
+    DataPacket req = new DataPacket();
+    boolean rc = sessionLayer.requestWithNoResponse(DataFrame.CommandType.CmdZWaveReplicationCommandComplete, req);
+    if (!rc) throw new ApplicationLayerException("CMD_ZWaveREPLICATION_COMMAND_COMPLETE");
   }
 
   /*
@@ -1013,8 +1316,24 @@ public class ApplicationLayerImpl implements ApplicationLayer,
   public TXStatus zwaveReplicationSend(int nodeId, int[] data,
       TXOption txOptions)
   {
-    // TODO Auto-generated method stub
-    return null;
+    if (data == null)
+    {
+        throw new NullPointerException("data");
+    }
+    DataPacket req = new DataPacket();
+    req.addPayload(nodeId);
+    req.addPayload(data.length);
+    req.addPayload(data);
+    req.addPayload(txOptions.get());
+    TXStatus rc = sessionLayer.requestWithMultipleResponses(DataFrame.CommandType.CmdZWaveReplicationSendData, req, 2, true);
+    if (rc == TXStatus.CompleteOk)
+    {
+      return TXStatus.getByVal(rc.getResponses()[1].getPayload()[0]);
+    }
+    else
+    {
+        return rc;
+    }
   }
 
   /*
@@ -1026,8 +1345,16 @@ public class ApplicationLayerImpl implements ApplicationLayer,
    */
   public TXStatus zwaveRequestNetworkUpdate()
   {
-    // TODO Auto-generated method stub
-    return null;
+    DataPacket req = new DataPacket();
+    TXStatus rc = sessionLayer.requestWithMultipleResponses(DataFrame.CommandType.CmdZWaveRequestNetworkUpdate, req, 2, true, TIMEOUT);
+    if (rc == TXStatus.CompleteOk)
+    {
+        return TXStatus.getByVal(rc.getResponses()[1].getPayload()[0]);
+    }
+    else
+    {
+        return rc;
+    }
   }
 
   /*
@@ -1039,10 +1366,37 @@ public class ApplicationLayerImpl implements ApplicationLayer,
    */
   public TXStatus zwaveRequestNodeInfo(int nodeId)
   {
-    // TODO Auto-generated method stub
-    return null;
+    DataPacket req = new DataPacket();
+    req.addPayload(nodeId);
+    TXStatus rc = sessionLayer.requestWithResponse(DataFrame.CommandType.CmdZWaveRequestNodeInfo, req, false);
+    if (rc == TXStatus.CompleteOk)
+    {
+        _requestNodeInfo = true;
+        waitForNodeInfoExecutor = Executors.newSingleThreadScheduledExecutor();
+        waitForNodeInfoExecutor.schedule(new Runnable()
+        {
+          public void run()
+          {
+            waitForNodeInfoCallbackHandler();
+          }
+        }, TIMEOUT, TimeUnit.MILLISECONDS);
+        
+    }
+    return rc;
   }
 
+  private void waitForNodeInfoCallbackHandler()
+  {
+      if (waitForNodeInfoExecutor != null)
+      {
+        waitForNodeInfoExecutor.shutdownNow();
+      }
+      _requestNodeInfo = false;
+      //RequestNodeInfoEventArgs e = new RequestNodeInfoEventArgs((Node)handler);
+      // if (RequestNodeInfoEvent != null) RequestNodeInfoEvent((Node)handler);
+      //if (RequestNodeInfoEvent != null) RequestNodeInfoEvent(this, e);
+  }
+  
   /*
    * (non-Javadoc)
    * 
@@ -1051,8 +1405,18 @@ public class ApplicationLayerImpl implements ApplicationLayer,
    */
   public RequestNeighbor zwaveRequestNodeNeighborUpdate(int nodeId)
   {
-    // TODO Auto-generated method stub
-    return null;
+    DataPacket req = new DataPacket();
+    req.addPayload(nodeId);
+    TXStatus rc = sessionLayer.requestWithMultipleResponses(DataFrame.CommandType.CmdZWaveRequestNodeNeighborUpdate, req, 2, true);
+
+    if (rc == TXStatus.CompleteOk)
+    {
+        return RequestNeighbor.getByVal(rc.getResponses()[1].getPayload()[0]);
+    }
+    else
+    {
+        return RequestNeighbor.UpdateFailed;
+    }
   }
 
   /*
@@ -1064,8 +1428,14 @@ public class ApplicationLayerImpl implements ApplicationLayer,
    */
   public int zwaveRFPowerLevelSet(int powerLevel)
   {
-    // TODO Auto-generated method stub
-    return 0;
+    DataPacket req = new DataPacket();
+    req.addPayload(powerLevel);
+    TXStatus rc = sessionLayer.requestWithResponse(DataFrame.CommandType.CmdZWaveRFPowerLevelSet, req);
+    if (rc != TXStatus.CompleteOk)
+    {
+        throw new ApplicationLayerException("CMD_ZWaveRF_POWER_LEVEL_SET");
+    }
+    return rc.getResponse().getPayload()[0];
   }
 
   /*
@@ -1077,8 +1447,11 @@ public class ApplicationLayerImpl implements ApplicationLayer,
    */
   public TXStatus zwaveSendData(int nodeId, int[] data, TXOption txOptions)
   {
-    // TODO Auto-generated method stub
-    return null;
+    if (data == null)
+    {
+        throw new NullPointerException("data");
+    }
+    return zwaveSendData(nodeId, data, txOptions, TIMEOUT);
   }
 
   /*
@@ -1091,8 +1464,25 @@ public class ApplicationLayerImpl implements ApplicationLayer,
   public TXStatus zwaveSendData(int nodeId, int[] data, TXOption txOptions,
       int timeout)
   {
-    // TODO Auto-generated method stub
-    return null;
+    if (data == null)
+    {
+        throw new NullPointerException("data");
+    }
+
+    DataPacket req = new DataPacket();
+    req.addPayload(nodeId);
+    req.addPayload(data.length);
+    req.addPayload(data);
+    req.addPayload(txOptions.get());
+    TXStatus rc = sessionLayer.requestWithMultipleResponses(DataFrame.CommandType.CmdZWaveSendData, req, 2, true, timeout);
+    if (rc == TXStatus.CompleteOk)
+    {
+        return TXStatus.getByVal(rc.getResponses()[1].getPayload()[0]);
+    }
+    else
+    {
+        return rc;
+    }
   }
 
   /*
@@ -1103,8 +1493,9 @@ public class ApplicationLayerImpl implements ApplicationLayer,
    */
   public void zwaveSendDataAbort()
   {
-    // TODO Auto-generated method stub
-
+    DataPacket req = new DataPacket();
+    TXStatus rc = sessionLayer.requestWithResponse(DataFrame.CommandType.CmdZWaveSendDataAbort, req, true);
+    if (rc != TXStatus.CompleteOk) throw new ApplicationLayerException("CMD_ZWaveSEND_DATA_ABORT");
   }
 
   /*
@@ -1116,8 +1507,7 @@ public class ApplicationLayerImpl implements ApplicationLayer,
    */
   public TXStatus zwaveSendDataMeta(int nodeId, int[] data, TXOption txOptions)
   {
-    // TODO Auto-generated method stub
-    return null;
+    return zwaveSendDataMeta(nodeId, data, txOptions, TIMEOUT);
   }
 
   /*
@@ -1130,23 +1520,50 @@ public class ApplicationLayerImpl implements ApplicationLayer,
   public TXStatus zwaveSendDataMeta(int nodeId, int[] data, TXOption txOptions,
       int timeout)
   {
-    // TODO Auto-generated method stub
-    return null;
+    if (data == null)
+    {
+        throw new NullPointerException("data");
+    }
+    DataPacket req = new DataPacket();
+    req.addPayload(nodeId);
+    req.addPayload(data.length);
+    req.addPayload(data);
+    req.addPayload(txOptions.get());
+    TXStatus rc = sessionLayer.requestWithMultipleResponses(DataFrame.CommandType.CmdZWaveSendDataMeta, req, 2, true, timeout);
+    if (rc != TXStatus.CompleteOk)
+    {
+        return rc;
+    }
+    return TXStatus.getByVal(rc.getResponses()[1].getPayload()[0]);
   }
 
-  /*
-   * (non-Javadoc)
-   * 
-   * @see
-   * net.gregrapp.jhouse.interfaces.zwave.ApplicationLayer#zwaveSendDataMulti
-   * (java.util.ArrayList, int[],
-   * net.gregrapp.jhouse.interfaces.zwave.Constants.TXOption)
+ 
+  /* (non-Javadoc)
+   * @see net.gregrapp.jhouse.interfaces.zwave.ApplicationLayer#zwaveSendDataMulti(java.util.List, int[], net.gregrapp.jhouse.interfaces.zwave.Constants.TXOption)
    */
-  public TXStatus zwaveSendDataMulti(ArrayList nodeIdList, int[] data,
-      TXOption txOptions)
+  public TXStatus zwaveSendDataMulti(List<Integer> nodeIdList, int[] data, TXOption txOptions)
   {
-    // TODO Auto-generated method stub
-    return null;
+    if (nodeIdList == null || data == null)
+    {
+        throw new NullPointerException("nodeIdList");
+    }
+    DataPacket[] res = new DataPacket[2];
+    DataPacket req = new DataPacket();
+
+    req.addPayload(nodeIdList.size());
+    req.addPayload(CollectionUtils.toIntArray(nodeIdList));
+    req.addPayload(data.length);
+    req.addPayload(data);
+    req.addPayload(txOptions.get());
+    TXStatus rc = sessionLayer.requestWithMultipleResponses(DataFrame.CommandType.CmdZWaveSendDataMulti, req, 2, true);
+    if (rc == TXStatus.CompleteOk)
+    {
+        return TXStatus.getByVal(rc.getResponses()[1].getPayload()[0]);
+    }
+    else
+    {
+        return rc;
+    }
   }
 
   /*
@@ -1158,8 +1575,18 @@ public class ApplicationLayerImpl implements ApplicationLayer,
    */
   public TXStatus zwaveSendNodeInformation(int destination, TXOption txOptions)
   {
-    // TODO Auto-generated method stub
-    return null;
+    DataPacket req = new DataPacket();
+    req.addPayload(destination);
+    req.addPayload(txOptions.get());
+    TXStatus rc = sessionLayer.requestWithResponse(DataFrame.CommandType.CmdZWaveSendNodeInformation, req, true);
+    if (rc != TXStatus.CompleteOk)
+    {
+        return TXStatus.getByVal(rc.getResponse().getPayload()[0]);
+    }
+    else
+    {
+        return rc;
+    }  
   }
 
   /*
@@ -1172,8 +1599,7 @@ public class ApplicationLayerImpl implements ApplicationLayer,
   public TXStatus zwaveSendSlaveData(int sourceId, int destinationId,
       int[] data, TXOption txOptions)
   {
-    // TODO Auto-generated method stub
-    return null;
+    return zwaveSendSlaveData(sourceId, destinationId, data, txOptions, TIMEOUT);
   }
 
   /*
@@ -1187,8 +1613,31 @@ public class ApplicationLayerImpl implements ApplicationLayer,
   public TXStatus zwaveSendSlaveData(int sourceId, int destinationId,
       int[] data, TXOption txOptions, int timeout)
   {
-    // TODO Auto-generated method stub
-    return null;
+    if (data == null)
+    {
+        throw new NullPointerException("data");
+    }
+    TXStatus rc;
+    if (libraryType.lib == Library.ControllerBridgeLib)
+    {
+        DataPacket req = new DataPacket();
+        req.addPayload(sourceId);
+        req.addPayload(destinationId);
+        req.addPayload(data.length);
+        req.addPayload(data);
+        req.addPayload(txOptions.get());
+        rc = sessionLayer.requestWithMultipleResponses(DataFrame.CommandType.CmdZWaveSendSlaveData, req, 2, true, timeout);
+        if (rc == TXStatus.CompleteOk)
+        {
+            return TXStatus.getByVal(rc.getResponses()[1].getPayload()[0]);
+        }
+    }
+    else
+    {
+      //rc = new TXStatus();
+      rc = null;
+    }
+    return rc;
   }
 
   /*
@@ -1201,8 +1650,7 @@ public class ApplicationLayerImpl implements ApplicationLayer,
   public TXStatus zwaveSendSlaveNodeInformation(int sourceId,
       int destinationId, TXOption txOptions)
   {
-    // TODO Auto-generated method stub
-    return null;
+    return zwaveSendSlaveNodeInformation(sourceId, destinationId, txOptions, 10000);
   }
 
   /*
@@ -1215,8 +1663,26 @@ public class ApplicationLayerImpl implements ApplicationLayer,
   public TXStatus zwaveSendSlaveNodeInformation(int sourceId,
       int destinationId, TXOption txOptions, int timeout)
   {
-    // TODO Auto-generated method stub
-    return null;
+    TXStatus rc;
+    if (libraryType.lib == Library.ControllerBridgeLib)
+    {
+        DataPacket req = new DataPacket();
+        req.addPayload(sourceId);
+        req.addPayload(destinationId);
+        req.addPayload(txOptions.get());
+
+        rc = sessionLayer.requestWithMultipleResponses(DataFrame.CommandType.CmdZWaveSendSlaveNodeInfo, req, 2, true, timeout);
+        if (rc == TXStatus.CompleteOk)
+        {
+            return TXStatus.getByVal(rc.getResponses()[1].getPayload()[0]);
+        }
+    }
+    else
+    {
+      //rc = new TXStatus();
+      rc = null;
+    }
+    return rc;
   }
 
   /*
@@ -1228,8 +1694,19 @@ public class ApplicationLayerImpl implements ApplicationLayer,
    */
   public TXStatus zwaveSendSucId(int nodeId, TXOption txOptions)
   {
-    // TODO Auto-generated method stub
-    return null;
+    DataPacket req = new DataPacket();
+    req.addPayload(nodeId);
+    req.addPayload(txOptions.get());
+    TXStatus rc = sessionLayer.requestWithMultipleResponses(DataFrame.CommandType.CmdZWaveSendSucId, req, 2, true, DEFAULT_TIMEOUT);
+
+    if ((rc == TXStatus.CompleteOk) && (rc.getResponses()[1].getLength() == 1))
+    {
+        return TXStatus.getByVal(rc.getResponses()[1].getPayload()[0]);
+    }
+    else
+    {
+        return rc;
+    }
   }
 
   /*
@@ -1240,7 +1717,6 @@ public class ApplicationLayerImpl implements ApplicationLayer,
    */
   public int[] zwaveSerialApiGetCapabilities()
   {
-    DataPacket res;
     DataPacket req = new DataPacket();
 
     TXStatus rc = sessionLayer.requestWithResponse(DataFrame.CommandType.CmdSerialApiGetCapabilities, req);
@@ -1269,8 +1745,16 @@ public class ApplicationLayerImpl implements ApplicationLayer,
    */
   public int[] zwaveSerialApiSetTimeout(int acknowledgeTimeout, int timeout)
   {
-    // TODO Auto-generated method stub
-    return null;
+    DataPacket req = new DataPacket();
+
+    req.addPayload(acknowledgeTimeout);
+    req.addPayload(timeout);
+    TXStatus rc = sessionLayer.requestWithResponse(DataFrame.CommandType.CmdSerialApiSetTimeouts, req);
+    if (rc != TXStatus.CompleteOk)
+        throw new ApplicationLayerException("CMD_SERIAL_API_SET_TIMEOUTS");
+    // Get the payload as it contains the old ackTimeout and byteTimeout which previously was present in the ZW module
+    int[] payload = rc.getResponse().getPayload();
+    return payload;
   }
 
   /*
@@ -1282,8 +1766,9 @@ public class ApplicationLayerImpl implements ApplicationLayer,
    */
   public void zwaveSerialApiSoftReset()
   {
-    // TODO Auto-generated method stub
-
+    DataPacket req = new DataPacket();
+    TXStatus rc = sessionLayer.requestWithResponse(DataFrame.CommandType.CmdSerialApiSoftReset, req, true);
+    if (rc != TXStatus.CompleteOk) throw new ApplicationLayerException("CMD_SERIAL_API_SOFT_RESET");
   }
 
   /*
@@ -1294,8 +1779,11 @@ public class ApplicationLayerImpl implements ApplicationLayer,
    */
   public void zwaveSetDefault()
   {
-    // TODO Auto-generated method stub
-
+    DataPacket req = new DataPacket();
+    TXStatus rc = sessionLayer.requestWithResponse(DataFrame.CommandType.CmdZWaveSetDefault, req, true);
+    if (rc != TXStatus.CompleteOk)
+        throw new ApplicationLayerException("CMD_ZWaveSET_DEFAULT");
+    enumerateNodes();
   }
 
   /*
@@ -1307,8 +1795,11 @@ public class ApplicationLayerImpl implements ApplicationLayer,
    */
   public boolean zwaveSetLearnMode(boolean learnMode)
   {
-    // TODO Auto-generated method stub
-    return false;
+    DataPacket req = new DataPacket();
+    req.addPayload(learnMode?1:0);
+    boolean rc = sessionLayer.requestWithNoResponse(DataFrame.CommandType.CmdZWaveSetLearnMode, req);
+    if (!rc) throw new ApplicationLayerException("CMD_ZWaveSET_LEARN_MODE");
+    return rc;
   }
 
   /*
@@ -1321,8 +1812,18 @@ public class ApplicationLayerImpl implements ApplicationLayer,
   public void zwaveSetNodeInformation(int listening, int generic, int specific,
       int[] nodeParameter)
   {
-    // TODO Auto-generated method stub
-
+    if (nodeParameter == null)
+    {
+        throw new NullPointerException("nodeParm");
+    }
+    DataPacket req = new DataPacket();
+    req.addPayload(listening);
+    req.addPayload(generic);
+    req.addPayload(specific);
+    req.addPayload(nodeParameter.length);
+    req.addPayload(nodeParameter);
+    boolean rc = sessionLayer.requestWithNoResponse(DataFrame.CommandType.CmdSerialApiApplNodeInformation, req);
+    if (!rc) throw new ApplicationLayerException("CMD_SERIAL_API_APPL_NODE_INFORMATION");
   }
 
   /*
@@ -1347,8 +1848,10 @@ public class ApplicationLayerImpl implements ApplicationLayer,
    */
   public void zwaveSetRFReceiveMode(int mode)
   {
-    // TODO Auto-generated method stub
-
+    DataPacket req = new DataPacket();
+    req.addPayload(mode);
+    boolean rc = sessionLayer.requestWithNoResponse(DataFrame.CommandType.CmdZWaveSetRFReceiveMode, req);
+    if (!rc) throw new ApplicationLayerException("CMD_ZWaveSET_RF_RECEIVE_MODE");
   }
 
   /*
@@ -1358,9 +1861,19 @@ public class ApplicationLayerImpl implements ApplicationLayer,
    * net.gregrapp.jhouse.interfaces.zwave.ApplicationLayer#zwaveSetSelfAsSuc
    * (boolean, int)
    */
-  public boolean zwaveSetSelfAsSuc(boolean sucState, int capabilities)
+  public boolean zwaveSetSelfAsSuc(boolean sucState, int capabilities, out int suc)
   {
-    // TODO Auto-generated method stub
+    suc = 0;
+    if (slaveController) return false;
+
+    zwaveMemoryGetId(out _controllerHomeId, out _controllerNodeId);
+    if (_controllerNodeId == 0) return false;
+
+    if (zwaveSetSucNodeId(_controllerNodeId, sucState, 0, capabilities))
+    {
+        suc = _controllerNodeId;
+        return true;
+    }
     return false;
   }
 
@@ -1373,7 +1886,18 @@ public class ApplicationLayerImpl implements ApplicationLayer,
    */
   public boolean zwaveSetSlaveLearnMode(int node, int mode)
   {
-    // TODO Auto-generated method stub
+    if (libraryType.lib == Library.ControllerBridgeLib)
+    {
+        DataPacket req = new DataPacket();
+        req.addPayload(node);
+        req.addPayload(mode);
+
+        TXStatus rc = sessionLayer.requestWithResponse(DataFrame.CommandType.CmdZWaveSetSlaveLearnMode, req, true);
+        if (rc == TXStatus.CompleteOk)
+        {
+            return (rc.getResponse().getPayload()[0] != 0);
+        }
+    }
     return false;
   }
 
@@ -1386,8 +1910,23 @@ public class ApplicationLayerImpl implements ApplicationLayer,
   public void zwaveSetSlaveNodeInformation(int nodeId, int listening,
       int generic, int specific, int[] nodeParameter)
   {
-    // TODO Auto-generated method stub
+    if (nodeParameter == null)
+    {
+        throw new NullPointerException("nodeParameter");
+    }
 
+    if (libraryType.lib == Library.ControllerBridgeLib)
+    {
+        DataPacket req = new DataPacket();
+        req.addPayload(nodeId);
+        req.addPayload(listening);
+        req.addPayload(generic);
+        req.addPayload(specific);
+        req.addPayload(nodeParameter.length);
+        req.addPayload(nodeParameter);
+        boolean rc = sessionLayer.requestWithNoResponse(DataFrame.CommandType.CmdSerialApiSlaveNodeInfo, req);
+        if (!rc) throw new ApplicationLayerException("CMD_SERIAL_API_APPL_SLAVE_NODE_INFO");
+    }
   }
 
   /*
@@ -1401,8 +1940,14 @@ public class ApplicationLayerImpl implements ApplicationLayer,
   public boolean zwaveSetSucNodeId(int nodeId, boolean sucState,
       TXOption txOptions, int capabilities)
   {
-    // TODO Auto-generated method stub
-    return false;
+    if (nodeId == _controllerNodeId)
+    {
+        return thisSUCNodeId(nodeId, sucState, txOptions, capabilities);
+    }
+    else
+    {
+        return otherSUCNodeId(nodeId, sucState, txOptions, capabilities);
+    }
   }
 
   /*
@@ -1413,8 +1958,10 @@ public class ApplicationLayerImpl implements ApplicationLayer,
    */
   public void zwaveStopLearnMode()
   {
-    // TODO Auto-generated method stub
-
+    DataPacket req = new DataPacket();
+    req.addPayload(Mode.NodeStop.get());
+    boolean rc = sessionLayer.requestWithNoResponse(DataFrame.CommandType.CmdZWaveAddNodeToNetwork, req);
+    if (!rc) throw new ApplicationLayerException("CMD_ZWaveADD_NODE_TO_NETWORK");
   }
 
   /*
@@ -1426,8 +1973,8 @@ public class ApplicationLayerImpl implements ApplicationLayer,
    */
   public boolean zwaveStoreHomeId(int homeId, int nodeId)
   {
-    // TODO Auto-generated method stub
-    return false;
+    DataPacket req = new DataPacket();
+    return sessionLayer.requestWithNoResponse(DataFrame.CommandType.CmdStoreHomeId, req);
   }
 
   /*
@@ -1439,8 +1986,29 @@ public class ApplicationLayerImpl implements ApplicationLayer,
    */
   public TXStatus zwaveStoreNodeInfo(int nodeId, Node nodeInfo)
   {
-    // TODO Auto-generated method stub
-    return null;
+    if (nodeInfo == null)
+    {
+        throw new NullPointerException("nodeInfo");
+    }
+    DataPacket req = new DataPacket();
+    req.addPayload(nodeId);
+    req.addPayload(nodeInfo.getCapability());
+    req.addPayload(nodeInfo.getSecurity());
+    req.addPayload(nodeInfo.getReserved());
+    req.addPayload(nodeInfo.getBasic());
+    req.addPayload(nodeInfo.getGeneric());
+    req.addPayload(nodeInfo.getSpecific());
+
+    TXStatus rc = sessionLayer.requestWithMultipleResponses(DataFrame.CommandType.CmdStoreNodeInfo, req, 2);
+
+    if (rc == TXStatus.CompleteOk)
+    {
+        return TXStatus.getByVal(rc.getResponses()[1].getPayload()[0]);
+    }
+    else
+    {
+        return rc;
+    }
   }
 
   /*
@@ -1452,8 +2020,27 @@ public class ApplicationLayerImpl implements ApplicationLayer,
    */
   public String zwaveSupportedSerialCmds()
   {
-    // TODO Auto-generated method stub
-    return null;
+    String retString = null;
+    /* ctrlCapabilities format:
+     *0 APPL_VERSION,1 APPL_REVISION,2 MAN_ID1, 3MAN_ID2, 
+     *4 PRODUCT_TYPE1, 5 PRODUCT_TYPE2, 6 PRODUCT_ID1,7 PRODUCT_ID2, 8 FUNCID_SUPPORTED...*/
+    if (serialCapabilityMask != null)
+    {
+        int i = 1;
+        while (i < serialCapabilityMask.getLength() * 8)
+        {
+            if (serialCapabilityMask.zwaveNodeMaskNodeIn(i))
+            {
+              DataFrame.CommandType ct = DataFrame.CommandType.getByVal(i);
+              if (ct != null)
+                retString += ct.toString() + ",";
+              else
+                retString += i + ",";
+            }
+            i++;
+        }
+    }
+    return retString;  
   }
 
   /*
@@ -1477,8 +2064,22 @@ public class ApplicationLayerImpl implements ApplicationLayer,
    */
   public VersionInfoType zwaveVersion()
   {
-    // TODO Auto-generated method stub
-    return null;
+    DataPacket req = new DataPacket();
+
+    TXStatus rc = sessionLayer.requestWithResponse(DataFrame.CommandType.CmdZWaveGetVersion, req);
+    if (rc != TXStatus.CompleteOk) return libraryType;// throw new ApplicationLayerException("CmdZWaveGetVersion");  
+
+    libraryType = new VersionInfoType();
+
+    int[] payload = rc.getResponse().getPayload();
+    libraryType.ver = new String(payload, 6, 6);
+    if (libraryType.ver.endsWith("\0"))
+    {
+        libraryType.ver = libraryType.ver.substring(0, libraryType.ver.length() - 1);
+    }
+    libraryType.lib = Library.getByVal(payload[12]);
+
+    return libraryType;
   }
   
   private static final int GET_INIT_DATA_FLAG_SLAVE_API = 0x01;
@@ -1578,7 +2179,7 @@ public class ApplicationLayerImpl implements ApplicationLayer,
   private boolean _requestNodeInfo = false;
   private boolean slaveApi;
   private boolean slaveController;
-  // private System.Threading.Timer waitForNodeInfoTimer;
+  private ScheduledExecutorService waitForNodeInfoExecutor;
   int chipType = 0; // Initialy we do not know which Chip is used and
   int chipRev = 0; // if chipType still is undefined after the
   int serialAPIver = 0;

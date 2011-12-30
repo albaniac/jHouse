@@ -26,6 +26,7 @@
 package net.gregrapp.jhouse.interfaces.zwave;
 
 import java.util.ArrayList;
+import java.util.List;
 
 import net.gregrapp.jhouse.interfaces.zwave.Constants.ChipType;
 import net.gregrapp.jhouse.interfaces.zwave.Constants.ControllerChangeMode;
@@ -93,6 +94,7 @@ public interface ApplicationLayer
   // <param name="nodeId">Node ID to get info for</param>
   // <returns></returns>
   Node zwaveGetNodeProtocolInfo(int nodeId);
+  Node zwaveGetNodeProtocolInfo(int nodeId, boolean checkIfVirtual);
   // <summary>
   // Gets the node capabilities from the ZWave.dll list (does not read from ZWave module)
   // </summary>
@@ -183,7 +185,7 @@ public interface ApplicationLayer
   // <param name="data">payload to send</param>
   // <param name="txOptions">if TRANSMIT_OPTION_ACK is specified each node gets a singlecast</param>
   // <returns>Transmit Result</returns>
-  TXStatus zwaveSendDataMulti(ArrayList nodeIdList, int[] data, TXOption txOptions);
+  TXStatus zwaveSendDataMulti(List<Integer> nodeIdList, int[] data, TXOption txOptions);
   // <summary>
   // Transmit a frame to the node ID specified. If 0xFF is specified the frame is broadcasted
   // </summary>
@@ -311,7 +313,11 @@ public interface ApplicationLayer
   // <returns>status</returns>
   NodeStatus zwaveRemoveNodeFromNetwork(Mode mode);
   // <summary>
-  // Only used during replication to transfer application information. See programming guide
+  // Only used during replication to transfer application information. See programming guide.
+  // Used when the controller is in replication mode. It sends the payload and 
+  // expects the receiver to respond with a command complete message 
+  // (ZWaveREPLICATION_COMMAND_COMPLETE). Messages sent using this command should always 
+  // be part of the Z-Wave controller replication command class.
   // </summary>
   // <param name="nodeId">destination</param>
   // <param name="data">payload</param>

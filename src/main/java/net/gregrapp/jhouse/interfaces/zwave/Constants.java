@@ -123,7 +123,14 @@ public class Constants
     {
       return this.value;
     }
-
+    
+    public static Library getByVal(int value)
+    {
+      for (Library l : Library.class.getEnumConstants())
+        if (l.get() == value)
+          return l;
+      return null;
+    }
   }
 
   // <summary>
@@ -230,6 +237,14 @@ public class Constants
     public int get()
     {
       return this.value;
+    }
+    
+    public static ChipType getByVal(int value)
+    {
+      for (ChipType t : ChipType.class.getEnumConstants())
+        if (t.get() == value)
+          return t;
+      return null;
     }
   }
 
@@ -569,6 +584,13 @@ public class Constants
       return this.value;
     }
 
+    public static RequestNeighbor getByVal(int value)
+    {
+      for (RequestNeighbor n : RequestNeighbor.class.getEnumConstants())
+        if (n.get() == value)
+          return n;
+      return null;
+    }
   }
 
   // <summary>
@@ -615,7 +637,14 @@ public class Constants
     {
       return this.value;
     }
-
+    
+    public static NodeFailedStatus getByVal(int value)
+    {
+      for (NodeFailedStatus s : NodeFailedStatus.class.getEnumConstants())
+        if (s.get() == value)
+          return s;
+      return null;
+    }
   }
 
   // <summary>
@@ -715,7 +744,14 @@ public class Constants
     {
       return this.value;
     }
-
+    
+    public static NodeFailedReturnValue getByVal(int value)
+    {
+      for (NodeFailedReturnValue v : NodeFailedReturnValue.class.getEnumConstants())
+        if (v.get() == value)
+          return v;
+      return null;
+    }
   }
 
   // <summary>
@@ -820,6 +856,13 @@ public class Constants
       return this.value;
     }
 
+    public static ZWaveRediscoveryNeededReturnValue getByVal(int value)
+    {
+      for (ZWaveRediscoveryNeededReturnValue v : ZWaveRediscoveryNeededReturnValue.class.getEnumConstants())
+        if (v.get() == value)
+          return v;
+      return null;
+    }
   }
 
   // <summary>
