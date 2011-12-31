@@ -34,27 +34,64 @@ import java.util.concurrent.TimeUnit;
 import net.gregrapp.jhouse.transports.Transport;
 import net.gregrapp.jhouse.transports.TransportException;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 /**
  * @author Greg Rapp
  * 
  */
 public class FrameLayerImpl implements FrameLayer
 {
+  private static final Logger logger = LoggerFactory
+      .getLogger(FrameLayerImpl.class);
 
-  private Transport transport;
-  private Thread receiveThread;
-  private FrameLayerAsyncCallback callbackHandler;
-  private boolean active;
-  private ScheduledExecutorService retransmissionTimeoutExecutor;
-  private Stack<TransmittedDataFrame> retransmissionStack = new Stack<TransmittedDataFrame>();
+  // / <summary>
+  // / The Data Frame received will be splitted up into the following states
+  // / </summary>
+  private enum FrameReceiveState
+  {
+    FRS_CHECKSUM(0x05), FRS_COMMAND(0x03), FRS_DATA(0x04), FRS_LENGTH(0x01), FRS_RX_TIMEOUT(
+        0x06), FRS_SOF_HUNT(0x00), FRS_TYPE(0x02);
+
+    private int value;
+
+    FrameReceiveState(int value)
+    {
+      this.value = value;
+    }
+
+    @SuppressWarnings("unused")
+    public int get()
+    {
+      return this.value;
+    }
+  }
+
+  private class TransmittedDataFrame
+  {
+    public DataFrame frame;
+
+    public int retries;
+
+    public TransmittedDataFrame(DataFrame frame)
+    {
+      this.frame = frame;
+    }
+  }
+
   private static final int ACK_WAIT_TIME = 2000; // How long in ms to wait for
-                                                 // an ack
-  private static final int MAX_RETRANSMISSION = 3;
-  private FrameReceiveState parserState;
-  private DataFrame currentDataFrame;
   private static final int MAX_FRAME_SIZE = 88;
+  // an ack
+  private static final int MAX_RETRANSMISSION = 3;
   private static final int MIN_FRAME_SIZE = 3;
-  private FrameStatistics stats;
+  private boolean active;
+  private FrameLayerAsyncCallback callbackHandler;
+  private DataFrame currentDataFrame;
+  private FrameReceiveState parserState;
+  private Thread receiveThread;
+  private Stack<TransmittedDataFrame> retransmissionStack = new Stack<TransmittedDataFrame>();
+  private ScheduledExecutorService retransmissionTimeoutExecutor;
 
   // private boolean disposed;
 
@@ -62,19 +99,16 @@ public class FrameLayerImpl implements FrameLayer
   // ResourceManager("ZWave.Properties.Resources",
   // Assembly.GetExecutingAssembly());
 
-  /*
-   * (non-Javadoc)
-   * 
-   * @see
-   * net.gregrapp.jhouse.interfaces.zwave.FrameLayer#open(net.gregrapp.jhouse
-   * .transports.Transport)
-   */
-  public void open(Transport transport)
+  private ScheduledFuture<?> retransmissionTimeoutExecutorFuture;
+
+  private FrameStatistics stats;
+
+  private Transport transport;
+
+  public FrameLayerImpl(Transport transport)
   {
-    if (transport == null)
-    {
-      throw new NullPointerException("transportLayer");
-    }
+    logger.info("Instantiating Zwave frame layer");
+    this.transport = transport;
 
     retransmissionStack = new Stack<TransmittedDataFrame>();
     this.transport = transport;
@@ -92,6 +126,7 @@ public class FrameLayerImpl implements FrameLayer
 
     active = true;
 
+    logger.debug("Creating receive thread");
     // Start the communication receive thread
     receiveThread = new Thread(new Runnable()
     {
@@ -101,157 +136,26 @@ public class FrameLayerImpl implements FrameLayer
       }
     });
     receiveThread.setPriority(Thread.MAX_PRIORITY);
+    logger.debug("Starting receive thread");
     receiveThread.start();
-    // //// wait for the thread to actually get spun up
+    // Wait for the thread to actually get spun up
     try
     {
-      this.wait();
-    } catch (InterruptedException e)
-    {
-      // TODO Auto-generated catch block
-      e.printStackTrace();
-    }
-  }
-
-  /*
-   * (non-Javadoc)
-   * 
-   * @see net.gregrapp.jhouse.interfaces.zwave.FrameLayer#close()
-   */
-  public void close()
-  {
-    active = false;
-    if (retransmissionTimeoutExecutor != null)
-      retransmissionTimeoutExecutor.shutdown();
-  }
-
-  /*
-   * (non-Javadoc)
-   * 
-   * @see
-   * net.gregrapp.jhouse.interfaces.zwave.FrameLayer#write(net.gregrapp.jhouse
-   * .interfaces.zwave.DataFrame)
-   */
-  public boolean write(DataFrame frame) throws FrameLayerException
-  {
-    try
-    {
-      // TODO Implement logging
-      // log.Write(resourceManager.GetString("Transmitted") + frame.ToString());
-      TransmittedDataFrame tdf = new TransmittedDataFrame(frame);
-      int bytesWritten = 0;
       synchronized (this)
       {
-        retransmissionStack.push(tdf);
-  
-        // Transmit the frame to the peer...
-        int[] data = frame.getFrameBuffer();
-        bytesWritten = transport.write(data);
-        stats.transmittedFrames++;
-        // Reset the retransmission timer...
-        resetRetransmissionTimeoutTimer();
-  
-        return bytesWritten == data.length;
+        logger.debug("Waiting for receive thread to start");
+        this.wait();
       }
-    } catch (TransportException e)
+    } catch (InterruptedException e)
     {
-      throw new FrameLayerException("Error in Transport: " + e.getLocalizedMessage());
-    }
-  }
-
-  /*
-   * (non-Javadoc)
-   * 
-   * @see
-   * net.gregrapp.jhouse.interfaces.zwave.FrameLayer#setCallbackHandler(net.
-   * gregrapp.jhouse.interfaces.zwave.FrameLayerAsyncCallback)
-   */
-  public void setCallbackHandler(FrameLayerAsyncCallback handler)
-  {
-    this.callbackHandler = handler;
-  }
-
-  /*
-   * (non-Javadoc)
-   * 
-   * @see net.gregrapp.jhouse.interfaces.zwave.FrameLayer#getStatistics()
-   */
-  public FrameStatistics getStatistics()
-  {
-    synchronized (stats)
-    {
-      return new FrameStatistics(stats);
-    }
-
-  }
-
-  /*
-   * (non-Javadoc)
-   * 
-   * @see net.gregrapp.jhouse.interfaces.zwave.FrameLayer#enableTracing(boolean)
-   */
-  public void enableTracing(boolean enable)
-  {
-    // TODO Auto-generated method stub
-  }
-
-  private class TransmittedDataFrame
-  {
-    public TransmittedDataFrame(DataFrame frame)
-    {
-      this.frame = frame;
-    }
-
-    public int retries;
-    public DataFrame frame;
-  }
-
-  private void retransmissionTimeOutCallbackHandler()
-  {
-    // TODO Implement logging
-    // log.Write(resourceManager.GetString("Retransmission"));
-    checkRetransmission(true);
-  }
-
-  private void transmitACK()
-  {
-    // TODO Implement logging
-    // log.Write(resourceManager.GetString("TransmitAcknowledge"));
-    try
-    {
-      transport.write(new int[] { (int) DataFrame.HeaderType.Acknowledge.get() });
-    } catch (TransportException e)
-    {
-      // TODO Auto-generated catch block
-      e.printStackTrace();
-    }
-    synchronized (stats)
-    {
-      stats.transmittedAcks++;
-    }
-  }
-
-  private void transmitNAK()
-  {
-    // TODO Implement logging
-    // log.Write(resourceManager.GetString("TransmitNoAcknowledge"));
-    try
-    {
-      transport.write(new int[] { (int) DataFrame.HeaderType.NotAcknowledged
-          .get() });
-    } catch (TransportException e)
-    {
-      // TODO Auto-generated catch block
-      e.printStackTrace();
-    }
-    synchronized (stats)
-    {
-      stats.transmittedNaks++;
+      logger.error("Error waiting for receive thread to start", e);
     }
   }
 
   private boolean checkRetransmission(boolean isRetry)
   {
+    logger.debug("{} frames awaiting retransmission", retransmissionStack.size());
+
     try
     {
       synchronized (this)
@@ -260,9 +164,9 @@ public class FrameLayerImpl implements FrameLayer
         {
           TransmittedDataFrame tdf = (TransmittedDataFrame) retransmissionStack
               .peek();
-          // TODO Implement logging
-          // log.Write(resourceManager.GetString("CheckRetransmission") +
-          // tdf.frame);
+
+          logger.debug("Retransmitting frame for command [{}]", tdf.frame.getCommand().toString());
+
           // Transmit the frame to the peer...
           transport.write(tdf.frame.getFrameBuffer());
           if (isRetry)
@@ -273,9 +177,10 @@ public class FrameLayerImpl implements FrameLayer
               stats.retransmittedFrames++;
             }
 
-            // Drop the frame if retried to many times
+            // Drop the frame if retried too many times
             if (++tdf.retries >= MAX_RETRANSMISSION)
             {
+              logger.warn("Retransmission limit reached, dropping frame for command [{}]", tdf.frame.getCommand().toString());
               retransmissionStack.pop();
               synchronized (stats)
               {
@@ -295,46 +200,97 @@ public class FrameLayerImpl implements FrameLayer
       } // lock
     } catch (Exception e)
     {
-      // TODO Implement logging
-      // log.Write(resourceManager.GetString("CheckRetransmissionException"));
-      // throw(e);
+       logger.error("Error during retransmittion operation", e);
     }
     return true;
   }
 
-  // / <summary>
-  // / The Data Frame received will be splitted up into the following states
-  // / </summary>
-  private enum FrameReceiveState
+  /*
+   * (non-Javadoc)
+   * 
+   * @see
+   * net.gregrapp.jhouse.interfaces.zwave.FrameLayer#open(net.gregrapp.jhouse
+   * .transports.Transport)
+   */
+  /*
+   * public void open(Transport transport) { if (transport == null) { throw new
+   * NullPointerException("transportLayer"); }
+   * 
+   * retransmissionStack = new Stack<TransmittedDataFrame>(); this.transport =
+   * transport;
+   * 
+   * this.parserState = FrameReceiveState.FRS_SOF_HUNT;
+   * 
+   * stats = new FrameStatistics();
+   * 
+   * // TimerCallback tc = new //
+   * TimerCallback(this.ReTransmissionTimeOutCallbackHandler); //
+   * this.retransmissionTimeoutTimer = new Timer(tc, this, //
+   * System.Threading.Timeout.Infinite, System.Threading.Timeout.Infinite);
+   * this.retransmissionTimeoutExecutor = Executors
+   * .newSingleThreadScheduledExecutor();
+   * 
+   * active = true;
+   * 
+   * // Start the communication receive thread receiveThread = new Thread(new
+   * Runnable() { public void run() { receiveThread(); } });
+   * receiveThread.setPriority(Thread.MAX_PRIORITY); receiveThread.start(); //
+   * //// wait for the thread to actually get spun up try { this.wait(); } catch
+   * (InterruptedException e) { // TODO Auto-generated catch block
+   * e.printStackTrace(); } }
+   */
+  /*
+   * (non-Javadoc)
+   * 
+   * @see net.gregrapp.jhouse.interfaces.zwave.FrameLayer#close()
+   */
+  public void close()
   {
-    FRS_SOF_HUNT(0x00), FRS_LENGTH(0x01), FRS_TYPE(0x02), FRS_COMMAND(0x03), FRS_DATA(
-        0x04), FRS_CHECKSUM(0x05), FRS_RX_TIMEOUT(0x06);
-
-    private int value;
-
-    FrameReceiveState(int value)
-    {
-      this.value = value;
-    }
-
-    @SuppressWarnings("unused")
-    public int get()
-    {
-      return this.value;
-    }
+    active = false;
+    if (retransmissionTimeoutExecutor != null)
+      retransmissionTimeoutExecutor.shutdown();
   }
 
+  /*
+   * (non-Javadoc)
+   * 
+   * @see net.gregrapp.jhouse.interfaces.zwave.FrameLayer#enableTracing(boolean)
+   */
+  public void enableTracing(boolean enable)
+  {
+    // TODO Auto-generated method stub
+  }
+
+  /*
+   * (non-Javadoc)
+   * 
+   * @see net.gregrapp.jhouse.interfaces.zwave.FrameLayer#getStatistics()
+   */
+  public FrameStatistics getStatistics()
+  {
+    logger.debug("Getting frame layer statistics");
+    synchronized (stats)
+    {
+      return new FrameStatistics(stats);
+    }
+
+  }
+  
   private boolean parseRawData(int buffer)
   {
+    logger.trace("Parsing raw frame byte [{}]", String.format("%#04x", buffer));
     if (parserState == FrameReceiveState.FRS_SOF_HUNT)
     {
       if (DataFrame.HeaderType.StartOfFrame == DataFrame.HeaderType
           .getByVal(buffer))
       {
+        logger.debug("SOF byte received");
         parserState = FrameReceiveState.FRS_LENGTH;
       } else if (DataFrame.HeaderType.Acknowledge == DataFrame.HeaderType
           .getByVal(buffer))
       {
+        logger.debug("ACK byte received");
+
         // Acknowledge received from peer
         // Remove the last frame from the retransmission stack
         synchronized (stats)
@@ -346,27 +302,24 @@ public class FrameLayerImpl implements FrameLayer
           if (retransmissionStack.size() > 0)
             retransmissionStack.pop();
         }
-        // TODO Implement logging
-        // log.Write(resourceManager.GetString("ReceivedAcknowledge"));
       } else if (DataFrame.HeaderType.NotAcknowledged == DataFrame.HeaderType
           .getByVal(buffer))
       {
+        logger.debug("NAK received");
         // Not Acknowledge received from peer
         synchronized (stats)
         {
           stats.receivedNaks++;
         }
         checkRetransmission(true);
-        // TODO Implement logging
-        // log.Write(resourceManager.GetString("ReceivedNoAcknowledge"));
       } else if (DataFrame.HeaderType.Can == DataFrame.HeaderType
           .getByVal(buffer))
       {
+        logger.debug("CAN received");
+        
         // Do noting... just wait for the retransmission timer to kick-in
         // CheckRetransmission(false);
         // CAN frame received - peer dropped a data frame transmitted by us
-        // TODO Implement logging
-        // log.Write(resourceManager.GetString("ReceivedCancel"));
         synchronized (stats)
         {
           stats.droppedFrames++;
@@ -376,9 +329,12 @@ public class FrameLayerImpl implements FrameLayer
     {
       if (buffer < MIN_FRAME_SIZE || buffer > MAX_FRAME_SIZE)
       {
+        logger.warn("Frame length byte is not valid, aborting frame");
         parserState = FrameReceiveState.FRS_SOF_HUNT;
       } else
       {
+        logger.debug("Frame length byte received [{}]", buffer);
+
         currentDataFrame = new DataFrame((int) (buffer - 3)); // Payload size is
                                                               // excluding len,
                                                               // type & cmd
@@ -391,13 +347,16 @@ public class FrameLayerImpl implements FrameLayer
       if (currentDataFrame.getFrameType() == DataFrame.FrameType.Request
           || currentDataFrame.getFrameType() == DataFrame.FrameType.Response)
       {
+        logger.debug("Frame type byte received [{}]", currentDataFrame.getFrameType().toString());
         parserState = FrameReceiveState.FRS_COMMAND;
       } else
       {
+        logger.warn("Invalid frame type byte received [{}]", String.format("%#04x", buffer));
         parserState = FrameReceiveState.FRS_SOF_HUNT;
       }
     } else if (parserState == FrameReceiveState.FRS_COMMAND)
     {
+      logger.debug("Command byte received [{}]", DataFrame.CommandType.getByVal(buffer).toString());
       currentDataFrame.setCommand(DataFrame.CommandType.getByVal(buffer));
       if (currentDataFrame.isPayloadFull())
         parserState = FrameReceiveState.FRS_CHECKSUM;
@@ -405,16 +364,21 @@ public class FrameLayerImpl implements FrameLayer
         parserState = FrameReceiveState.FRS_DATA;
     } else if (parserState == FrameReceiveState.FRS_DATA)
     {
+      logger.warn("Payload byte received [{}]", String.format("%#04x", buffer));
       if (!currentDataFrame.addPayload(buffer))
+      {
+        logger.warn("Error parsing payload byte [{}]", String.format("%#04x", buffer));
         parserState = FrameReceiveState.FRS_SOF_HUNT;
+      }
       else if (currentDataFrame.isPayloadFull())
         parserState = FrameReceiveState.FRS_CHECKSUM;
     } else if (parserState == FrameReceiveState.FRS_CHECKSUM)
     {
+      logger.debug("Checksum byte received [{}]", String.format("%#04x", buffer));
+
       if (currentDataFrame.isChecksumValid(buffer))
       {
-        // TODO Implement logging
-        // log.Write(resourceManager.GetString("Received") + currentDataFrame);
+        logger.debug("Checksum is valid");
         // Frame received successfully -> Send acknowledge (ACK)
         transmitACK();
 
@@ -428,6 +392,7 @@ public class FrameLayerImpl implements FrameLayer
         checkRetransmission(true);
       } else
       {
+        logger.warn("Invalid checksum");
         // Frame receive failed -> Send NAK
         transmitNAK();
       }
@@ -435,9 +400,11 @@ public class FrameLayerImpl implements FrameLayer
       parserState = FrameReceiveState.FRS_SOF_HUNT;
     } else if (parserState == FrameReceiveState.FRS_RX_TIMEOUT)
     {
+      logger.warn("RX timeout, aborting frame parsing [{}]", String.format("%#04x", buffer));
       parserState = FrameReceiveState.FRS_SOF_HUNT;
     } else
     {
+      logger.warn("Unknown frame parser state, aborting [{}]", String.format("%#04x", buffer));
       parserState = FrameReceiveState.FRS_SOF_HUNT;
     }
 
@@ -446,34 +413,33 @@ public class FrameLayerImpl implements FrameLayer
 
   private void receiveThread()
   {
+    logger.info("Receiver thread started");
     try
     {
-      this.notify();
+      synchronized (this)
+      {
+        this.notify();
+      }
       int[] buffer = new int[100];
 
+      logger.debug("Starting receiver thread loop");
       while (active)
       {
         int bytesRead = transport.read(buffer);
         for (int i = 0; i < bytesRead; i++)
-          if (!parseRawData(buffer[i]))
+          if (!parseRawData(0xFF & buffer[i]))
             break;
       }
     } catch (Exception e)
     {
-      // TODO Implement logging
-      // log.Write(resourceManager.GetString("ReceiveThreadException"));
-    } finally
-    {
-      // TODO Implement logging
-      // log.Write(resourceManager.GetString("ReceiveThreadId") +
-      // Thread.CurrentThread.GetHashCode());
-    }
+      logger.error("Error in receive thread", e);
+    } 
   }
-
-  private ScheduledFuture<?> retransmissionTimeoutExecutorFuture;
 
   private void resetRetransmissionTimeoutTimer()
   {
+    logger.debug("Resetting retransmission timeout timer");
+    
     if (retransmissionTimeoutExecutorFuture != null)
       retransmissionTimeoutExecutorFuture.cancel(false);
 
@@ -485,6 +451,94 @@ public class FrameLayerImpl implements FrameLayer
             retransmissionTimeOutCallbackHandler();
           }
         }, ACK_WAIT_TIME, TimeUnit.MILLISECONDS);
+  }
+
+  private void retransmissionTimeOutCallbackHandler()
+  {
+    logger.debug("Retransmission callback handler called");
+    checkRetransmission(true);
+  }
+
+  /*
+   * (non-Javadoc)
+   * 
+   * @see
+   * net.gregrapp.jhouse.interfaces.zwave.FrameLayer#setCallbackHandler(net.
+   * gregrapp.jhouse.interfaces.zwave.FrameLayerAsyncCallback)
+   */
+  public void setCallbackHandler(FrameLayerAsyncCallback handler)
+  {
+    this.callbackHandler = handler;
+  }
+
+  private void transmitACK()
+  {
+    logger.debug("Transmitting ACK");
+    try
+    {
+      transport
+          .write(new int[] { (int) DataFrame.HeaderType.Acknowledge.get() });
+    } catch (TransportException e)
+    {
+      logger.error("Error transmitting ACK", e);
+    }
+    synchronized (stats)
+    {
+      stats.transmittedAcks++;
+    }
+  }
+
+  private void transmitNAK()
+  {
+    logger.debug("Transmitting NAK");
+    
+    try
+    {
+      transport.write(new int[] { (int) DataFrame.HeaderType.NotAcknowledged
+          .get() });
+    } catch (TransportException e)
+    {
+      logger.error("Error transmitting NAK");
+    }
+    synchronized (stats)
+    {
+      stats.transmittedNaks++;
+    }
+  }
+
+  /*
+   * (non-Javadoc)
+   * 
+   * @see
+   * net.gregrapp.jhouse.interfaces.zwave.FrameLayer#write(net.gregrapp.jhouse
+   * .interfaces.zwave.DataFrame)
+   */
+  public boolean write(DataFrame frame) throws FrameLayerException
+  {
+    try
+    {
+      logger.debug("Writting frame to transport");
+      TransmittedDataFrame tdf = new TransmittedDataFrame(frame);
+      int bytesWritten = 0;
+      synchronized (this)
+      {
+        retransmissionStack.push(tdf);
+
+        // Transmit the frame to the peer...
+        int[] data = frame.getFrameBuffer();
+        bytesWritten = transport.write(data);
+        logger.debug("{} bytes written to transport", bytesWritten);
+        stats.transmittedFrames++;
+        // Reset the retransmission timer...
+        resetRetransmissionTimeoutTimer();
+
+        return bytesWritten == data.length;
+      }
+    } catch (TransportException e)
+    {
+      throw new FrameLayerException("Error in Transport: "
+          + e.getLocalizedMessage());
+    }
   }
 
 }

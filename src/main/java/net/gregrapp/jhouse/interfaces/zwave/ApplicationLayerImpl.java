@@ -703,7 +703,18 @@ public class ApplicationLayerImpl implements ApplicationLayer,
         }
       } else if (nodeStatus == NodeStatus.Done)
       {
-        addedNode = zwaveGetNodeProtocolInfo(nid);
+        try
+        {
+          addedNode = zwaveGetNodeProtocolInfo(nid);
+        } catch (FrameLayerException e)
+        {
+          // TODO Auto-generated catch block
+          e.printStackTrace();
+        } catch (ApplicationLayerException e)
+        {
+          // TODO Auto-generated catch block
+          e.printStackTrace();
+        }
         // AddNodeEventArgs e = new AddNodeEventArgs(addedNode, cmd,
         // nodeStatus);
         // if (AddNodeEvent != null) AddNodeEvent(this, e);
@@ -774,13 +785,35 @@ public class ApplicationLayerImpl implements ApplicationLayer,
 
       else if (appCtrlUpdateStatus == AppCtrlUpdateStatus.ADD_DONE)
       {
-        Node node;
+        Node node = null;
         if (libraryType.lib == Library.ControllerBridgeLib)
         {
-          node = zwaveGetNodeProtocolInfo(nid, true);
+          try
+          {
+            node = zwaveGetNodeProtocolInfo(nid, true);
+          } catch (FrameLayerException e)
+          {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+          } catch (ApplicationLayerException e)
+          {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+          }
         } else
         {
-          node = zwaveGetNodeProtocolInfo(nid);
+          try
+          {
+            node = zwaveGetNodeProtocolInfo(nid);
+          } catch (FrameLayerException e)
+          {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+          } catch (ApplicationLayerException e)
+          {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+          }
         }
         if (payload.length - 6 > 0)
         {
@@ -844,7 +877,18 @@ public class ApplicationLayerImpl implements ApplicationLayer,
         nodeTable.remove(nid);
 
       else if (learnMode == LearnMode.Done)
-        enumerateNodes();
+        try
+        {
+          enumerateNodes();
+        } catch (FrameLayerException e)
+        {
+          // TODO Auto-generated catch block
+          e.printStackTrace();
+        } catch (ApplicationLayerException e)
+        {
+          // TODO Auto-generated catch block
+          e.printStackTrace();
+        }
       // UpdateEventArgs e = new UpdateEventArgs(payload[1], payload[2]);
       // if (UpdateEvent != null) UpdateEvent(this, e);
 
@@ -860,7 +904,19 @@ public class ApplicationLayerImpl implements ApplicationLayer,
         nodeRemove(orgId);
       } else
       {
-        Node node = zwaveGetNodeProtocolInfo(newId, true);
+        Node node = null;
+        try
+        {
+          node = zwaveGetNodeProtocolInfo(newId, true);
+        } catch (FrameLayerException e)
+        {
+          // TODO Auto-generated catch block
+          e.printStackTrace();
+        } catch (ApplicationLayerException e)
+        {
+          // TODO Auto-generated catch block
+          e.printStackTrace();
+        }
         /* We know the node is virtual... */
         node.setVirtual(true);
         if (payload.length - 6 > 0)
@@ -1277,6 +1333,12 @@ public class ApplicationLayerImpl implements ApplicationLayer,
     nodeTable.remove(id);
   }
 
+  public ApplicationLayerImpl(SessionLayer sessionLayer)
+  {
+    this.sessionLayer = sessionLayer;
+    sessionLayer.setCallbackHandler(this);
+  }
+  
   /*
    * (non-Javadoc)
    * 
@@ -1284,6 +1346,7 @@ public class ApplicationLayerImpl implements ApplicationLayer,
    * net.gregrapp.jhouse.interfaces.zwave.ApplicationLayer#open(java.lang.String
    * , java.lang.String)
    */
+  /*
   public void open(String transportLayerLibrary, String connectionString)
   {
     // transportLayer = (ITransportLayer)FindInterface(a, "ITransportLayer");
@@ -1292,7 +1355,8 @@ public class ApplicationLayerImpl implements ApplicationLayer,
     sessionLayer.setCallbackHandler(this);
     sessionLayer.open(frameLayer, transport);
   }
-
+  */
+  
   private boolean otherSUCNodeId(int nodeId, boolean sucState,
       TXOption txOptions, int capabilities) throws FrameLayerException
   {

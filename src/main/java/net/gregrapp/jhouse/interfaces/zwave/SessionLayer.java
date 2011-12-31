@@ -26,7 +26,6 @@
 package net.gregrapp.jhouse.interfaces.zwave;
 
 import net.gregrapp.jhouse.interfaces.zwave.Constants.TXStatus;
-import net.gregrapp.jhouse.transports.Transport;
 
 /**
  * @author Greg Rapp
@@ -45,7 +44,8 @@ public interface SessionLayer
   // <param name="frameLayer"></param>
   // <param name="transportLayer"></param>
   // <param name="connectionString"></param>
-  void open(FrameLayer frameLayer, Transport transport);
+  //void open(FrameLayer frameLayer, Transport transport);
+  
   // <summary>
   // 
   // </summary>

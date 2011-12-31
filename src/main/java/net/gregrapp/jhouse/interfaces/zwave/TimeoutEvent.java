@@ -83,12 +83,18 @@ class TimeoutEvent
 
   public void set()
   {
-    this.notify();
+    synchronized (this)
+    {
+      this.notify();
+    }
   }
 
   public void timerCallbackHandler()
   {
     timertimeout = true;
-    this.notify();
+    synchronized (this)
+    {
+      this.notify();      
+    }
   }
 }

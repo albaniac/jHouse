@@ -167,7 +167,7 @@ public interface ApplicationLayer
   // </summary>
   // <param name="transportLayerLibrary">Name of transportLayer</param>
   // <param name="connectionString">String used to pass connection information to transportLayer</param>
-  void open(String transportLayerLibrary, String connectionString);
+  //void open(String transportLayerLibrary, String connectionString);
   // <summary>
   // Enable Add node function
   // </summary>

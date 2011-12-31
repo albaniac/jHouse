@@ -25,8 +25,6 @@
 
 package net.gregrapp.jhouse.interfaces.zwave;
 
-import net.gregrapp.jhouse.transports.Transport;
-
 /**
  * @author Greg Rapp
  *
@@ -39,7 +37,7 @@ public interface FrameLayer
   // <summary>
   // 
   // </summary>
-  void open(Transport transport);
+  //void open(Transport transport);
   // <summary>
   // 
   // </summary>

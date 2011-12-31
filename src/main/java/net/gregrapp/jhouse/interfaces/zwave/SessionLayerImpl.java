@@ -156,7 +156,7 @@ public class SessionLayerImpl implements SessionLayer, FrameLayerAsyncCallback
    * net.gregrapp.jhouse.interfaces.zwave.SessionLayer#open(net.gregrapp.jhouse
    * .interfaces.zwave.FrameLayer, net.gregrapp.jhouse.transports.Transport)
    */
-  public void open(FrameLayer frameLayer, Transport transport)
+/*  public void open(FrameLayer frameLayer, Transport transport)
   {
     if (frameLayer == null)
     {
@@ -165,6 +165,14 @@ public class SessionLayerImpl implements SessionLayer, FrameLayerAsyncCallback
     this.sequenceNumber = MIN_SEQUENCE_NUMBER;
     this.frameLayer = frameLayer;
     frameLayer.open(transport);
+    frameLayer.setCallbackHandler(this);
+    queue = new DataPacketQueue();
+    stats = new SessionStatistics();
+  }
+  */
+  public SessionLayerImpl(FrameLayer frameLayer)
+  {
+    this.frameLayer = frameLayer;
     frameLayer.setCallbackHandler(this);
     queue = new DataPacketQueue();
     stats = new SessionStatistics();
