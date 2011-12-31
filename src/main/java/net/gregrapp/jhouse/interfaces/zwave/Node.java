@@ -269,7 +269,7 @@ public class Node
   @Override
   public String toString()
   {
-    return "Node. Id: " + id + " Type: " + basic + " Cap: " + capability
+    return "NodeId: " + id + " Type: " + basic + " Cap: " + capability
         + " Sec: " + security + " Res: " + reserved;
   }
 

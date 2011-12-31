@@ -59,10 +59,6 @@ public interface ApplicationLayer
   ChipType chipType();
 
   // <summary>
-  // Close the connection to the transportLayerLibrary
-  // </summary>
-  void close();
-  // <summary>
   // Update the capabilities and return a list of nodes as read from the ZWave module
   // </summary>
   // <returns>List of nodes</returns>
@@ -162,12 +158,7 @@ public interface ApplicationLayer
   // <param name="CommandId">id number to check</param>
   // <returns>true if supported, false if not</returns>
   boolean isSupportedSerialCmd(int CommandId);
-  // <summary>
-  // Configure and connect the Applicationlayer to a ZWave module
-  // </summary>
-  // <param name="transportLayerLibrary">Name of transportLayer</param>
-  // <param name="connectionString">String used to pass connection information to transportLayer</param>
-  //void open(String transportLayerLibrary, String connectionString);
+
   // <summary>
   // Enable Add node function
   // </summary>
@@ -590,5 +581,5 @@ public interface ApplicationLayer
   // Returns the library type and version used on the ZWaveModule
   // </summary>
   // <returns>Type and version</returns>
-  VersionInfoType zwaveVersion() throws FrameLayerException;
+  public VersionInfoType getZwaveVersion() throws FrameLayerException;
 }

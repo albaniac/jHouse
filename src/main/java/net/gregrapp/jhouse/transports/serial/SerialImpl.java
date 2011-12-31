@@ -19,9 +19,9 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import net.gregrapp.jhosue.utils.ArrayUtils;
 import net.gregrapp.jhouse.transports.AbstractTransport;
 import net.gregrapp.jhouse.transports.TransportException;
+import net.gregrapp.jhouse.utils.ArrayUtils;
 
 /**
  * @author Greg Rapp
@@ -53,8 +53,6 @@ public class SerialImpl extends AbstractTransport
     logger.debug("Serial port set to {}", this.serialPort);
     this.serialBaud = Integer.valueOf(this.config.get(1)).intValue();
     logger.debug("Serial baud set to {}", this.serialBaud);
-
-    init();
   }
 
   /*
@@ -94,9 +92,9 @@ public class SerialImpl extends AbstractTransport
    * 
    * @see net.gregrapp.jhouse.transports.Transport#init()
    */
-  public void init()
+  public void init() throws TransportException
   {
-    logger.info("Initialzing transport {}", this.getClass().getName());
+    logger.info("Initialzing instance of transport {}", this.getClass().getName());
     CommPort commPort = null;
     try
     {
@@ -105,12 +103,10 @@ public class SerialImpl extends AbstractTransport
       commPort = portIdentifier.open(this.getClass().getName(), 2000);
     } catch (NoSuchPortException e)
     {
-      // TODO Auto-generated catch block
-      e.printStackTrace();
+      throw new TransportException("Port not found", e);
     } catch (PortInUseException e)
     {
-      // TODO Auto-generated catch block
-      e.printStackTrace();
+      throw new TransportException("Port already in use", e);
     }
 
     if (commPort instanceof SerialPort)
@@ -125,12 +121,10 @@ public class SerialImpl extends AbstractTransport
         this.out = serialPort.getOutputStream();
       } catch (UnsupportedCommOperationException e)
       {
-        // TODO Auto-generated catch block
-        e.printStackTrace();
+        throw new TransportException("Error initializing transport", e);
       } catch (IOException e)
       {
-        // TODO Auto-generated catch block
-        e.printStackTrace();
+        throw new TransportException("Error initializing transport", e);
       }
     }
   }

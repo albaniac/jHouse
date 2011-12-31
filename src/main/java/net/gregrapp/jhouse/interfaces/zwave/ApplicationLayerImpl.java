@@ -31,7 +31,9 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
-import net.gregrapp.jhosue.utils.CollectionUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import net.gregrapp.jhouse.interfaces.zwave.Constants.ChipType;
 import net.gregrapp.jhouse.interfaces.zwave.Constants.ControllerChangeMode;
 import net.gregrapp.jhouse.interfaces.zwave.Constants.CreateNewPrimaryControllerMode;
@@ -48,6 +50,8 @@ import net.gregrapp.jhouse.interfaces.zwave.Constants.TXStatus;
 import net.gregrapp.jhouse.interfaces.zwave.Constants.ZWaveRediscoveryNeededReturnValue;
 import net.gregrapp.jhouse.interfaces.zwave.DataFrame.CommandType;
 import net.gregrapp.jhouse.transports.Transport;
+import net.gregrapp.jhouse.utils.ArrayUtils;
+import net.gregrapp.jhouse.utils.CollectionUtils;
 
 /**
  * @author Greg Rapp
@@ -56,6 +60,9 @@ import net.gregrapp.jhouse.transports.Transport;
 public class ApplicationLayerImpl implements ApplicationLayer,
     SessionLayerAsyncCallback
 {
+  private static final Logger logger = LoggerFactory
+      .getLogger(ApplicationLayerImpl.class);
+  
   // ApplicationControllerUpdate status
   private enum AppCtrlUpdateStatus
   {
@@ -634,19 +641,6 @@ public class ApplicationLayerImpl implements ApplicationLayer,
   /*
    * (non-Javadoc)
    * 
-   * @see net.gregrapp.jhouse.interfaces.zwave.ApplicationLayer#close()
-   */
-  public void close()
-  {
-    if (sessionLayer != null)
-    {
-      sessionLayer.close();
-    }
-  }
-
-  /*
-   * (non-Javadoc)
-   * 
    * @see net.gregrapp.jhouse.interfaces.zwave.SessionLayerAsyncCallback#
    * dataPacketReceived
    * (net.gregrapp.jhouse.interfaces.zwave.DataFrame.CommandType,
@@ -654,8 +648,11 @@ public class ApplicationLayerImpl implements ApplicationLayer,
    */
   public void dataPacketReceived(CommandType cmd, DataPacket packet)
   {
+    logger.debug("Data packet received for command [{}]", cmd.toString());
+    
     if (packet == null)
     {
+      logger.warn("Null data packet received");
       throw new NullPointerException("packet");
     }
 
@@ -679,6 +676,7 @@ public class ApplicationLayerImpl implements ApplicationLayer,
       // FuncID|status|nodeId|len|basic|generic|specific|data[0]|data[1],data[2]..data[len-7]....
       int nid = payload[2];
       NodeStatus nodeStatus = NodeStatus.getByVal(payload[1]);
+      logger.debug("Node [{}] status is [{}]", nid, nodeStatus.toString());
       if (nodeStatus == NodeStatus.AddingRemovingSlave
           || nodeStatus == NodeStatus.AddingRemovingController)
       { // ZWNode(byte id , byte capability, byte security, byte reserved, byte
@@ -689,6 +687,7 @@ public class ApplicationLayerImpl implements ApplicationLayer,
           {
             addedNode = new Node(nid, 0, 0, 0, payload[4], payload[5],
                 payload[6]);
+            logger.info("Node added: {}", addedNode);
             if ((payload.length - 7) > 0)
             {
               int[] supportedCmdClasses = new int[payload.length - 7];
@@ -696,6 +695,7 @@ public class ApplicationLayerImpl implements ApplicationLayer,
               {
                 supportedCmdClasses[i] = payload[i + 7];
               }
+              logger.debug("Supported command classes: {}", ArrayUtils.toHexStringArray(supportedCmdClasses));
               addedNode.setSupportedCmdClasses(supportedCmdClasses);
             }
             nodeTable.add(addedNode);
@@ -703,17 +703,16 @@ public class ApplicationLayerImpl implements ApplicationLayer,
         }
       } else if (nodeStatus == NodeStatus.Done)
       {
+        logger.debug("Node [{}] status is [{}]", nid, nodeStatus);
         try
         {
           addedNode = zwaveGetNodeProtocolInfo(nid);
         } catch (FrameLayerException e)
         {
-          // TODO Auto-generated catch block
-          e.printStackTrace();
+          logger.warn("Error getting node protocol info", e);
         } catch (ApplicationLayerException e)
         {
-          // TODO Auto-generated catch block
-          e.printStackTrace();
+          logger.warn("Error getting node protocol info", e);
         }
         // AddNodeEventArgs e = new AddNodeEventArgs(addedNode, cmd,
         // nodeStatus);
@@ -722,6 +721,7 @@ public class ApplicationLayerImpl implements ApplicationLayer,
 
       else if (nodeStatus == NodeStatus.Failed)
       {
+        logger.warn("Node [{}] status is [{}]", nid, nodeStatus);
         nodeTable.remove(nid);
         // AddNodeEventArgs e = new AddNodeEventArgs(addedNode, cmd,
         // nodeStatus);
@@ -730,6 +730,7 @@ public class ApplicationLayerImpl implements ApplicationLayer,
 
       else if (nodeStatus == NodeStatus.ProtocolDone)
       {
+        logger.debug("Node [{}] status is [{}]", nid, nodeStatus);
         // AddNodeEventArgs e = new AddNodeEventArgs(addedNode, cmd,
         // nodeStatus);
         // if (AddNodeEvent != null) AddNodeEvent(this, e);
@@ -745,9 +746,11 @@ public class ApplicationLayerImpl implements ApplicationLayer,
           || nodeStatus == NodeStatus.LearnReady
           || nodeStatus == NodeStatus.NodeFound)
       {
+        logger.debug("Node status is [{}]", nodeStatus);
       } else if (nodeStatus == NodeStatus.Done)
       {
         int nid = payload[2];
+        logger.debug("Node [{}] status is [{}]", nid, nodeStatus);
         if (nodeTable.contains(nid))
         {
           removedNode = nodeTable.get(nid);
@@ -759,6 +762,7 @@ public class ApplicationLayerImpl implements ApplicationLayer,
 
       else if (nodeStatus == NodeStatus.Failed)
       {
+        logger.warn("Node status is [{}]", nodeStatus);
         // RemoveNodeEventArgs e = new RemoveNodeEventArgs(removedNode, cmd);
         // if (RemoveNodeEvent != null) RemoveNodeEvent(this, e);
       }
@@ -776,7 +780,7 @@ public class ApplicationLayerImpl implements ApplicationLayer,
       {
         if (nodeTable.contains(nid))
         {
-          Node node = nodeTable.get(nid);
+          //Node node = nodeTable.get(nid);
           nodeTable.remove(nid);
           // RemoveNodeEventArgs e = new RemoveNodeEventArgs(node, cmd);
           // if (RemoveNodeEvent != null) RemoveNodeEvent(this, e);
@@ -786,7 +790,7 @@ public class ApplicationLayerImpl implements ApplicationLayer,
       else if (appCtrlUpdateStatus == AppCtrlUpdateStatus.ADD_DONE)
       {
         Node node = null;
-        if (libraryType.lib == Library.ControllerBridgeLib)
+        if (libraryType.library == Library.ControllerBridgeLib)
         {
           try
           {
@@ -1073,7 +1077,7 @@ public class ApplicationLayerImpl implements ApplicationLayer,
    */
   public Library getLibraryType()
   {
-    return libraryType.lib;
+    return libraryType.library;
   }
 
   /*
@@ -1084,7 +1088,7 @@ public class ApplicationLayerImpl implements ApplicationLayer,
    */
   public String getLibraryVersion()
   {
-    return libraryType.ver;
+    return libraryType.version;
   }
 
   /*
@@ -1659,7 +1663,7 @@ public class ApplicationLayerImpl implements ApplicationLayer,
     TXStatus rc = sessionLayer.requestWithResponse(
         DataFrame.CommandType.CmdZWaveGetNodeProtocolInfo, req);
     if (rc != TXStatus.CompleteOk)
-      throw new ApplicationLayerException("CMD_ZWaveGET_NODE_PROTOCOL_INFO");
+      throw new ApplicationLayerException(String.format("CMD_ZWaveGET_NODE_PROTOCOL_INFO - status:{}", rc));
     int[] payload = rc.getResponse().getPayload();
 
     boolean isVirtual = false;
@@ -1698,7 +1702,7 @@ public class ApplicationLayerImpl implements ApplicationLayer,
       ApplicationLayerException
   {
     NodeMask nodeMask;
-    if (libraryType.lib == Library.ControllerBridgeLib)
+    if (libraryType.library == Library.ControllerBridgeLib)
     {
       DataPacket req = new DataPacket();
 
@@ -1745,7 +1749,7 @@ public class ApplicationLayerImpl implements ApplicationLayer,
   public boolean zwaveIsVirtualNode(int nodeId) throws FrameLayerException,
       ApplicationLayerException
   {
-    if (libraryType.lib == Library.ControllerBridgeLib)
+    if (libraryType.library == Library.ControllerBridgeLib)
     {
       DataPacket req = new DataPacket();
       req.addPayload(nodeId);
@@ -2326,7 +2330,7 @@ public class ApplicationLayerImpl implements ApplicationLayer,
       throw new NullPointerException("data");
     }
     TXStatus rc;
-    if (libraryType.lib == Library.ControllerBridgeLib)
+    if (libraryType.library == Library.ControllerBridgeLib)
     {
       DataPacket req = new DataPacket();
       req.addPayload(sourceId);
@@ -2374,7 +2378,7 @@ public class ApplicationLayerImpl implements ApplicationLayer,
       throws FrameLayerException
   {
     TXStatus rc;
-    if (libraryType.lib == Library.ControllerBridgeLib)
+    if (libraryType.library == Library.ControllerBridgeLib)
     {
       DataPacket req = new DataPacket();
       req.addPayload(sourceId);
@@ -2566,7 +2570,7 @@ public class ApplicationLayerImpl implements ApplicationLayer,
   public boolean zwaveSetPromiscuousMode(boolean enable)
       throws FrameLayerException, ApplicationLayerException
   {
-    if (libraryType.lib == Library.InstallerLib)
+    if (libraryType.library == Library.InstallerLib)
     {
       DataPacket req = new DataPacket();
       if (enable)
@@ -2645,7 +2649,7 @@ public class ApplicationLayerImpl implements ApplicationLayer,
   public boolean zwaveSetSlaveLearnMode(int node, int mode)
       throws FrameLayerException
   {
-    if (libraryType.lib == Library.ControllerBridgeLib)
+    if (libraryType.library == Library.ControllerBridgeLib)
     {
       DataPacket req = new DataPacket();
       req.addPayload(node);
@@ -2676,7 +2680,7 @@ public class ApplicationLayerImpl implements ApplicationLayer,
       throw new NullPointerException("nodeParameter");
     }
 
-    if (libraryType.lib == Library.ControllerBridgeLib)
+    if (libraryType.library == Library.ControllerBridgeLib)
     {
       DataPacket req = new DataPacket();
       req.addPayload(nodeId);
@@ -2858,7 +2862,7 @@ public class ApplicationLayerImpl implements ApplicationLayer,
    * 
    * @see net.gregrapp.jhouse.interfaces.zwave.ApplicationLayer#zwaveVersion()
    */
-  public VersionInfoType zwaveVersion() throws FrameLayerException
+  public VersionInfoType getZwaveVersion() throws FrameLayerException
   {
     DataPacket req = new DataPacket();
 
@@ -2871,13 +2875,13 @@ public class ApplicationLayerImpl implements ApplicationLayer,
     libraryType = new VersionInfoType();
 
     int[] payload = rc.getResponse().getPayload();
-    libraryType.ver = new String(payload, 6, 6);
-    if (libraryType.ver.endsWith("\0"))
+    libraryType.version = new String(payload, 6, 6);
+    if (libraryType.version.endsWith("\0"))
     {
-      libraryType.ver = libraryType.ver.substring(0,
-          libraryType.ver.length() - 1);
+      libraryType.version = libraryType.version.substring(0,
+          libraryType.version.length() - 1);
     }
-    libraryType.lib = Library.getByVal(payload[12]);
+    libraryType.library = Library.getByVal(payload[12]);
 
     return libraryType;
   }

@@ -33,6 +33,6 @@ import net.gregrapp.jhouse.interfaces.zwave.Constants.Library;
  */
 public final class VersionInfoType
 {
-  String ver;
-  Library lib;
+  public String version;
+  public Library library;
 }

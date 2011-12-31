@@ -68,7 +68,10 @@ class TimeoutEvent
     // Wait for the event to be signaled...
     try
     {
-      this.wait();
+      synchronized (this)
+      {
+        this.wait();
+      }
     } catch (InterruptedException e)
     {
       // TODO Auto-generated catch block

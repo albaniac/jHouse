@@ -16,7 +16,7 @@
 			</list>
 		</constructor-arg>
 	</bean>
-
+<!--
 	<bean name="zwaveFrameLayer" class="net.gregrapp.jhouse.interfaces.zwave.FrameLayerImpl">
  		<constructor-arg index="0"><ref bean="zwaveTransport"/></constructor-arg>
  	</bean>
@@ -28,11 +28,14 @@
 	<bean name="zwaveApplicationLayer" class="net.gregrapp.jhouse.interfaces.zwave.ApplicationLayerImpl">
  		<constructor-arg index="0"><ref bean="zwaveSessionLayer"/></constructor-arg>
  	</bean>
-
+ -->
 	<!-- 
 	<bean name="zwaveInterface" class="net.gregrapp.jhouse.legacy.interfaces.zwave.ZwaveInterface">
 		<property name="transport" ref="zwaveTransport"/>
 	</bean>
 	 -->
+	<bean name="zwaveInterface" class="net.gregrapp.jhouse.interfaces.zwave.ZwaveInterface">
+		<property name="transport" ref="zwaveTransport"/>
+	</bean>
 	 
 </beans>

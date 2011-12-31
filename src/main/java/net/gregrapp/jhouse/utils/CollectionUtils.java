@@ -1,7 +1,7 @@
 /**
  * 
  */
-package net.gregrapp.jhosue.utils;
+package net.gregrapp.jhouse.utils;
 
 import java.util.Collection;
 import java.util.Iterator;

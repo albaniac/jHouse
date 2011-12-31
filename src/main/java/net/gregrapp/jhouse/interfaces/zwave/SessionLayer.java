@@ -37,19 +37,7 @@ public interface SessionLayer
   // 
   // </summary>
   public boolean isReady();
-  
-  // <summary>
-  // 
-  // </summary>
-  // <param name="frameLayer"></param>
-  // <param name="transportLayer"></param>
-  // <param name="connectionString"></param>
-  //void open(FrameLayer frameLayer, Transport transport);
-  
-  // <summary>
-  // 
-  // </summary>
-  void close();
+    
   // <summary>
   // 
   // </summary>

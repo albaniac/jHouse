@@ -8,8 +8,10 @@ public interface Transport
 {
   /**
    * Initialize the Transport
+   * @return
+   * @throws TransportException 
    */
-  public void init();
+  public void init() throws TransportException;
 
   /**
    * Write bytes to the Transport

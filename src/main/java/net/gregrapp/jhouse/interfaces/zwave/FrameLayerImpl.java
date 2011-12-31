@@ -107,7 +107,7 @@ public class FrameLayerImpl implements FrameLayer
 
   public FrameLayerImpl(Transport transport)
   {
-    logger.info("Instantiating Zwave frame layer");
+    logger.info("Instantiating frame layer");
     this.transport = transport;
 
     retransmissionStack = new Stack<TransmittedDataFrame>();
@@ -246,6 +246,7 @@ public class FrameLayerImpl implements FrameLayer
    */
   public void close()
   {
+    logger.info("Closing frame layer");
     active = false;
     if (retransmissionTimeoutExecutor != null)
       retransmissionTimeoutExecutor.shutdown();
@@ -382,6 +383,7 @@ public class FrameLayerImpl implements FrameLayer
         // Frame received successfully -> Send acknowledge (ACK)
         transmitACK();
 
+        logger.debug("Passing frame to frame layer callback handler");
         // Call the callbackhandler with the received frame
         callbackHandler.frameReceived(currentDataFrame);
         synchronized (stats)
@@ -468,6 +470,7 @@ public class FrameLayerImpl implements FrameLayer
    */
   public void setCallbackHandler(FrameLayerAsyncCallback handler)
   {
+    logger.debug("Callback handler set");
     this.callbackHandler = handler;
   }
 

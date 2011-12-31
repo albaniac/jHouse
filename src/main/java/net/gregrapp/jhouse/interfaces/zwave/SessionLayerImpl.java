@@ -27,7 +27,9 @@ package net.gregrapp.jhouse.interfaces.zwave;
 
 import net.gregrapp.jhouse.interfaces.zwave.Constants.TXStatus;
 import net.gregrapp.jhouse.interfaces.zwave.DataFrame.CommandType;
-import net.gregrapp.jhouse.transports.Transport;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @author Greg Rapp
@@ -35,6 +37,9 @@ import net.gregrapp.jhouse.transports.Transport;
  */
 public class SessionLayerImpl implements SessionLayer, FrameLayerAsyncCallback
 {
+  private static final Logger logger = LoggerFactory
+      .getLogger(SessionLayerImpl.class);
+      
   private static final int DEFAULT_TIMEOUT = 10000; // How long in ms to wait
                                                     // for an response
 
@@ -58,20 +63,11 @@ public class SessionLayerImpl implements SessionLayer, FrameLayerAsyncCallback
   private int sequenceNumber = MIN_SEQUENCE_NUMBER;
   private SessionStatistics stats;
 
-  /*
-   * (non-Javadoc)
-   * 
-   * @see net.gregrapp.jhouse.interfaces.zwave.SessionLayer#close()
-   */
-  public void close()
-  {
-    frameLayer.close();
-  }
-
   public void frameReceived(DataFrame frame)
   {
     if (frame == null)
     {
+      logger.warn("Null frame received");
       throw new NullPointerException("frame");
     }
     // Called from FrameLayer thread scope...
@@ -84,14 +80,13 @@ public class SessionLayerImpl implements SessionLayer, FrameLayerAsyncCallback
     {
       // The peer ZWave module could be tranmitting the same frame twice.
       // so check if the frame was retransmitted from module
-      if (lastDataFrame != null && lastDataFrame == frame)
+      if (lastDataFrame != null && lastDataFrame.equals(frame))
       {
         synchronized (stats)
         {
           stats.duplicatePackets++;
         }
-        // TODO Implement log
-        // log.Write("COM - Duplicate packet received...");
+        logger.info("Duplicate frame received");
         return;
       }
       lastDataFrame = frame;
@@ -100,6 +95,7 @@ public class SessionLayerImpl implements SessionLayer, FrameLayerAsyncCallback
       if (request.getSequenceNumber() > 0
           && frame.getFrameType() == DataFrame.FrameType.Request)
       {
+        logger.trace("Stripping sequence number [{}] from payload", request.getSequenceNumber());
         int[] payload = frame.getPayloadBuffer();
         int[] data = new int[payload.length - 1];
         System.arraycopy(payload, 1, data, 0, data.length);
@@ -108,13 +104,16 @@ public class SessionLayerImpl implements SessionLayer, FrameLayerAsyncCallback
         dp.setSequenceNumber(payload[0]);
       } else
       {
+        logger.trace("Frame does not contain a sequence number");
         dp = new DataPacket(frame.getPayloadBuffer());
         dp.setTimestamp(frame.getTimestamp());
       }
       // Put the DataPacket in the Queue...
+      logger.debug("Adding data packet to multiple response queue for command [{}]", frame.getCommand().toString());
       queue.add(dp);
     } else if (asyncCallback != null)
     {
+      logger.debug("Passing data packet to session layer callback handler");
       DataPacket dp = new DataPacket(frame.getPayloadBuffer());
       dp.setTimestamp(frame.getTimestamp());
       asyncCallback.dataPacketReceived(frame.getCommand(), dp);
@@ -133,6 +132,7 @@ public class SessionLayerImpl implements SessionLayer, FrameLayerAsyncCallback
    */
   public SessionStatistics getStatistics()
   {
+    logger.debug("Getting session layer statistics");
     synchronized (stats)
     {
       return new SessionStatistics(stats);
@@ -172,6 +172,7 @@ public class SessionLayerImpl implements SessionLayer, FrameLayerAsyncCallback
   */
   public SessionLayerImpl(FrameLayer frameLayer)
   {
+    logger.info("Instantiating session layer");
     this.frameLayer = frameLayer;
     frameLayer.setCallbackHandler(this);
     queue = new DataPacketQueue();
@@ -205,20 +206,22 @@ public class SessionLayerImpl implements SessionLayer, FrameLayerAsyncCallback
       DataPacket request, int maxResponses, boolean sequenceCheck, int timeout)
       throws FrameLayerException
   {
+    logger.debug("New request submitted expecting multiple responses for command [{}]", cmd.toString());
+
     if (request == null)
     {
       throw new NullPointerException("request");
     }
     if (maxResponses < 1)
     {
-      throw new IllegalArgumentException("maxResponses");
+      throw new IllegalArgumentException(String.format("maxResponses - %d", maxResponses));
     }
     setReady(false);
     synchronized (this)
     {
       if (sequenceCheck)
         request.setSequenceNumber(incrementSequenceNumber());
-
+      
       lastDataFrame = null;
       queue.clear();
 
@@ -232,12 +235,15 @@ public class SessionLayerImpl implements SessionLayer, FrameLayerAsyncCallback
 
       DataPacket[] responses = new DataPacket[maxResponses];
 
-      // Wait for reponse from peer or timeout...
+      // Wait for response from peer or timeout...
       for (int i = 0; i < maxResponses; i++)
       {
+        logger.debug("Waiting for response [timeout={}]", timeout);
         responses[i] = queue.poll(timeout);
         if (responses[i] != null)
         {
+          logger.debug("{} responses received", responses.length);
+          
           // Strip the sequence number if used by the request
           // The sequence number is placed as the first byte in the payload
           if (sequenceCheck
@@ -245,6 +251,7 @@ public class SessionLayerImpl implements SessionLayer, FrameLayerAsyncCallback
               && responses[i].getSequenceNumber() != request
                   .getSequenceNumber())
           {
+            logger.warn("Response sequence number does not match request, aborting");
             setReady(true);
             TXStatus txStatus = TXStatus.ResMissing;
             txStatus.setResponses(responses);
@@ -252,6 +259,7 @@ public class SessionLayerImpl implements SessionLayer, FrameLayerAsyncCallback
           }
         } else
         {
+          logger.debug("No responses received before timeout");
           synchronized (stats)
           {
             stats.receiveTimeouts++;
@@ -278,6 +286,7 @@ public class SessionLayerImpl implements SessionLayer, FrameLayerAsyncCallback
   public boolean requestWithNoResponse(CommandType cmd, DataPacket request)
       throws FrameLayerException
   {
+    logger.debug("New request submitted for command [{}]", cmd.toString());
     try
     {
       if (request == null)
@@ -286,6 +295,7 @@ public class SessionLayerImpl implements SessionLayer, FrameLayerAsyncCallback
       }
       synchronized (this)
       {
+        logger.debug("Constructing data frame");
         // Construct and setup the new data frame...
         DataFrame frame = new DataFrame();
         frame.setFrameType(DataFrame.FrameType.Request);
@@ -295,14 +305,14 @@ public class SessionLayerImpl implements SessionLayer, FrameLayerAsyncCallback
         // Check if the sequence number should be appended at the last payload
         // position...
         if (request.getSequenceNumber() > 0)
+          logger.trace("Adding sequence number [{}] to data frame", request.getSequenceNumber());
           frame.addPayload(request.getSequenceNumber());
         stats.transmittedPackets++;
         return frameLayer.write(frame);
       }
     } catch (FrameLayerException e)
     {
-      throw new FrameLayerException("Error in requestWithNoRepsonse :"
-          + e.getMessage());
+      throw new FrameLayerException("Error in requestWithNoRepsonse", e);
     }
   }
 
@@ -348,6 +358,7 @@ public class SessionLayerImpl implements SessionLayer, FrameLayerAsyncCallback
   public TXStatus requestWithResponse(CommandType cmd, DataPacket request,
       boolean sequenceCheck, int timeout) throws FrameLayerException
   {
+    logger.debug("New request submitted expecting a single response for command [{}]", cmd.toString());
     if (request == null)
     {
       throw new NullPointerException("request");
@@ -358,7 +369,7 @@ public class SessionLayerImpl implements SessionLayer, FrameLayerAsyncCallback
     {
       if (sequenceCheck)
         request.setSequenceNumber(incrementSequenceNumber());
-
+      
       lastDataFrame = null;
       queue.clear();
 
@@ -372,22 +383,30 @@ public class SessionLayerImpl implements SessionLayer, FrameLayerAsyncCallback
 
       DataPacket response = null;
 
+      logger.debug("Waiting for response [timeout={}]", timeout);
       // Wait for reponse from peer or timeout...
       response = queue.poll(timeout);
       if (response != null)
       {
+        logger.debug("Response received");
         this.command = CommandType.None;
+        logger.error("here");
         // Sequence number check...
         if (sequenceCheck
             && response.getSequenceNumber() != request.getSequenceNumber())
         {
+          logger.error("here");
+          logger.warn("Response sequence number does not match request, aborting");
           setReady(true);
+          logger.error("here");
           TXStatus txStatus = TXStatus.ResMissing;
           txStatus.setResponse(response);
+          logger.error("here");
           return txStatus;
         }
       } else
       {
+        logger.debug("No response received before timeout");
         synchronized (stats)
         {
           stats.receiveTimeouts++;
@@ -398,6 +417,7 @@ public class SessionLayerImpl implements SessionLayer, FrameLayerAsyncCallback
       setReady(true);
       TXStatus txStatus = TXStatus.CompleteOk;
       txStatus.setResponse(response);
+      logger.error("here");
       return txStatus;
     } // lock
   }
@@ -406,6 +426,8 @@ public class SessionLayerImpl implements SessionLayer, FrameLayerAsyncCallback
       DataPacket request, int maxResponses, int[] breakVal,
       boolean sequenceCheck, int timeout) throws FrameLayerException
   {
+    logger.debug("New request submitted expecting a variable number of responses for command [{}]", cmd.toString());
+    
     if (request == null)
     {
       throw new NullPointerException("request");
@@ -437,9 +459,11 @@ public class SessionLayerImpl implements SessionLayer, FrameLayerAsyncCallback
       // Wait for reponse from peer or timeout...
       for (int i = 0; i < maxResponses; i++)
       {
+        logger.debug("Waiting for response [timeout={}]", timeout);
         responses[i] = queue.poll(timeout);
         if (responses[i] != null)
         {
+          logger.debug("Response received");
           // Strip the sequence number if used by the request
           // The sequence number is placed as the first byte in the payload
           if (sequenceCheck
@@ -447,6 +471,7 @@ public class SessionLayerImpl implements SessionLayer, FrameLayerAsyncCallback
               && responses[i].getSequenceNumber() != request
                   .getSequenceNumber())
           {
+            logger.warn("Response sequence number does not match request, aborting");
             setReady(true);
             TXStatus txStatus = TXStatus.ResMissing;
             txStatus.setResponses(responses);
@@ -458,6 +483,7 @@ public class SessionLayerImpl implements SessionLayer, FrameLayerAsyncCallback
             {
               if (responses[i].getPayload()[0] == breakVal[n])
               {
+                logger.debug("Break value found in response, aborting");
                 TXStatus txStatus = TXStatus.CompleteFail;
                 txStatus.setResponses(responses);
                 return txStatus;
@@ -466,6 +492,7 @@ public class SessionLayerImpl implements SessionLayer, FrameLayerAsyncCallback
           }
         } else
         {
+          logger.debug("No response received before timeout");
           synchronized (stats)
           {
             stats.receiveTimeouts++;
@@ -485,6 +512,7 @@ public class SessionLayerImpl implements SessionLayer, FrameLayerAsyncCallback
       DataPacket request, int maxResponses, int[] breakVal,
       boolean sequenceCheck, int timeout) throws FrameLayerException
   {
+    logger.debug("New request submitted expecting a variable number of returns and responses for command [{}]", cmd.toString());
     if (request == null)
     {
       throw new NullPointerException("request");
@@ -515,6 +543,7 @@ public class SessionLayerImpl implements SessionLayer, FrameLayerAsyncCallback
       // Wait for reponse from peer or timeout...
       for (int i = 0; i < maxResponses; i++)
       {
+        logger.debug("Waiting for response [timeout={}]", timeout);
         responses[i] = queue.poll(timeout);
         if (responses[i] != null)
         {
@@ -525,6 +554,7 @@ public class SessionLayerImpl implements SessionLayer, FrameLayerAsyncCallback
               && responses[i].getSequenceNumber() != request
                   .getSequenceNumber())
           {
+            logger.warn("Response sequence number does not match request, aborting");
             setReady(true);
             TXStatus txStatus = TXStatus.ResMissing;
             txStatus.setResponses(responses);
@@ -536,6 +566,7 @@ public class SessionLayerImpl implements SessionLayer, FrameLayerAsyncCallback
             {
               if (responses[i].getPayload()[0] == breakVal[n])
               {
+                logger.debug("Break value found in response, aborting");
                 TXStatus txStatus = TXStatus.CompleteFail;
                 txStatus.setResponses(responses);
                 return txStatus;
@@ -544,6 +575,7 @@ public class SessionLayerImpl implements SessionLayer, FrameLayerAsyncCallback
           }
         } else
         {
+          logger.debug("No response received before timeout");
           synchronized (stats)
           {
             stats.receiveTimeouts++;
@@ -570,6 +602,7 @@ public class SessionLayerImpl implements SessionLayer, FrameLayerAsyncCallback
    */
   public void setCallbackHandler(SessionLayerAsyncCallback handler)
   {
+    logger.debug("Callback handler set");
     this.asyncCallback = handler;
   }
 
@@ -583,12 +616,14 @@ public class SessionLayerImpl implements SessionLayer, FrameLayerAsyncCallback
 
   private int incrementSequenceNumber()
   {
+    int oldSequenceNumber = sequenceNumber;
     sequenceNumber++;
 
     // Test if sequence number should wrap-around...
     if (sequenceNumber >= MAX_SEQUENCE_NUMBER)
       sequenceNumber = MIN_SEQUENCE_NUMBER;
 
+    logger.trace("Incrementing sequence number from [{}] to [{}] ", oldSequenceNumber, sequenceNumber);
     return sequenceNumber;
   }
 }

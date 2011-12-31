@@ -1,4 +1,4 @@
-package net.gregrapp.jhosue.utils;
+package net.gregrapp.jhouse.utils;
 
 public class ArrayUtils
 {
