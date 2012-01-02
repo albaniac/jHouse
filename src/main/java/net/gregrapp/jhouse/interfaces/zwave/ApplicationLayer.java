@@ -325,7 +325,7 @@ public interface ApplicationLayer
   // <param name="data">payload</param>
   // <param name="txOptions">transmit options</param>
   // <returns></returns>
-  TXStatus zwaveReplicationSend(int nodeId, int[] data, TXOption txOptions) throws FrameLayerException;
+  TXStatus zwaveReplicationSend(int nodeId, int[] data, TXOption[] txOptions) throws FrameLayerException;
   // <summary>
   // Request network update from the SUC/SIS 
   // </summary>
@@ -358,7 +358,7 @@ public interface ApplicationLayer
   // <param name="data"></param>
   // <param name="txOptions"></param>
   // <returns></returns>
-  TXStatus zwaveSendData(int nodeId, int[] data, TXOption txOptions) throws FrameLayerException;
+  TXStatus zwaveSendData(int nodeId, int[] data, TXOption[] txOptions) throws FrameLayerException;
 
   // <summary>
   // Transmit a frame to the node ID specified. If 0xFF is specified the frame is broadcasted
@@ -368,7 +368,7 @@ public interface ApplicationLayer
   // <param name="txOptions">Transmit options (TRANSMIT_OPTION_xxx)</param>
   // <param name="timeout">Response timeout in ms</param>
   // <returns>Transmit Result</returns>
-  TXStatus zwaveSendData(int nodeId, int[] data, TXOption txOptions, int timeout) throws FrameLayerException;
+  TXStatus zwaveSendData(int nodeId, int[] data, TXOption[] txOptions, int timeout) throws FrameLayerException;
   // <summary>
   // Abort application initiated transmissions started by calling ZWaveSendData
   // </summary>
@@ -380,7 +380,7 @@ public interface ApplicationLayer
   // <param name="data"></param>
   // <param name="txOptions"></param>
   // <returns></returns>
-  TXStatus zwaveSendDataMeta(int nodeId, int[] data, TXOption txOptions) throws FrameLayerException;
+  TXStatus zwaveSendDataMeta(int nodeId, int[] data, TXOption[] txOptions) throws FrameLayerException;
   // <summary>
   // Transmit a frame to the node ID specified. If 0xFF is specified the frame is broadcasted
   // </summary>
@@ -389,7 +389,7 @@ public interface ApplicationLayer
   // <param name="txOptions">Transmit options (TRANSMIT_OPTION_xxx)</param>
   // <param name="timeout">Response timeout in ms</param>
   // <returns>Transmit Result</returns>
-  TXStatus zwaveSendDataMeta(int nodeId, int[] data, TXOption txOptions, int timeout) throws FrameLayerException;
+  TXStatus zwaveSendDataMeta(int nodeId, int[] data, TXOption[] txOptions, int timeout) throws FrameLayerException;
   // <summary>
   // Transmit a frame to the node IDs specified. If 0xFF is specified the frame is broadcasted
   // </summary>
@@ -397,14 +397,14 @@ public interface ApplicationLayer
   // <param name="data">payload to send</param>
   // <param name="txOptions">if TRANSMIT_OPTION_ACK is specified each node gets a singlecast</param>
   // <returns>Transmit Result</returns>
-  TXStatus zwaveSendDataMulti(List<Integer> nodeIdList, int[] data, TXOption txOptions) throws FrameLayerException;
+  TXStatus zwaveSendDataMulti(List<Integer> nodeIdList, int[] data, TXOption[] txOptions) throws FrameLayerException;
   // <summary>
   // Send out this device Node information Frame
   // </summary>
   // <param name="destination">Destination node</param>
   // <param name="txOptions"></param>
   // <returns></returns>
-  TXStatus zwaveSendNodeInformation(int destination, TXOption txOptions) throws FrameLayerException;
+  TXStatus zwaveSendNodeInformation(int destination, TXOption[] txOptions) throws FrameLayerException;
   // <summary>
   // 
   // </summary>
@@ -413,7 +413,7 @@ public interface ApplicationLayer
   // <param name="data"></param>
   // <param name="txOptions"></param>
   // <returns></returns>
-  TXStatus zwaveSendSlaveData(int sourceId, int destinationId, int[] data, TXOption txOptions) throws FrameLayerException;
+  TXStatus zwaveSendSlaveData(int sourceId, int destinationId, int[] data, TXOption[] txOptions) throws FrameLayerException;
   // <summary>
   // Transmit a frame to the node ID specified. If 0xFF is specified the frame is broadcasted
   // </summary>
@@ -423,7 +423,7 @@ public interface ApplicationLayer
   // <param name="txOptions">Transmit options (TRANSMIT_OPTION_xxx)</param>
   // <param name="timeout">Response timeout in ms</param>
   // <returns>Transmit Result</returns>
-  TXStatus zwaveSendSlaveData(int sourceId, int destinationId, int[] data, TXOption txOptions, int timeout) throws FrameLayerException;
+  TXStatus zwaveSendSlaveData(int sourceId, int destinationId, int[] data, TXOption[] txOptions, int timeout) throws FrameLayerException;
   // <summary>
   // ZWaveSendSlaveNodeInformation 
   // </summary>
@@ -431,7 +431,7 @@ public interface ApplicationLayer
   // <param name="destinationId"></param>
   // <param name="txOptions"></param>
   // <returns></returns>
-  TXStatus zwaveSendSlaveNodeInformation(int sourceId, int destinationId, TXOption txOptions) throws FrameLayerException;
+  TXStatus zwaveSendSlaveNodeInformation(int sourceId, int destinationId, TXOption[] txOptions) throws FrameLayerException;
   // region ZWaveBRIDGE
   // <summary>
   // ZWaveSendSlaveNodeInformation with timeout
@@ -441,14 +441,14 @@ public interface ApplicationLayer
   // <param name="txOptions"></param>
   // <param name="timeout"></param>
   // <returns></returns>
-  TXStatus zwaveSendSlaveNodeInformation(int sourceId, int destinationId, TXOption txOptions, int timeout) throws FrameLayerException;
+  TXStatus zwaveSendSlaveNodeInformation(int sourceId, int destinationId, TXOption[] txOptions, int timeout) throws FrameLayerException;
   // <summary>
   // Transmits the SUC node ID to the node specified
   // </summary>
   // <param name="nodeId">Destination node</param>
   // <param name="txOptions">Option</param>
   // <returns>Transmit status</returns>
-  TXStatus zwaveSendSucId(int nodeId, TXOption txOptions) throws FrameLayerException;
+  TXStatus zwaveSendSucId(int nodeId, TXOption[] txOptions) throws FrameLayerException;
   // <summary>
   // Get the Capabilities of the ZWave module serialAPI (supported functions)
   // </summary>
@@ -534,7 +534,7 @@ public interface ApplicationLayer
   // <param name="txOptions"></param>
   // <param name="capabilities"></param>
   // <returns></returns>
-  boolean zwaveSetSucNodeId(int nodeId, boolean sucState, TXOption txOptions, int capabilities) throws FrameLayerException;
+  boolean zwaveSetSucNodeId(int nodeId, boolean sucState, TXOption[] txOptions, int capabilities) throws FrameLayerException;
   // <summary>
   // Disables the learn mode
   // </summary>
@@ -574,7 +574,7 @@ public interface ApplicationLayer
   // <param name="maxLength"></param>
   // <param name="testNodeMask"></param>
   // <returns></returns>
-  int zwaveTest(int testCmd, int testDelay, int testPayloadLength, int testCount, TXOption testTXOptions, int maxLength, int[] testNodeMask) throws FrameLayerException;
+  int zwaveTest(int testCmd, int testDelay, int testPayloadLength, int testCount, TXOption[] testTXOptions, int maxLength, int[] testNodeMask) throws FrameLayerException;
   // sendregion ERTT
 
   // <summary>

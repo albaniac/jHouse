@@ -34,36 +34,36 @@ public class Constants
   // <summary>
   // COMMAND_CLASS_BASIC
   // </summary>
-  public enum CmdBasic
+  public enum CommandBasic
   {
     // <summary>
     //
     // </summary>
-    BasicVersion(0x01),
+    BASIC_VERSION(0x01),
     // <summary>
     //
     // </summary>
-    BasicSet(0x01),
+    BASIC_SET(0x01),
     // <summary>
     //
     // </summary>
-    BasicGet(0x02),
+    BASIC_GET(0x02),
     // <summary>
     //
     // </summary>
-    BasicReport(0x03),
+    BASIC_REPORT(0x03),
     // <summary>
     //
     // </summary>
-    BasicOn(0xFF),
+    BASIC_ON(0xFF),
     // <summary>
     //
     // </summary>
-    BasicOff(0x00);
+    BASIC_OFF(0x00);
 
     private int value;
 
-    CmdBasic(int value)
+    CommandBasic(int value)
     {
       this.value = value;
     }
@@ -123,7 +123,7 @@ public class Constants
     {
       return this.value;
     }
-    
+
     public static Library getByVal(int value)
     {
       for (Library l : Library.class.getEnumConstants())
@@ -166,9 +166,9 @@ public class Constants
     ResMissing(0x06);
 
     private DataPacket[] responses = null;
-    
+
     private int value;
-    
+
     TXStatus(int value)
     {
       this.value = value;
@@ -178,7 +178,7 @@ public class Constants
     {
       return this.value;
     }
-    
+
     public DataPacket getResponse()
     {
       return this.responses[0];
@@ -194,12 +194,12 @@ public class Constants
       this.responses = new DataPacket[1];
       this.responses[0] = response;
     }
-    
+
     public void setResponses(DataPacket[] responses)
     {
       this.responses = responses;
     }
-    
+
     public static TXStatus getByVal(int value)
     {
       for (TXStatus s : TXStatus.class.getEnumConstants())
@@ -238,7 +238,7 @@ public class Constants
     {
       return this.value;
     }
-    
+
     public static ChipType getByVal(int value)
     {
       for (ChipType t : ChipType.class.getEnumConstants())
@@ -402,7 +402,7 @@ public class Constants
     {
       return this.value;
     }
-    
+
     public static LearnMode getByVal(int value)
     {
       for (LearnMode m : LearnMode.class.getEnumConstants())
@@ -637,7 +637,7 @@ public class Constants
     {
       return this.value;
     }
-    
+
     public static NodeFailedStatus getByVal(int value)
     {
       for (NodeFailedStatus s : NodeFailedStatus.class.getEnumConstants())
@@ -744,10 +744,11 @@ public class Constants
     {
       return this.value;
     }
-    
+
     public static NodeFailedReturnValue getByVal(int value)
     {
-      for (NodeFailedReturnValue v : NodeFailedReturnValue.class.getEnumConstants())
+      for (NodeFailedReturnValue v : NodeFailedReturnValue.class
+          .getEnumConstants())
         if (v.get() == value)
           return v;
       return null;
@@ -858,7 +859,8 @@ public class Constants
 
     public static ZWaveRediscoveryNeededReturnValue getByVal(int value)
     {
-      for (ZWaveRediscoveryNeededReturnValue v : ZWaveRediscoveryNeededReturnValue.class.getEnumConstants())
+      for (ZWaveRediscoveryNeededReturnValue v : ZWaveRediscoveryNeededReturnValue.class
+          .getEnumConstants())
         if (v.get() == value)
           return v;
       return null;
@@ -911,5 +913,324 @@ public class Constants
       return this.value;
     }
 
+  }
+
+  public enum CommandClass
+  {
+
+    // <summary>
+    // COMMAND_CLASS_SENSOR_BINARY(0x30),
+    // </summary>
+    COMMAND_CLASS_SENSOR_BINARY(0x30),
+
+    // <summary>
+    // COMMAND_CLASS_NON_INTEROPERABLE(0xF0),
+    // </summary>
+    COMMAND_CLASS_NON_INTEROPERABLE(0xF0),
+
+    // <summary>
+    // COMMAND_CLASS_METER_PULSE(0x35),
+    // </summary>
+    COMMAND_CLASS_METER_PULSE(0x35),
+
+    // <summary>
+    // COMMAND_CLASS_BATTERY(0x80),
+    // </summary>
+    COMMAND_CLASS_BATTERY(0x80),
+
+    // <summary>
+    // COMMAND_CLASS_VERSION(0x86),
+    // </summary>
+    COMMAND_CLASS_VERSION(0x86),
+
+    // <summary>
+    // COMMAND_CLASS_THERMOSTAT_OPERATING_STATE(0x42),
+    // </summary>
+    COMMAND_CLASS_THERMOSTAT_OPERATING_STATE(0x42),
+
+    // <summary>
+    // COMMAND_CLASS_GEOGRAPHICAL_LOCATION(0x8C),
+    // </summary>
+    COMMAND_CLASS_GEOGRAPHICAL_LOCATION(0x8C),
+
+    // <summary>
+    // COMMAND_CLASS_BASIC(0x20),
+    // </summary>
+    COMMAND_CLASS_BASIC(0x20),
+
+    // <summary>
+    // COMMAND_CLASS_SCREEN_ATTRIBUTES(0x93),
+    // </summary>
+    COMMAND_CLASS_SCREEN_ATTRIBUTES(0x93),
+
+    // <summary>
+    // COMMAND_CLASS_CONFIGURATION(0x70),
+    // </summary>
+    COMMAND_CLASS_CONFIGURATION(0x70),
+
+    // <summary>
+    // COMMAND_CLASS_SWITCH_BINARY(0x25),
+    // </summary>
+    COMMAND_CLASS_SWITCH_BINARY(0x25),
+
+    // <summary>
+    // COMMAND_CLASS_SCENE_ACTIVATION(0x2B),
+    // </summary>
+    COMMAND_CLASS_SCENE_ACTIVATION(0x2B),
+
+    // <summary>
+    // COMMAND_CLASS_PROPRIETARY(0x88),
+    // </summary>
+    COMMAND_CLASS_PROPRIETARY(0x88),
+
+    // <summary>
+    // COMMAND_CLASS_NODE_NAMING(0x77),
+    // </summary>
+    COMMAND_CLASS_NODE_NAMING(0x77),
+
+    // <summary>
+    // COMMAND_CLASS_NETWORK_STAT(0x83),
+    // </summary>
+    COMMAND_CLASS_NETWORK_STAT(0x83),
+
+    // <summary>
+    // COMMAND_CLASS_MULTI_INSTANCE(0x60),
+    // </summary>
+    COMMAND_CLASS_MULTI_INSTANCE(0x60),
+
+    // <summary>
+    // COMMAND_CLASS_THERMOSTAT_FAN_MODE(0x44),
+    // </summary>
+    COMMAND_CLASS_THERMOSTAT_FAN_MODE(0x44),
+
+    // <summary>
+    // COMMAND_CLASS_APPLICATION_STATUS(0x22),
+    // </summary>
+    COMMAND_CLASS_APPLICATION_STATUS(0x22),
+
+    // <summary>
+    // COMMAND_CLASS_AV_CONTENT_DIRECTORY_MD(0x95),
+    // </summary>
+    COMMAND_CLASS_AV_CONTENT_DIRECTORY_MD(0x95),
+
+    // <summary>
+    // COMMAND_CLASS_MANUFACTURER_SPECIFIC(0x72),
+    // </summary>
+    COMMAND_CLASS_MANUFACTURER_SPECIFIC(0x72),
+
+    // <summary>
+    // COMMAND_CLASS_BASIC_WINDOW_COVERING(0x50),
+    // </summary>
+    COMMAND_CLASS_BASIC_WINDOW_COVERING(0x50),
+
+    // <summary>
+    // COMMAND_CLASS_SCENE_CONTROLLER_CONF(0x2D),
+    // </summary>
+    COMMAND_CLASS_SCENE_CONTROLLER_CONF(0x2D),
+
+    // <summary>
+    // COMMAND_CLASS_MTP_WINDOW_COVERING(0x51),
+    // </summary>
+    COMMAND_CLASS_MTP_WINDOW_COVERING(0x51),
+
+    // <summary>
+    // COMMAND_CLASS_ASSOCIATION(0x85),
+    // </summary>
+    COMMAND_CLASS_ASSOCIATION(0x85),
+
+    // <summary>
+    // COMMAND_CLASS_TIME_PARAMETERS(0x8B),
+    // </summary>
+    COMMAND_CLASS_TIME_PARAMETERS(0x8B),
+
+    // <summary>
+    // COMMAND_CLASS_SWITCH_TOGGLE_MULTILEVEL(0x29),
+    // </summary>
+    COMMAND_CLASS_SWITCH_TOGGLE_MULTILEVEL(0x29),
+
+    // <summary>
+    // COMMAND_CLASS_THERMOSTAT_MODE(0x40),
+    // </summary>
+    COMMAND_CLASS_THERMOSTAT_MODE(0x40),
+
+    // <summary>
+    // COMMAND_CLASS_SCREEN_MD(0x92),
+    // </summary>
+    COMMAND_CLASS_SCREEN_MD(0x92),
+
+    // <summary>
+    // COMMAND_CLASS_KICK(0x79),
+    // </summary>
+    COMMAND_CLASS_KICK(0x79),
+
+    // <summary>
+    // COMMAND_CLASS_MANUFACTURER_PROPRIETARY(0x91),
+    // </summary>
+    COMMAND_CLASS_MANUFACTURER_PROPRIETARY(0x91),
+
+    // <summary>
+    // COMMAND_CLASS_AV_RENDERER_STATUS(0x97),
+    // </summary>
+    COMMAND_CLASS_AV_RENDERER_STATUS(0x97),
+
+    // <summary>
+    // COMMAND_CLASS_CHIMNEY_FAN(0x2A),
+    // </summary>
+    COMMAND_CLASS_CHIMNEY_FAN(0x2A),
+
+    // <summary>
+    // COMMAND_CLASS_SENSOR_MULTILEVEL(0x31),
+    // </summary>
+    COMMAND_CLASS_SENSOR_MULTILEVEL(0x31),
+
+    // <summary>
+    // COMMAND_CLASS_MARK(0xEF),
+    // </summary>
+    COMMAND_CLASS_MARK(0xEF),
+
+    // <summary>
+    // COMMAND_CLASS_HAIL(0x82),
+    // </summary>
+    COMMAND_CLASS_HAIL(0x82),
+
+    // <summary>
+    // COMMAND_CLASS_SIMPLE_AV_CONTROL(0x94),
+    // </summary>
+    COMMAND_CLASS_SIMPLE_AV_CONTROL(0x94),
+
+    // <summary>
+    // COMMAND_CLASS_SWITCH_ALL(0x27),
+    // </summary>
+    COMMAND_CLASS_SWITCH_ALL(0x27),
+
+    // <summary>
+    // COMMAND_CLASS_INDICATOR(0x87),
+    // </summary>
+    COMMAND_CLASS_INDICATOR(0x87),
+
+    // <summary>
+    // COMMAND_CLASS_THERMOSTAT_SETPOINT(0x43),
+    // </summary>
+    COMMAND_CLASS_THERMOSTAT_SETPOINT(0x43),
+
+    // <summary>
+    // COMMAND_CLASS_SCENE_ACTUATOR_CONF(0x2C),
+    // </summary>
+    COMMAND_CLASS_SCENE_ACTUATOR_CONF(0x2C),
+
+    // <summary>
+    // COMMAND_CLASS_CONTROLLER_REPLICATION(0x21),
+    // </summary>
+    COMMAND_CLASS_CONTROLLER_REPLICATION(0x21),
+
+    // <summary>
+    // COMMAND_CLASS_NO_OPERATION(0x00),
+    // </summary>
+    COMMAND_CLASS_NO_OPERATION(0x00),
+
+    // <summary>
+    // COMMAND_CLASS_PROTECTION(0x75),
+    // </summary>
+    COMMAND_CLASS_PROTECTION(0x75),
+
+    // <summary>
+    // COMMAND_CLASS_ALARM(0x71),
+    // </summary>
+    COMMAND_CLASS_ALARM(0x71),
+
+    // <summary>
+    // COMMAND_CLASS_SWITCH_MULTILEVEL(0x26),
+    // </summary>
+    COMMAND_CLASS_SWITCH_MULTILEVEL(0x26),
+
+    // <summary>
+    // COMMAND_CLASS_THERMOSTAT_HEATING(0x38),
+    // </summary>
+    COMMAND_CLASS_THERMOSTAT_HEATING(0x38),
+
+    // <summary>
+    // COMMAND_CLASS_LOCK(0x76),
+    // </summary>
+    COMMAND_CLASS_LOCK(0x76),
+
+    // <summary>
+    // COMMAND_CLASS_LANGUAGE(0x89),
+    // </summary>
+    COMMAND_CLASS_LANGUAGE(0x89),
+
+    // <summary>
+    // COMMAND_CLASS_GARAGE_DOOR(0x64),
+    // </summary>
+    COMMAND_CLASS_GARAGE_DOOR(0x64),
+
+    // <summary>
+    // COMMAND_CLASS_CLOCK(0x81),
+    // </summary>
+    COMMAND_CLASS_CLOCK(0x81),
+
+    // <summary>
+    // COMMAND_CLASS_WAKE_UP(0x84),
+    // </summary>
+    COMMAND_CLASS_WAKE_UP(0x84),
+
+    // <summary>
+    // COMMAND_CLASS_DISPLAY(0x61),
+    // </summary>
+    COMMAND_CLASS_DISPLAY(0x61),
+
+    // <summary>
+    // COMMAND_CLASS_TIME(0x8A),
+    // </summary>
+    COMMAND_CLASS_TIME(0x8A),
+
+    // <summary>
+    // COMMAND_CLASS_SWITCH_TOGGLE_BINARY(0x28),
+    // </summary>
+    COMMAND_CLASS_SWITCH_TOGGLE_BINARY(0x28),
+
+    // <summary>
+    // COMMAND_CLASS_THERMOSTAT_FAN_STATE(0x45),
+    // </summary>
+    COMMAND_CLASS_THERMOSTAT_FAN_STATE(0x45),
+
+    // <summary>
+    // COMMAND_CLASS_ACTUATOR_MULTILEVEL(0x78),
+    // </summary>
+    COMMAND_CLASS_ACTUATOR_MULTILEVEL(0x78),
+
+    // <summary>
+    // COMMAND_CLASS_ENERGY_PRODUCTION(0x90),
+    // </summary>
+    COMMAND_CLASS_ENERGY_PRODUCTION(0x90),
+
+    // <summary>
+    // COMMAND_CLASS_AV_CONTENT_SEARCH_MD(0x96),
+    // </summary>
+    COMMAND_CLASS_AV_CONTENT_SEARCH_MD(0x96),
+
+    // <summary>
+    // COMMAND_CLASS_POWERLEVEL(0x73),
+    // </summary>
+    COMMAND_CLASS_POWERLEVEL(0x73);
+
+    private int value;
+
+    CommandClass(int value)
+    {
+      this.value = value;
+    }
+
+    public int get()
+    {
+      return this.value;
+    }
+
+    public static CommandClass getByVal(int value)
+    {
+      for (CommandClass c : CommandClass.class.getEnumConstants())
+        if (c.get() == value)
+          return c;
+      return null;
+    }
   }
 }

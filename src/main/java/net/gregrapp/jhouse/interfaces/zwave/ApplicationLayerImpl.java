@@ -35,6 +35,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import net.gregrapp.jhouse.interfaces.zwave.Constants.ChipType;
+import net.gregrapp.jhouse.interfaces.zwave.Constants.CommandBasic;
+import net.gregrapp.jhouse.interfaces.zwave.Constants.CommandClass;
 import net.gregrapp.jhouse.interfaces.zwave.Constants.ControllerChangeMode;
 import net.gregrapp.jhouse.interfaces.zwave.Constants.CreateNewPrimaryControllerMode;
 import net.gregrapp.jhouse.interfaces.zwave.Constants.LearnMode;
@@ -290,6 +292,7 @@ public class ApplicationLayerImpl implements ApplicationLayer,
     // </summary>
     public void zwaveNodeMaskClear()
     {
+      logger.debug("Clearning node mask");
       if (mask != null)
       {
         for (int i = 0; i < mask.length; i++)
@@ -305,6 +308,7 @@ public class ApplicationLayerImpl implements ApplicationLayer,
     // <param name="nodeId"></param>
     public void zwaveNodeMaskClearBit(int nodeId)
     {
+      logger.debug("Clearing nodemask bit for node {}", nodeId);
       if (nodeId < 1)
       {
         return;
@@ -320,6 +324,8 @@ public class ApplicationLayerImpl implements ApplicationLayer,
     // <returns>true if bit is set</returns>
     public boolean zwaveNodeMaskNodeIn(int nodeId)
     {
+      logger.debug("Getting nodemask bit for node {}", nodeId);
+
       if (nodeId < 1)
       {
         return false;
@@ -340,6 +346,8 @@ public class ApplicationLayerImpl implements ApplicationLayer,
     // <param name="nodeId"></param>
     public void zwaveNodeMaskSetBit(int nodeId)
     {
+      logger.debug("Setting nodemask bit for node {}", nodeId);
+
       if (nodeId < 1)
       {
         return;
@@ -560,12 +568,16 @@ public class ApplicationLayerImpl implements ApplicationLayer,
   private ScheduledExecutorService waitForNodeInfoExecutor;
 
   private DataPacket addPayloadToSUCNodeId(int nodeId, boolean sucState,
-      TXOption txOptions, int capabilities)
+      TXOption[] txOptions, int capabilities)
   {
+    int txOptInt = 0;
+    for (TXOption txOpt : txOptions)
+      txOptInt |= txOpt.get();
+
     DataPacket req = new DataPacket();
     req.addPayload(nodeId);
     req.addPayload(sucState ? 1 : 0);
-    req.addPayload(txOptions.get());
+    req.addPayload(txOptInt);
     req.addPayload(capabilities);
     return req;
   }
@@ -577,6 +589,8 @@ public class ApplicationLayerImpl implements ApplicationLayer,
    */
   public int chipRev()
   {
+    logger.info("Getting chip revision");
+
     return chipRev;
   }
 
@@ -587,12 +601,16 @@ public class ApplicationLayerImpl implements ApplicationLayer,
    */
   public ChipType chipType()
   {
+    logger.info("Getting chip type");
+
     return ChipType.getByVal(chipType);
   }
 
   public boolean clockCompare(Time time) throws FrameLayerException,
       ApplicationLayerException
   {
+    logger.info("Comparing interface clock time with time [{}]", time);
+
     if (time == null)
     {
       throw new NullPointerException("time");
@@ -612,6 +630,8 @@ public class ApplicationLayerImpl implements ApplicationLayer,
 
   public Time clockGet() throws FrameLayerException, ApplicationLayerException
   {
+    logger.info("Getting interface clock time");
+
     DataPacket req = new DataPacket();
     TXStatus rc = sessionLayer.requestWithResponse(
         DataFrame.CommandType.CmdClockGet, req);
@@ -624,6 +644,8 @@ public class ApplicationLayerImpl implements ApplicationLayer,
   public void clockSet(Time time) throws FrameLayerException,
       ApplicationLayerException
   {
+    logger.info("Setting interface clock to [{}]", time);
+
     if (time == null)
     {
       throw new NullPointerException("time");
@@ -648,7 +670,7 @@ public class ApplicationLayerImpl implements ApplicationLayer,
    */
   public void dataPacketReceived(CommandType cmd, DataPacket packet)
   {
-    logger.debug("Data packet received for command [{}]", cmd.toString());
+    logger.debug("Data packet received for command [{}]", cmd);
     
     if (packet == null)
     {
@@ -659,9 +681,14 @@ public class ApplicationLayerImpl implements ApplicationLayer,
     int[] payload = packet.getPayload();
     if (cmd == DataFrame.CommandType.CmdApplicationCommandHandler)
     {
-      // ApplicationCommandEventArgs e = new
-      // ApplicationCommandEventArgs(packet);
-      // if (ApplicationCommandEvent != null) ApplicationCommandEvent(this, e);
+      if (payload[3] == CommandClass.COMMAND_CLASS_BASIC.get())
+      {
+        logger.info("COMMAND_CLASS_BASIC");
+        if (payload[4] == CommandBasic.BASIC_REPORT.get())
+        {
+          logger.info("Received BASIC_REPORT from node {} with a value of {}", payload[1], payload[5]);
+        }
+      }
     } else if (cmd == DataFrame.CommandType.CmdApplicationSlaveCommandHandler)
     {
       // ApplicationSlaveCommandEventArgs e = new
@@ -676,7 +703,7 @@ public class ApplicationLayerImpl implements ApplicationLayer,
       // FuncID|status|nodeId|len|basic|generic|specific|data[0]|data[1],data[2]..data[len-7]....
       int nid = payload[2];
       NodeStatus nodeStatus = NodeStatus.getByVal(payload[1]);
-      logger.debug("Node [{}] status is [{}]", nid, nodeStatus.toString());
+      logger.debug("Node [{}] status is [{}]", nid, nodeStatus);
       if (nodeStatus == NodeStatus.AddingRemovingSlave
           || nodeStatus == NodeStatus.AddingRemovingController)
       { // ZWNode(byte id , byte capability, byte security, byte reserved, byte
@@ -703,7 +730,6 @@ public class ApplicationLayerImpl implements ApplicationLayer,
         }
       } else if (nodeStatus == NodeStatus.Done)
       {
-        logger.debug("Node [{}] status is [{}]", nid, nodeStatus);
         try
         {
           addedNode = zwaveGetNodeProtocolInfo(nid);
@@ -721,7 +747,6 @@ public class ApplicationLayerImpl implements ApplicationLayer,
 
       else if (nodeStatus == NodeStatus.Failed)
       {
-        logger.warn("Node [{}] status is [{}]", nid, nodeStatus);
         nodeTable.remove(nid);
         // AddNodeEventArgs e = new AddNodeEventArgs(addedNode, cmd,
         // nodeStatus);
@@ -730,7 +755,6 @@ public class ApplicationLayerImpl implements ApplicationLayer,
 
       else if (nodeStatus == NodeStatus.ProtocolDone)
       {
-        logger.debug("Node [{}] status is [{}]", nid, nodeStatus);
         // AddNodeEventArgs e = new AddNodeEventArgs(addedNode, cmd,
         // nodeStatus);
         // if (AddNodeEvent != null) AddNodeEvent(this, e);
@@ -1362,7 +1386,7 @@ public class ApplicationLayerImpl implements ApplicationLayer,
   */
   
   private boolean otherSUCNodeId(int nodeId, boolean sucState,
-      TXOption txOptions, int capabilities) throws FrameLayerException
+      TXOption[] txOptions, int capabilities) throws FrameLayerException
   {
     DataPacket req = addPayloadToSUCNodeId(nodeId, sucState, txOptions,
         capabilities);
@@ -1403,7 +1427,7 @@ public class ApplicationLayerImpl implements ApplicationLayer,
   }
 
   private boolean thisSUCNodeId(int nodeId, boolean sucState,
-      TXOption txOptions, int capabilities) throws FrameLayerException
+      TXOption[] txOptions, int capabilities) throws FrameLayerException
   {
     DataPacket req = addPayloadToSUCNodeId(nodeId, sucState, txOptions,
         capabilities);
@@ -2027,20 +2051,25 @@ public class ApplicationLayerImpl implements ApplicationLayer,
    * 
    * @see
    * net.gregrapp.jhouse.interfaces.zwave.ApplicationLayer#zwaveReplicationSend
-   * (int, int[], net.gregrapp.jhouse.interfaces.zwave.Constants.TXOption)
+   * (int, int[], net.gregrapp.jhouse.interfaces.zwave.Constants.TXOption[])
    */
   public TXStatus zwaveReplicationSend(int nodeId, int[] data,
-      TXOption txOptions) throws FrameLayerException
+      TXOption[] txOptions) throws FrameLayerException
   {
     if (data == null)
     {
       throw new NullPointerException("data");
     }
+    
+    int txOptInt = 0;
+    for (TXOption txOpt : txOptions)
+      txOptInt |= txOpt.get();
+        
     DataPacket req = new DataPacket();
     req.addPayload(nodeId);
     req.addPayload(data.length);
     req.addPayload(data);
-    req.addPayload(txOptions.get());
+    req.addPayload(txOptInt);
     TXStatus rc = sessionLayer.requestWithMultipleResponses(
         DataFrame.CommandType.CmdZWaveReplicationSendData, req, 2, true);
     if (rc == TXStatus.CompleteOk)
@@ -2152,9 +2181,9 @@ public class ApplicationLayerImpl implements ApplicationLayer,
    * 
    * @see
    * net.gregrapp.jhouse.interfaces.zwave.ApplicationLayer#zwaveSendData(int,
-   * int[], net.gregrapp.jhouse.interfaces.zwave.Constants.TXOption)
+   * int[], net.gregrapp.jhouse.interfaces.zwave.Constants.TXOption[])
    */
-  public TXStatus zwaveSendData(int nodeId, int[] data, TXOption txOptions)
+  public TXStatus zwaveSendData(int nodeId, int[] data, TXOption[] txOptions)
       throws FrameLayerException
   {
     if (data == null)
@@ -2169,21 +2198,25 @@ public class ApplicationLayerImpl implements ApplicationLayer,
    * 
    * @see
    * net.gregrapp.jhouse.interfaces.zwave.ApplicationLayer#zwaveSendData(int,
-   * int[], net.gregrapp.jhouse.interfaces.zwave.Constants.TXOption, int)
+   * int[], net.gregrapp.jhouse.interfaces.zwave.Constants.TXOption[], int)
    */
-  public TXStatus zwaveSendData(int nodeId, int[] data, TXOption txOptions,
+  public TXStatus zwaveSendData(int nodeId, int[] data, TXOption[] txOptions,
       int timeout) throws FrameLayerException
   {
     if (data == null)
     {
       throw new NullPointerException("data");
     }
+    
+    int txOptInt = 0;
+    for (TXOption txOpt : txOptions)
+      txOptInt |= txOpt.get();
 
     DataPacket req = new DataPacket();
     req.addPayload(nodeId);
     req.addPayload(data.length);
     req.addPayload(data);
-    req.addPayload(txOptions.get());
+    req.addPayload(txOptInt);
     TXStatus rc = sessionLayer.requestWithMultipleResponses(
         DataFrame.CommandType.CmdZWaveSendData, req, 2, true, timeout);
     if (rc == TXStatus.CompleteOk)
@@ -2216,9 +2249,9 @@ public class ApplicationLayerImpl implements ApplicationLayer,
    * 
    * @see
    * net.gregrapp.jhouse.interfaces.zwave.ApplicationLayer#zwaveSendDataMeta
-   * (int, int[], net.gregrapp.jhouse.interfaces.zwave.Constants.TXOption)
+   * (int, int[], net.gregrapp.jhouse.interfaces.zwave.Constants.TXOption[])
    */
-  public TXStatus zwaveSendDataMeta(int nodeId, int[] data, TXOption txOptions)
+  public TXStatus zwaveSendDataMeta(int nodeId, int[] data, TXOption[] txOptions)
       throws FrameLayerException
   {
     return zwaveSendDataMeta(nodeId, data, txOptions, TIMEOUT);
@@ -2231,18 +2264,23 @@ public class ApplicationLayerImpl implements ApplicationLayer,
    * net.gregrapp.jhouse.interfaces.zwave.ApplicationLayer#zwaveSendDataMeta
    * (int, int[], net.gregrapp.jhouse.interfaces.zwave.Constants.TXOption, int)
    */
-  public TXStatus zwaveSendDataMeta(int nodeId, int[] data, TXOption txOptions,
+  public TXStatus zwaveSendDataMeta(int nodeId, int[] data, TXOption[] txOptions,
       int timeout) throws FrameLayerException
   {
     if (data == null)
     {
       throw new NullPointerException("data");
     }
+    
+    int txOptInt = 0;
+    for (TXOption txOpt : txOptions)
+      txOptInt |= txOpt.get();
+
     DataPacket req = new DataPacket();
     req.addPayload(nodeId);
     req.addPayload(data.length);
     req.addPayload(data);
-    req.addPayload(txOptions.get());
+    req.addPayload(txOptInt);
     TXStatus rc = sessionLayer.requestWithMultipleResponses(
         DataFrame.CommandType.CmdZWaveSendDataMeta, req, 2, true, timeout);
     if (rc != TXStatus.CompleteOk)
@@ -2253,19 +2291,23 @@ public class ApplicationLayerImpl implements ApplicationLayer,
   }
 
   public TXStatus zwaveSendDataMulti(List<Integer> nodeIdList, int[] data,
-      TXOption txOptions) throws FrameLayerException
+      TXOption[] txOptions) throws FrameLayerException
   {
     if (nodeIdList == null || data == null)
     {
       throw new NullPointerException("nodeIdList");
     }
-    DataPacket req = new DataPacket();
+    
+    int txOptInt = 0;
+    for (TXOption txOpt : txOptions)
+      txOptInt |= txOpt.get();
 
+    DataPacket req = new DataPacket();
     req.addPayload(nodeIdList.size());
     req.addPayload(CollectionUtils.toIntArray(nodeIdList));
     req.addPayload(data.length);
     req.addPayload(data);
-    req.addPayload(txOptions.get());
+    req.addPayload(txOptInt);
     TXStatus rc = sessionLayer.requestWithMultipleResponses(
         DataFrame.CommandType.CmdZWaveSendDataMulti, req, 2, true);
     if (rc == TXStatus.CompleteOk)
@@ -2282,14 +2324,18 @@ public class ApplicationLayerImpl implements ApplicationLayer,
    * 
    * @see
    * net.gregrapp.jhouse.interfaces.zwave.ApplicationLayer#zwaveSendNodeInformation
-   * (int, net.gregrapp.jhouse.interfaces.zwave.Constants.TXOption)
+   * (int, net.gregrapp.jhouse.interfaces.zwave.Constants.TXOption[])
    */
-  public TXStatus zwaveSendNodeInformation(int destination, TXOption txOptions)
+  public TXStatus zwaveSendNodeInformation(int destination, TXOption[] txOptions)
       throws FrameLayerException
   {
+    int txOptInt = 0;
+    for (TXOption txOpt : txOptions)
+      txOptInt |= txOpt.get();
+
     DataPacket req = new DataPacket();
     req.addPayload(destination);
-    req.addPayload(txOptions.get());
+    req.addPayload(txOptInt);
     TXStatus rc = sessionLayer.requestWithResponse(
         DataFrame.CommandType.CmdZWaveSendNodeInformation, req, true);
     if (rc != TXStatus.CompleteOk)
@@ -2306,10 +2352,10 @@ public class ApplicationLayerImpl implements ApplicationLayer,
    * 
    * @see
    * net.gregrapp.jhouse.interfaces.zwave.ApplicationLayer#zwaveSendSlaveData
-   * (int, int, int[], net.gregrapp.jhouse.interfaces.zwave.Constants.TXOption)
+   * (int, int, int[], net.gregrapp.jhouse.interfaces.zwave.Constants.TXOption[])
    */
   public TXStatus zwaveSendSlaveData(int sourceId, int destinationId,
-      int[] data, TXOption txOptions) throws FrameLayerException
+      int[] data, TXOption[] txOptions) throws FrameLayerException
   {
     return zwaveSendSlaveData(sourceId, destinationId, data, txOptions, TIMEOUT);
   }
@@ -2323,21 +2369,26 @@ public class ApplicationLayerImpl implements ApplicationLayer,
    * int)
    */
   public TXStatus zwaveSendSlaveData(int sourceId, int destinationId,
-      int[] data, TXOption txOptions, int timeout) throws FrameLayerException
+      int[] data, TXOption[] txOptions, int timeout) throws FrameLayerException
   {
     if (data == null)
     {
       throw new NullPointerException("data");
     }
-    TXStatus rc;
+
+     TXStatus rc;
     if (libraryType.library == Library.ControllerBridgeLib)
     {
-      DataPacket req = new DataPacket();
+      int txOptInt = 0;
+      for (TXOption txOpt : txOptions)
+        txOptInt |= txOpt.get();
+
+     DataPacket req = new DataPacket();
       req.addPayload(sourceId);
       req.addPayload(destinationId);
       req.addPayload(data.length);
       req.addPayload(data);
-      req.addPayload(txOptions.get());
+      req.addPayload(txOptInt);
       rc = sessionLayer.requestWithMultipleResponses(
           DataFrame.CommandType.CmdZWaveSendSlaveData, req, 2, true, timeout);
       if (rc == TXStatus.CompleteOk)
@@ -2360,7 +2411,7 @@ public class ApplicationLayerImpl implements ApplicationLayer,
    * net.gregrapp.jhouse.interfaces.zwave.Constants.TXOption)
    */
   public TXStatus zwaveSendSlaveNodeInformation(int sourceId,
-      int destinationId, TXOption txOptions) throws FrameLayerException
+      int destinationId, TXOption[] txOptions) throws FrameLayerException
   {
     return zwaveSendSlaveNodeInformation(sourceId, destinationId, txOptions,
         10000);
@@ -2374,16 +2425,20 @@ public class ApplicationLayerImpl implements ApplicationLayer,
    * net.gregrapp.jhouse.interfaces.zwave.Constants.TXOption, int)
    */
   public TXStatus zwaveSendSlaveNodeInformation(int sourceId,
-      int destinationId, TXOption txOptions, int timeout)
+      int destinationId, TXOption[] txOptions, int timeout)
       throws FrameLayerException
   {
     TXStatus rc;
     if (libraryType.library == Library.ControllerBridgeLib)
     {
+      int txOptInt = 0;
+      for (TXOption txOpt : txOptions)
+        txOptInt |= txOpt.get();
+
       DataPacket req = new DataPacket();
       req.addPayload(sourceId);
       req.addPayload(destinationId);
-      req.addPayload(txOptions.get());
+      req.addPayload(txOptInt);
 
       rc = sessionLayer.requestWithMultipleResponses(
           DataFrame.CommandType.CmdZWaveSendSlaveNodeInfo, req, 2, true,
@@ -2405,14 +2460,18 @@ public class ApplicationLayerImpl implements ApplicationLayer,
    * 
    * @see
    * net.gregrapp.jhouse.interfaces.zwave.ApplicationLayer#zwaveSendSucId(int,
-   * net.gregrapp.jhouse.interfaces.zwave.Constants.TXOption)
+   * net.gregrapp.jhouse.interfaces.zwave.Constants.TXOption[])
    */
-  public TXStatus zwaveSendSucId(int nodeId, TXOption txOptions)
+  public TXStatus zwaveSendSucId(int nodeId, TXOption[] txOptions)
       throws FrameLayerException
   {
+    int txOptInt = 0;
+    for (TXOption txOpt : txOptions)
+      txOptInt |= txOpt.get();
+
     DataPacket req = new DataPacket();
     req.addPayload(nodeId);
-    req.addPayload(txOptions.get());
+    req.addPayload(txOptInt);
     TXStatus rc = sessionLayer.requestWithMultipleResponses(
         DataFrame.CommandType.CmdZWaveSendSucId, req, 2, true, DEFAULT_TIMEOUT);
 
@@ -2631,7 +2690,7 @@ public class ApplicationLayerImpl implements ApplicationLayer,
       return -1;
 
     if (zwaveSetSucNodeId(_controllerNodeId, sucState,
-        TXOption.TransmitOptionNone, capabilities))
+        new TXOption[] {TXOption.TransmitOptionNone}, capabilities))
     {
       suc = _controllerNodeId;
       return suc;
@@ -2702,11 +2761,11 @@ public class ApplicationLayerImpl implements ApplicationLayer,
    * 
    * @see
    * net.gregrapp.jhouse.interfaces.zwave.ApplicationLayer#zwaveSetSucNodeId
-   * (int, boolean, net.gregrapp.jhouse.interfaces.zwave.Constants.TXOption,
+   * (int, boolean, net.gregrapp.jhouse.interfaces.zwave.Constants.TXOption[],
    * int)
    */
   public boolean zwaveSetSucNodeId(int nodeId, boolean sucState,
-      TXOption txOptions, int capabilities) throws FrameLayerException
+      TXOption[] txOptions, int capabilities) throws FrameLayerException
   {
     if (nodeId == _controllerNodeId)
     {
@@ -2826,7 +2885,7 @@ public class ApplicationLayerImpl implements ApplicationLayer,
    * int, int[])
    */
   public int zwaveTest(int testCmd, int testDelay, int testPayloadLength,
-      int testCount, TXOption testTXOptions, int maxLength, int[] testNodeMask)
+      int testCount, TXOption[] testTXOptions, int maxLength, int[] testNodeMask)
       throws FrameLayerException
   {
     if (testNodeMask == null)
@@ -2837,12 +2896,16 @@ public class ApplicationLayerImpl implements ApplicationLayer,
     req.addPayload(testCmd);
     if (testCmd > 0)
     {
+      int testTXOptInt = 0;
+      for (TXOption txOpt : testTXOptions)
+        testTXOptInt |= txOpt.get();
+
       req.addPayload((testDelay >> 8) & 0xff);
       req.addPayload(testDelay & 0xff);
       req.addPayload(testPayloadLength);
       req.addPayload((testCount >> 8) & 0xff);
       req.addPayload((testCount & 0xff));
-      req.addPayload(testTXOptions.get());
+      req.addPayload(testTXOptInt);
       req.addPayload(testNodeMask.length);
       req.addPayload(testNodeMask);
     }

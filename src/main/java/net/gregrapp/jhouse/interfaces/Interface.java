@@ -3,6 +3,7 @@
  */
 package net.gregrapp.jhouse.interfaces;
 
+import net.gregrapp.jhouse.device.types.Device;
 import net.gregrapp.jhouse.transports.Transport;
 
 /**
@@ -29,6 +30,11 @@ public interface Interface
    */
   public Transport getTransport();
 
+  /**
+   * @param device
+   */
+  public void attachDevice(Device device);
+  
   /**
    * Destroy the Interface
    */

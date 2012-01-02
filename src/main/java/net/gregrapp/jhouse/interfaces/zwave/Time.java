@@ -78,4 +78,9 @@ public class Time
     this.hour = (int)cal.get(Calendar.HOUR);
     this.weekday = (int)cal.get(Calendar.DAY_OF_WEEK);
   }
+  
+  public String toString()
+  {
+    return String.format("Weekday: {} Hour: {} Minute: {}", weekday, hour, minute);
+  }
 }

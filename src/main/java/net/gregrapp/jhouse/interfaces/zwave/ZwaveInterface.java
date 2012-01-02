@@ -3,13 +3,18 @@
  */
 package net.gregrapp.jhouse.interfaces.zwave;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import java.util.HashMap;
+import java.util.Map;
 
+import net.gregrapp.jhouse.device.types.Device;
+import net.gregrapp.jhouse.device.types.ZwaveDevice;
 import net.gregrapp.jhouse.interfaces.AbstractInterface;
-import net.gregrapp.jhouse.interfaces.zwave.Constants.CmdBasic;
+import net.gregrapp.jhouse.interfaces.zwave.Constants.CommandBasic;
 import net.gregrapp.jhouse.interfaces.zwave.Constants.TXOption;
 import net.gregrapp.jhouse.transports.TransportException;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @author Greg Rapp
@@ -19,6 +24,9 @@ public class ZwaveInterface extends AbstractInterface
 {
   private static final Logger logger = LoggerFactory
       .getLogger(ZwaveInterface.class);
+  
+  private ApplicationLayer appLayer;
+  private Map<Integer, ZwaveDevice> devices = new HashMap<Integer, ZwaveDevice>();
   
   /* (non-Javadoc)
    * @see net.gregrapp.jhouse.interfaces.Interface#init()
@@ -36,7 +44,7 @@ public class ZwaveInterface extends AbstractInterface
     
     FrameLayer frameLayer = new FrameLayerImpl(this.transport);
     SessionLayer sessionLayer = new SessionLayerImpl(frameLayer);
-    ApplicationLayer appLayer = new ApplicationLayerImpl(sessionLayer);
+    appLayer = new ApplicationLayerImpl(sessionLayer);
     
     try
     {
@@ -59,9 +67,9 @@ public class ZwaveInterface extends AbstractInterface
     
     try
     {
-      appLayer.zwaveSendData(14, new int[] {0x20, CmdBasic.BasicSet.get(), CmdBasic.BasicOn.get()}, TXOption.TransmitOptionAutoRoute);
+      appLayer.zwaveSendData(14, new int[] {0x20, CommandBasic.BASIC_SET.get(), CommandBasic.BASIC_ON.get()}, new TXOption[] {TXOption.TransmitOptionAcknowledge, TXOption.TransmitOptionAutoRoute});
       Thread.sleep(2000);
-      appLayer.zwaveSendData(14, new int[] {0x20, CmdBasic.BasicSet.get(), CmdBasic.BasicOff.get()}, TXOption.TransmitOptionAutoRoute);
+      appLayer.zwaveSendData(14, new int[] {0x20, CommandBasic.BASIC_SET.get(), CommandBasic.BASIC_OFF.get()}, new TXOption[] {TXOption.TransmitOptionAcknowledge, TXOption.TransmitOptionAutoRoute});
     } catch (FrameLayerException e)
     {
       // TODO Auto-generated catch block
@@ -73,6 +81,18 @@ public class ZwaveInterface extends AbstractInterface
     }
   }
 
+  public boolean zwaveSendData(int nodeId, int... data)
+  {
+    try
+    {
+      appLayer.zwaveSendData(nodeId, data, new TXOption[] {TXOption.TransmitOptionAcknowledge, TXOption.TransmitOptionAutoRoute});
+    } catch (FrameLayerException e)
+    {
+      return false;
+    }
+    return true;
+  }
+
   /* (non-Javadoc)
    * @see net.gregrapp.jhouse.interfaces.Interface#destroy()
    */
@@ -80,6 +100,15 @@ public class ZwaveInterface extends AbstractInterface
   {
     // TODO Auto-generated method stub
 
+  }
+
+  public void attachDevice(Device device)
+  {
+    if (!(device instanceof ZwaveDevice))
+      throw new ClassCastException("Cannot attach non ZWave device to this interface");
+   
+    ZwaveDevice zwaveDevice = (ZwaveDevice)device;
+    this.devices.put(zwaveDevice.getNodeId(), zwaveDevice);
   }
 
 }

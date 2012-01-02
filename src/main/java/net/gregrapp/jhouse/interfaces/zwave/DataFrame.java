@@ -132,7 +132,6 @@ public class DataFrame
     //
     // </summary>
     CmdSerialApiGetInitData(0x02),
-    // SERIALAPI VER. 4 added START
     // <summary>
     //
     // </summary>
@@ -326,7 +325,6 @@ public class DataFrame
     //
     // </summary>
     CmdZWaveSetPromiscuousMode(0xd0),
-    // SERIALAPI VER. 4 added END
     // <summary>
     //
     // </summary>
