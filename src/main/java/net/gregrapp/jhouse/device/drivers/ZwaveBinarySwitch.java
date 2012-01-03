@@ -11,17 +11,18 @@ import net.gregrapp.jhouse.device.types.ZwaveDevice;
 import net.gregrapp.jhouse.interfaces.zwave.Constants.CommandClass;
 import net.gregrapp.jhouse.interfaces.zwave.ZwaveInterface;
 import net.gregrapp.jhouse.interfaces.zwave.Constants.CommandBasic;
+import net.gregrapp.jhouse.interfaces.zwave.command.CommandClassBasic;
 
 /**
  * @author Greg Rapp
  * 
  */
-public class ZwaveBinarySwitch extends ZwaveDevice implements BinarySwitch
+public class ZwaveBinarySwitch extends ZwaveDevice implements BinarySwitch, CommandClassBasic
 {
   private static final Logger logger = LoggerFactory
       .getLogger(ZwaveBinarySwitch.class);
   
-  private int switchState;
+  private int switchState = -1;
   
   public ZwaveBinarySwitch(int deviceId, ZwaveInterface deviceInterface, int nodeId)
   {
@@ -43,6 +44,7 @@ public class ZwaveBinarySwitch extends ZwaveDevice implements BinarySwitch
   {
     logger.info("Setting device ID {} to ON", this.deviceId);
     deviceInterface.zwaveSendData(this.nodeId, CommandClass.COMMAND_CLASS_BASIC.get(), CommandBasic.BASIC_SET.get(), CommandBasic.BASIC_ON.get());
+    this.commandClassBasicSet(0xFF);
   }
 
   /*
@@ -53,7 +55,7 @@ public class ZwaveBinarySwitch extends ZwaveDevice implements BinarySwitch
   public void setOff()
   {
     logger.info("Setting device ID {} to OFF", this.deviceId);
-    deviceInterface.zwaveSendData(this.nodeId, CommandClass.COMMAND_CLASS_BASIC.get(), CommandBasic.BASIC_SET.get(), CommandBasic.BASIC_OFF.get());
+    this.commandClassBasicSet(0x0);
   }
 
   /*
@@ -63,8 +65,12 @@ public class ZwaveBinarySwitch extends ZwaveDevice implements BinarySwitch
    */
   public void toggleOnOff()
   {
-    // TODO Auto-generated method stub
-
+    if (this.switchState == 0xFF)
+      this.setOff();
+    else if (this.switchState == 0x0)
+      this.setOn();
+    else
+      logger.warn("Invalid switch state for device {}, ignoring toggle command", this.deviceId);
   }
 
   /* (non-Javadoc)
@@ -75,7 +81,23 @@ public class ZwaveBinarySwitch extends ZwaveDevice implements BinarySwitch
   {
     logger.info("Polling device ID {}", this.deviceId);
     // Request a BASIC_REPORT to get the current status of the switch
-    deviceInterface.zwaveSendData(this.nodeId, CommandClass.COMMAND_CLASS_BASIC.get(), CommandBasic.BASIC_GET.get());   
+    this.commandClassBasicGet();
+  }
+
+  public void commandClassBasicReport(int value)
+  {
+    logger.info("Received switch state update [{}]", value==255?"ON":"OFF");
+    this.switchState = value;
+  }
+
+  public void commandClassBasicSet(int value)
+  {
+    deviceInterface.zwaveSendData(this.nodeId, CommandClass.COMMAND_CLASS_BASIC.get(), CommandBasic.BASIC_SET.get(), value);    
+  }
+
+  public void commandClassBasicGet()
+  {
+    deviceInterface.zwaveSendData(this.nodeId, CommandClass.COMMAND_CLASS_BASIC.get(), CommandBasic.BASIC_GET.get());       
   }
 
 }

@@ -26,6 +26,14 @@ public abstract class AbstractDevice implements Device
   }
 
   /**
+   * @return device's unique id
+   */
+  public int getDeviceId()
+  {
+    return this.deviceId;
+  }
+  
+  /**
    * @return the device status text
    */
   public String getStatus()

@@ -62,9 +62,6 @@ import net.gregrapp.jhouse.utils.CollectionUtils;
 public class ApplicationLayerImpl implements ApplicationLayer,
     SessionLayerAsyncCallback
 {
-  private static final Logger logger = LoggerFactory
-      .getLogger(ApplicationLayerImpl.class);
-  
   // ApplicationControllerUpdate status
   private enum AppCtrlUpdateStatus
   {
@@ -91,7 +88,7 @@ public class ApplicationLayerImpl implements ApplicationLayer,
       return this.value;
     }
   }
-
+  
   public class ControllerCapabilities
   {
     private int[] capabilities;
@@ -507,6 +504,9 @@ public class ApplicationLayerImpl implements ApplicationLayer,
 
   private static final int GET_INIT_DATA_FLAG_TIMER_SUPPORT = 0x02;
 
+  private static final Logger logger = LoggerFactory
+      .getLogger(ApplicationLayerImpl.class);
+
   // for an response
   private static final int TIMEOUT = 180000; // wait 3 minuttes before timing
 
@@ -529,13 +529,13 @@ public class ApplicationLayerImpl implements ApplicationLayer,
   // out
   private Node addedNode;
 
+  private ApplicationLayerAsyncCallback asyncCallback;
+
   int chipRev = 0; // if chipType still is undefined after the
 
   int chipType = 0; // Initially we do not know which Chip is used and
 
-  // <summary>
   // Controller capabilities
-  // </summary>
   private int[] ctrlCapabilities = null;
 
   private boolean disposed;
@@ -566,6 +566,12 @@ public class ApplicationLayerImpl implements ApplicationLayer,
   private Transport transport;
 
   private ScheduledExecutorService waitForNodeInfoExecutor;
+  
+  public ApplicationLayerImpl(SessionLayer sessionLayer)
+  {
+    this.sessionLayer = sessionLayer;
+    sessionLayer.setCallbackHandler(this);
+  }
 
   private DataPacket addPayloadToSUCNodeId(int nodeId, boolean sucState,
       TXOption[] txOptions, int capabilities)
@@ -672,6 +678,7 @@ public class ApplicationLayerImpl implements ApplicationLayer,
   {
     logger.debug("Data packet received for command [{}]", cmd);
     
+    
     if (packet == null)
     {
       logger.warn("Null data packet received");
@@ -679,7 +686,7 @@ public class ApplicationLayerImpl implements ApplicationLayer,
     }
 
     int[] payload = packet.getPayload();
-    if (cmd == DataFrame.CommandType.CmdApplicationCommandHandler)
+    /*if (cmd == DataFrame.CommandType.CmdApplicationCommandHandler)
     {
       if (payload[3] == CommandClass.COMMAND_CLASS_BASIC.get())
       {
@@ -689,7 +696,7 @@ public class ApplicationLayerImpl implements ApplicationLayer,
           logger.info("Received BASIC_REPORT from node {} with a value of {}", payload[1], payload[5]);
         }
       }
-    } else if (cmd == DataFrame.CommandType.CmdApplicationSlaveCommandHandler)
+    } else*/ if (cmd == DataFrame.CommandType.CmdApplicationSlaveCommandHandler)
     {
       // ApplicationSlaveCommandEventArgs e = new
       // ApplicationSlaveCommandEventArgs(packet);
@@ -963,7 +970,6 @@ public class ApplicationLayerImpl implements ApplicationLayer,
     }
 
     else if (cmd == DataFrame.CommandType.CmdZWaveReplaceFailedNode)
-
       if (payload.length > 1)
       {
         int st = payload[1]; // Byte 1: funcID, Byte 2: status
@@ -1015,6 +1021,7 @@ public class ApplicationLayerImpl implements ApplicationLayer,
     // }
     // }
     // }
+    asyncCallback.dataPacketReceived(cmd, packet);
   }
 
   /*
@@ -1217,6 +1224,35 @@ public class ApplicationLayerImpl implements ApplicationLayer,
   /*
    * (non-Javadoc)
    * 
+   * @see net.gregrapp.jhouse.interfaces.zwave.ApplicationLayer#zwaveVersion()
+   */
+  public VersionInfoType getZwaveVersion() throws FrameLayerException
+  {
+    DataPacket req = new DataPacket();
+
+    TXStatus rc = sessionLayer.requestWithResponse(
+        DataFrame.CommandType.CmdZWaveGetVersion, req);
+    if (rc != TXStatus.CompleteOk)
+      return libraryType;// throw new
+                         // ApplicationLayerException("CmdZWaveGetVersion");
+
+    libraryType = new VersionInfoType();
+
+    int[] payload = rc.getResponse().getPayload();
+    libraryType.version = new String(payload, 6, 6);
+    if (libraryType.version.endsWith("\0"))
+    {
+      libraryType.version = libraryType.version.substring(0,
+          libraryType.version.length() - 1);
+    }
+    libraryType.library = Library.getByVal(payload[12]);
+
+    return libraryType;
+  }
+
+  /*
+   * (non-Javadoc)
+   * 
    * @see
    * net.gregrapp.jhouse.interfaces.zwave.ApplicationLayer#isControllerIsRealPrimary
    * ()
@@ -1351,21 +1387,6 @@ public class ApplicationLayerImpl implements ApplicationLayer,
   {
     return serialCapabilityMask.zwaveNodeMaskNodeIn(CommandId);
   }
-
-  // <summary>
-  // Remove Node from the nodeTable
-  // </summary>
-  // <param name="id"></param>
-  public void nodeRemove(int id)
-  {
-    nodeTable.remove(id);
-  }
-
-  public ApplicationLayerImpl(SessionLayer sessionLayer)
-  {
-    this.sessionLayer = sessionLayer;
-    sessionLayer.setCallbackHandler(this);
-  }
   
   /*
    * (non-Javadoc)
@@ -1385,6 +1406,15 @@ public class ApplicationLayerImpl implements ApplicationLayer,
   }
   */
   
+  // <summary>
+  // Remove Node from the nodeTable
+  // </summary>
+  // <param name="id"></param>
+  public void nodeRemove(int id)
+  {
+    nodeTable.remove(id);
+  }
+
   private boolean otherSUCNodeId(int nodeId, boolean sucState,
       TXOption[] txOptions, int capabilities) throws FrameLayerException
   {
@@ -1424,6 +1454,11 @@ public class ApplicationLayerImpl implements ApplicationLayer,
     nodeTable.add(node);
     _requestNodeInfo = false;
     waitForNodeInfoCallbackHandler();
+  }
+
+  public void setCallbackHandler(ApplicationLayerAsyncCallback handler)
+  {
+    this.asyncCallback = handler;
   }
 
   private boolean thisSUCNodeId(int nodeId, boolean sucState,
@@ -2918,35 +2953,6 @@ public class ApplicationLayerImpl implements ApplicationLayer,
     {
       return rc.getResponse().getPayload()[0];
     }
-  }
-
-  /*
-   * (non-Javadoc)
-   * 
-   * @see net.gregrapp.jhouse.interfaces.zwave.ApplicationLayer#zwaveVersion()
-   */
-  public VersionInfoType getZwaveVersion() throws FrameLayerException
-  {
-    DataPacket req = new DataPacket();
-
-    TXStatus rc = sessionLayer.requestWithResponse(
-        DataFrame.CommandType.CmdZWaveGetVersion, req);
-    if (rc != TXStatus.CompleteOk)
-      return libraryType;// throw new
-                         // ApplicationLayerException("CmdZWaveGetVersion");
-
-    libraryType = new VersionInfoType();
-
-    int[] payload = rc.getResponse().getPayload();
-    libraryType.version = new String(payload, 6, 6);
-    if (libraryType.version.endsWith("\0"))
-    {
-      libraryType.version = libraryType.version.substring(0,
-          libraryType.version.length() - 1);
-    }
-    libraryType.library = Library.getByVal(payload[12]);
-
-    return libraryType;
   }
 
 }

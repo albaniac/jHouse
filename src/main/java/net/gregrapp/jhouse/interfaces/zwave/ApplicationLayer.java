@@ -582,4 +582,6 @@ public interface ApplicationLayer
   // </summary>
   // <returns>Type and version</returns>
   public VersionInfoType getZwaveVersion() throws FrameLayerException;
+  
+  public void setCallbackHandler(ApplicationLayerAsyncCallback handler);
 }

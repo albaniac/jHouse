@@ -69,8 +69,7 @@ public class SerialImpl extends AbstractTransport
       bytesAvailable = in.available();
     } catch (IOException e)
     {
-      // TODO Auto-generated catch block
-      e.printStackTrace();
+      logger.error("Error determining number of bytes available on interface", e);
     }
 
     return bytesAvailable;
@@ -131,7 +130,6 @@ public class SerialImpl extends AbstractTransport
 
   public boolean isOpen()
   {
-    // TODO Auto-generated method stub
     return true;
   }
 
@@ -159,8 +157,8 @@ public class SerialImpl extends AbstractTransport
     {
       throw new TransportException("Transport read error", e);
     }
-    logger.debug("Read {} bytes in from interface - {}", numBytes,
-        ArrayUtils.toHexStringArray((Arrays.copyOfRange(buffer, 0, numBytes))));
+    logger.debug("Read {} bytes in from interface", numBytes);
+    logger.trace("{}", ArrayUtils.toHexStringArray((Arrays.copyOfRange(buffer, 0, numBytes))));
     return numBytes;
   }
 
@@ -171,8 +169,8 @@ public class SerialImpl extends AbstractTransport
    */
   public int write(int[] buffer) throws TransportException
   {
-    logger.debug("Writing {} bytes out to interface - {}", buffer.length,
-        ArrayUtils.toHexStringArray(buffer));
+    logger.debug("Writing {} bytes out to interface", buffer.length);
+    logger.trace("{}", ArrayUtils.toHexStringArray(buffer));
     try
     {
       for (int buf : buffer)

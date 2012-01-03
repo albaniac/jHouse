@@ -18,6 +18,11 @@ public abstract class AbstractInterface implements Interface
   
   protected Transport transport;
   
+  public AbstractInterface(Transport transport)
+  {
+    this.setTransport(transport);
+  }
+  
   public void setTransport(Transport transport)
   {
     logger.debug("Setting Transport on this Interface to instance of {}", transport.getClass().getName());

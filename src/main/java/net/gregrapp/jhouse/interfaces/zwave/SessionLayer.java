@@ -42,7 +42,7 @@ public interface SessionLayer
   // 
   // </summary>
   // <param name="handler"></param>
-  void setCallbackHandler(SessionLayerAsyncCallback handler);
+  public void setCallbackHandler(SessionLayerAsyncCallback handler);
   // <summary>
   // 
   // </summary>

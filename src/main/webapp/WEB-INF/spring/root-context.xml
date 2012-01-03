@@ -18,7 +18,7 @@
 	</bean>
 
 	<bean name="zwaveInterface" class="net.gregrapp.jhouse.interfaces.zwave.ZwaveInterface">
-		<property name="transport" ref="zwaveTransport"/>
+		<constructor-arg ref="zwaveTransport"/>
 	</bean>
 	
 	<bean name="dinningRoomLight" class="net.gregrapp.jhouse.device.drivers.ZwaveBinarySwitch">

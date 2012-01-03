@@ -365,7 +365,7 @@ public class FrameLayerImpl implements FrameLayer
         parserState = FrameReceiveState.FRS_DATA;
     } else if (parserState == FrameReceiveState.FRS_DATA)
     {
-      logger.warn("Payload byte received [{}]", String.format("%#04x", buffer));
+      logger.trace("Payload byte received [{}]", String.format("%#04x", buffer));
       if (!currentDataFrame.addPayload(buffer))
       {
         logger.warn("Error parsing payload byte [{}]", String.format("%#04x", buffer));

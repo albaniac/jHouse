@@ -73,6 +73,50 @@ public class Constants
       return this.value;
     }
   }
+  
+  public enum CommandSwitchMultilevel
+  {
+    // <summary>
+    //      SWITCH_MULTILEVEL_START_LEVEL_CHANGE(0x04),
+    // </summary>
+    SWITCH_MULTILEVEL_START_LEVEL_CHANGE(0x04),
+    // <summary>
+    //      SWITCH_MULTILEVEL_SET(0x01),
+    // </summary>
+    SWITCH_MULTILEVEL_SET(0x01),
+    // <summary>
+    //      SWITCH_MULTILEVEL_REPORT(0x03),
+    // </summary>
+    SWITCH_MULTILEVEL_REPORT(0x03),
+    // <summary>
+    //      SWITCH_MULTILEVEL_DOWN_BIT(0x40),
+    // </summary>
+    SWITCH_MULTILEVEL_DOWN_BIT(0x40),
+    // <summary>
+    //      SWITCH_MULTILEVEL_STOP_LEVEL_CHANGE(0x05),
+    // </summary>
+    SWITCH_MULTILEVEL_STOP_LEVEL_CHANGE(0x05),
+    // <summary>
+    //      SWITCH_MULTILEVEL_GET(0x02),
+    // </summary>
+    SWITCH_MULTILEVEL_GET(0x02),
+    // <summary>
+    //      SWITCH_MULTILEVEL_LEVEL_CHANGE_MASK(0xC0),
+    // </summary>
+    SWITCH_MULTILEVEL_LEVEL_CHANGE_MASK(0xC0);
+    
+    private int value;
+
+    CommandSwitchMultilevel(int value)
+    {
+      this.value = value;
+    }
+
+    public int get()
+    {
+      return this.value;
+    }
+  }
 
   // <summary>
   // LibraryType
