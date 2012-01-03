@@ -27,4 +27,5 @@
 		<constructor-arg value="14" />
 	</bean>
 	
+	<bean name="deviceManager" class="net.gregrapp.jhouse.managers.DeviceManagerImpl" />
 </beans>
