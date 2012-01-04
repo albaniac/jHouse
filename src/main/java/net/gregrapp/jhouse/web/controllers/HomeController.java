@@ -5,6 +5,8 @@ import java.util.Date;
 import java.util.Locale;
 
 import net.gregrapp.jhouse.device.classes.BinarySwitch;
+import net.gregrapp.jhouse.device.types.Device;
+import net.gregrapp.jhouse.managers.DeviceManager;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -12,6 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 
@@ -25,6 +28,9 @@ public class HomeController {
 	
 	@Autowired
 	ApplicationContext ctx;
+	
+	@Autowired
+	DeviceManager deviceManager;
 	
 	/**
 	 * Simply selects the home view to render by returning its name.
@@ -42,8 +48,24 @@ public class HomeController {
 		String formattedDate = dateFormat.format(date);
 		
 		model.addAttribute("serverTime", formattedDate );
-		
+
 		return "home";
 	}
-	
+
+  @RequestMapping(value = "/info/{id}", method = RequestMethod.GET)
+  public String info(@PathVariable("id") int id, Model model)
+  {
+    Device dev = deviceManager.getDeviceForId(id);
+    String[] devclass = null;
+    if (dev != null)
+      devclass = deviceManager.getDeviceClassesForDevice(dev);
+   
+    String strDevClasses = "";
+    for (String s : devclass)
+      strDevClasses += s + ",";
+    
+    model.addAttribute("stuff", strDevClasses); 
+    
+   return "home"; 
+  }
 }

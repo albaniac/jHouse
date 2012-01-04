@@ -21,22 +21,27 @@ public interface Interface
    * Set the Transport to be utilized by this Interface
    * 
    * @param transport
-   *          Instance of Transport
+   *          instance of transport
    */
   public void setTransport(Transport transport);
 
   /**
-   * @return A Transport instance
+   * @return a transport instance
    */
   public Transport getTransport();
 
   /**
-   * @param device
+   * @param device device to attach to this interface
    */
   public void attachDevice(Device device);
   
   /**
-   * Destroy the Interface
+   * @return interface status
+   */
+  public boolean isReady();
+  
+  /**
+   * Destroy the interface
    */
   public void destroy();
 }

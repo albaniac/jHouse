@@ -3,17 +3,16 @@
  */
 package net.gregrapp.jhouse.device.drivers;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import net.gregrapp.jhouse.device.classes.BinarySwitch;
 import net.gregrapp.jhouse.device.classes.MultilevelSwitch;
 import net.gregrapp.jhouse.device.types.ZwaveDevice;
+import net.gregrapp.jhouse.interfaces.zwave.Constants.CommandClass;
 import net.gregrapp.jhouse.interfaces.zwave.Constants.CommandSwitchMultilevel;
 import net.gregrapp.jhouse.interfaces.zwave.ZwaveInterface;
-import net.gregrapp.jhouse.interfaces.zwave.Constants.CommandBasic;
-import net.gregrapp.jhouse.interfaces.zwave.Constants.CommandClass;
 import net.gregrapp.jhouse.interfaces.zwave.command.CommandClassSwitchMultilevel;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @author Greg Rapp
@@ -96,4 +95,14 @@ public class ZwaveMultilevelSwitch extends ZwaveDevice implements BinarySwitch, 
     this.commandClassSwitchMultilevelGet();
   }
 
+  /*
+   * (non-Javadoc)
+   * 
+   * @see net.gregrapp.jhouse.device.types.Device#interfaceReady()
+   */
+  public void interfaceReady()
+  {
+    logger.debug("Interface ready callback received");
+    this.poll();
+  }
 }

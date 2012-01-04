@@ -31,16 +31,16 @@ public abstract class ZwaveDevice extends AbstractDevice
   }
 
   /**
-   * Poll the device to obtain its current state
-   */
-  public abstract void poll();
-  
-  /**
    * Poll the device when we receive a HAIL from the device
    */
   public void hail()
   {
     this.poll();
   }
-  
+
+  /**
+   * Poll the device to obtain its current state
+   */
+  public abstract void poll();
+
 }

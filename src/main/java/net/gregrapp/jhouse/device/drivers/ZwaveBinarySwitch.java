@@ -17,14 +17,16 @@ import net.gregrapp.jhouse.interfaces.zwave.command.CommandClassBasic;
  * @author Greg Rapp
  * 
  */
-public class ZwaveBinarySwitch extends ZwaveDevice implements BinarySwitch, CommandClassBasic
+public class ZwaveBinarySwitch extends ZwaveDevice implements BinarySwitch,
+    CommandClassBasic
 {
   private static final Logger logger = LoggerFactory
       .getLogger(ZwaveBinarySwitch.class);
-  
+
   private int switchState = -1;
-  
-  public ZwaveBinarySwitch(int deviceId, ZwaveInterface deviceInterface, int nodeId)
+
+  public ZwaveBinarySwitch(int deviceId, ZwaveInterface deviceInterface,
+      int nodeId)
   {
     super(deviceId, deviceInterface, nodeId);
     init();
@@ -32,9 +34,8 @@ public class ZwaveBinarySwitch extends ZwaveDevice implements BinarySwitch, Comm
 
   private void init()
   {
-    this.poll();
   }
-  
+
   /*
    * (non-Javadoc)
    * 
@@ -43,7 +44,9 @@ public class ZwaveBinarySwitch extends ZwaveDevice implements BinarySwitch, Comm
   public void setOn()
   {
     logger.info("Setting device ID {} to ON", this.deviceId);
-    deviceInterface.zwaveSendData(this.nodeId, CommandClass.COMMAND_CLASS_BASIC.get(), CommandBasic.BASIC_SET.get(), CommandBasic.BASIC_ON.get());
+    deviceInterface.zwaveSendData(this.nodeId,
+        CommandClass.COMMAND_CLASS_BASIC.get(), CommandBasic.BASIC_SET.get(),
+        CommandBasic.BASIC_ON.get());
     this.commandClassBasicSet(0xFF);
   }
 
@@ -70,10 +73,14 @@ public class ZwaveBinarySwitch extends ZwaveDevice implements BinarySwitch, Comm
     else if (this.switchState == 0x0)
       this.setOn();
     else
-      logger.warn("Invalid switch state for device {}, ignoring toggle command", this.deviceId);
+      logger.warn(
+          "Invalid switch state for device {}, ignoring toggle command",
+          this.deviceId);
   }
 
-  /* (non-Javadoc)
+  /*
+   * (non-Javadoc)
+   * 
    * @see net.gregrapp.jhouse.device.types.ZwaveDevice#poll()
    */
   @Override
@@ -86,18 +93,33 @@ public class ZwaveBinarySwitch extends ZwaveDevice implements BinarySwitch, Comm
 
   public void commandClassBasicReport(int value)
   {
-    logger.info("Received switch state update [{}]", value==255?"ON":"OFF");
+    logger.info("Received switch state update [{}]", value == 255 ? "ON"
+        : "OFF");
     this.switchState = value;
   }
 
   public void commandClassBasicSet(int value)
   {
-    deviceInterface.zwaveSendData(this.nodeId, CommandClass.COMMAND_CLASS_BASIC.get(), CommandBasic.BASIC_SET.get(), value);    
+    deviceInterface.zwaveSendData(this.nodeId,
+        CommandClass.COMMAND_CLASS_BASIC.get(), CommandBasic.BASIC_SET.get(),
+        value);
   }
 
   public void commandClassBasicGet()
   {
-    deviceInterface.zwaveSendData(this.nodeId, CommandClass.COMMAND_CLASS_BASIC.get(), CommandBasic.BASIC_GET.get());       
+    deviceInterface.zwaveSendData(this.nodeId,
+        CommandClass.COMMAND_CLASS_BASIC.get(), CommandBasic.BASIC_GET.get());
+  }
+
+  /*
+   * (non-Javadoc)
+   * 
+   * @see net.gregrapp.jhouse.device.types.Device#interfaceReady()
+   */
+  public void interfaceReady()
+  {
+    logger.debug("Interface ready callback received");
+    this.poll();
   }
 
 }

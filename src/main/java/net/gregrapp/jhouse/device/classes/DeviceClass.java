@@ -9,9 +9,4 @@ package net.gregrapp.jhouse.device.classes;
  */
 public interface DeviceClass
 {
-  public String getStatus();
-  public void setStatus(String status);
-  
-  public String getValue();
-  public void setValue(String value);
 }

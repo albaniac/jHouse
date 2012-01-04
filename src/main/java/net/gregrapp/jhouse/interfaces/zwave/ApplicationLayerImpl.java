@@ -1722,7 +1722,7 @@ public class ApplicationLayerImpl implements ApplicationLayer,
     TXStatus rc = sessionLayer.requestWithResponse(
         DataFrame.CommandType.CmdZWaveGetNodeProtocolInfo, req);
     if (rc != TXStatus.CompleteOk)
-      throw new ApplicationLayerException(String.format("CMD_ZWaveGET_NODE_PROTOCOL_INFO - status:{}", rc));
+      throw new ApplicationLayerException(String.format("CMD_ZWaveGET_NODE_PROTOCOL_INFO - status: {}", rc.toString()));
     int[] payload = rc.getResponse().getPayload();
 
     boolean isVirtual = false;

@@ -3,8 +3,8 @@
  */
 package net.gregrapp.jhouse.device.types;
 
-import java.util.ArrayList;
-import java.util.List;
+import net.gregrapp.jhouse.interfaces.Interface;
+
 
 
 /**

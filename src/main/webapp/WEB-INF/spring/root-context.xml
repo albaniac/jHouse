@@ -22,8 +22,11 @@
 	</bean>
 	
 	<bean name="dinningRoomLight" class="net.gregrapp.jhouse.device.drivers.ZwaveBinarySwitch">
+		<!-- Unique device ID -->
 		<constructor-arg value="1" />
+		<!-- Interface bean reference -->
 		<constructor-arg ref="zwaveInterface"/>
+		<!-- ZWave node ID -->
 		<constructor-arg value="14" />
 	</bean>
 	

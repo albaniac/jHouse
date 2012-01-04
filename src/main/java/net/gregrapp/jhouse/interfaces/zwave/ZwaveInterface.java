@@ -24,28 +24,33 @@ import org.slf4j.LoggerFactory;
 
 /**
  * @author Greg Rapp
- *
+ * 
  */
-public class ZwaveInterface extends AbstractInterface implements ApplicationLayerAsyncCallback
+public class ZwaveInterface extends AbstractInterface implements
+    ApplicationLayerAsyncCallback
 {
+  private static final Logger logger = LoggerFactory
+      .getLogger(ZwaveInterface.class);
+
+  private ApplicationLayer appLayer;
+
+  private Map<Integer, ArrayList<ZwaveDevice>> devices = new HashMap<Integer, ArrayList<ZwaveDevice>>();
+
   public ZwaveInterface(Transport transport)
   {
     super(transport);
   }
 
-  private static final Logger logger = LoggerFactory
-      .getLogger(ZwaveInterface.class);
-  
-  private ApplicationLayer appLayer;
-  private Map<Integer, ArrayList<ZwaveDevice>> devices = new HashMap<Integer, ArrayList<ZwaveDevice>>();
-  
   public void attachDevice(Device device)
   {
     if (!(device instanceof ZwaveDevice))
-      throw new ClassCastException("Cannot attach non ZWave device to this interface");
-   
-    ZwaveDevice zwaveDevice = (ZwaveDevice)device;
+    {
+      throw new ClassCastException(
+          "Cannot attach non ZWave device to this interface");
+    }
     
+    ZwaveDevice zwaveDevice = (ZwaveDevice) device;
+
     if (devices.containsKey(zwaveDevice.getNodeId()))
     {
       if (devices.get(zwaveDevice.getNodeId()) instanceof ArrayList)
@@ -62,9 +67,12 @@ public class ZwaveInterface extends AbstractInterface implements ApplicationLaye
       ArrayList<ZwaveDevice> tmp = new ArrayList<ZwaveDevice>();
       tmp.add(zwaveDevice);
       devices.put(zwaveDevice.getNodeId(), tmp);
-    }    
+    }
+    
+    //if (this.interfaceReady)
+    //  device.interfaceReady();
   }
-  
+
   public void dataPacketReceived(CommandType cmd, DataPacket packet)
   {
     int[] payload = packet.getPayload();
@@ -75,21 +83,24 @@ public class ZwaveInterface extends AbstractInterface implements ApplicationLaye
         logger.info("COMMAND_CLASS_BASIC");
         if (payload[4] == CommandBasic.BASIC_REPORT.get())
         {
-          logger.info("Received BASIC_REPORT from node {} with a value of {}", payload[1], payload[5]);
+          logger.info("Received BASIC_REPORT from node {} with a value of {}",
+              payload[1], payload[5]);
           int nodeId = payload[1];
           if (devices.containsKey(nodeId))
           {
             int value = payload[5];
             for (Object device : devices.get(nodeId))
               if (device instanceof CommandClassBasic)
-                ((CommandClassBasic)device).commandClassBasicReport(value);
+                ((CommandClassBasic) device).commandClassBasicReport(value);
           }
         }
       }
-    }    
+    }
   }
 
-  /* (non-Javadoc)
+  /*
+   * (non-Javadoc)
+   * 
    * @see net.gregrapp.jhouse.interfaces.Interface#destroy()
    */
   public void destroy()
@@ -98,7 +109,9 @@ public class ZwaveInterface extends AbstractInterface implements ApplicationLaye
 
   }
 
-  /* (non-Javadoc)
+  /*
+   * (non-Javadoc)
+   * 
    * @see net.gregrapp.jhouse.interfaces.Interface#init()
    */
   public void init()
@@ -108,10 +121,11 @@ public class ZwaveInterface extends AbstractInterface implements ApplicationLaye
       this.transport.init();
     } catch (TransportException e)
     {
-      // TODO Auto-generated catch block
-      e.printStackTrace();
+      logger
+          .error("Aborting ZWave initialization, error opening transport", e);
+      return;
     }
-    
+
     FrameLayer frameLayer = new FrameLayerImpl(this.transport);
     SessionLayer sessionLayer = new SessionLayerImpl(frameLayer);
     appLayer = new ApplicationLayerImpl(sessionLayer);
@@ -124,7 +138,7 @@ public class ZwaveInterface extends AbstractInterface implements ApplicationLaye
     {
       logger.error("Error retrieving version info from ZWave controller", e);
     }
-    
+
     try
     {
       appLayer.enumerateNodes();
@@ -135,12 +149,20 @@ public class ZwaveInterface extends AbstractInterface implements ApplicationLaye
     {
       logger.error("Error enumerating ZWave nodes", e);
     }
+
+   setInterfaceReady(true);
     
     try
     {
-      appLayer.zwaveSendData(14, new int[] {0x20, CommandBasic.BASIC_SET.get(), CommandBasic.BASIC_ON.get()}, new TXOption[] {TXOption.TransmitOptionAcknowledge, TXOption.TransmitOptionAutoRoute});
+      appLayer.zwaveSendData(14, new int[] { 0x20,
+          CommandBasic.BASIC_SET.get(), CommandBasic.BASIC_ON.get() },
+          new TXOption[] { TXOption.TransmitOptionAcknowledge,
+              TXOption.TransmitOptionAutoRoute });
       Thread.sleep(2000);
-      appLayer.zwaveSendData(14, new int[] {0x20, CommandBasic.BASIC_SET.get(), CommandBasic.BASIC_OFF.get()}, new TXOption[] {TXOption.TransmitOptionAcknowledge, TXOption.TransmitOptionAutoRoute});
+      appLayer.zwaveSendData(14, new int[] { 0x20,
+          CommandBasic.BASIC_SET.get(), CommandBasic.BASIC_OFF.get() },
+          new TXOption[] { TXOption.TransmitOptionAcknowledge,
+              TXOption.TransmitOptionAutoRoute });
     } catch (FrameLayerException e)
     {
       // TODO Auto-generated catch block
@@ -156,7 +178,9 @@ public class ZwaveInterface extends AbstractInterface implements ApplicationLaye
   {
     try
     {
-      TXStatus txStatus = appLayer.zwaveSendData(nodeId, data, new TXOption[] {TXOption.TransmitOptionAcknowledge, TXOption.TransmitOptionAutoRoute});
+      TXStatus txStatus = appLayer.zwaveSendData(nodeId, data,
+          new TXOption[] { TXOption.TransmitOptionAcknowledge,
+              TXOption.TransmitOptionAutoRoute });
       if (txStatus == TXStatus.CompleteOk)
         return true;
     } catch (FrameLayerException e)
@@ -167,5 +191,22 @@ public class ZwaveInterface extends AbstractInterface implements ApplicationLaye
     return false;
   }
 
-  
+  /**
+   * Tells attached devices that this interface is ready for traffic
+   */
+  private void setInterfaceReady(boolean ready)
+  {
+    this.interfaceReady = ready;
+    
+    if (ready)
+    {
+      for (ArrayList<ZwaveDevice> zwaveDevices : this.devices.values())
+      {
+        for (ZwaveDevice dev : zwaveDevices)
+        {
+          dev.interfaceReady();
+        }
+      }
+    }
+  }
 }
