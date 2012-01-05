@@ -68,6 +68,22 @@ public class ZwaveBinarySwitch extends ZwaveDevice implements BinarySwitch,
    */
   public void toggleOnOff()
   {
+    logger.debug("Toggling device {}", this.deviceId);
+    if (this.switchState == -1)
+    {
+      logger.info("Switch state is unknown, polling switch");
+      
+      this.poll();
+      long startTime = System.currentTimeMillis();
+      while (this.switchState == -1 && (System.currentTimeMillis() - startTime < 5000)) {
+        try
+        {
+          Thread.sleep(100);
+        } catch (InterruptedException e)
+        {
+        }
+      }
+    }
     if (this.switchState == 0xFF)
       this.setOff();
     else if (this.switchState == 0x0)
@@ -103,6 +119,7 @@ public class ZwaveBinarySwitch extends ZwaveDevice implements BinarySwitch,
     deviceInterface.zwaveSendData(this.nodeId,
         CommandClass.COMMAND_CLASS_BASIC.get(), CommandBasic.BASIC_SET.get(),
         value);
+    this.switchState = value;
   }
 
   public void commandClassBasicGet()

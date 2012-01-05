@@ -137,6 +137,11 @@ public class ZwaveInterface extends AbstractInterface implements
     } catch (FrameLayerException e)
     {
       logger.error("Error retrieving version info from ZWave controller", e);
+      return;
+    } catch (ApplicationLayerException e)
+    {
+      logger.error("Error retrieving version info from ZWave controller", e);
+      return;
     }
 
     try
@@ -198,7 +203,7 @@ public class ZwaveInterface extends AbstractInterface implements
   {
     this.interfaceReady = ready;
     
-    if (ready)
+    if (ready && this.devices != null)
     {
       for (ArrayList<ZwaveDevice> zwaveDevices : this.devices.values())
       {

@@ -1,5 +1,7 @@
 package net.gregrapp.jhouse.web.controllers;
 
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.text.DateFormat;
 import java.util.Date;
 import java.util.Locale;
@@ -52,7 +54,7 @@ public class HomeController {
 		return "home";
 	}
 
-  @RequestMapping(value = "/info/{id}", method = RequestMethod.GET)
+  @RequestMapping(value = "/device/{id}", method = RequestMethod.GET)
   public String info(@PathVariable("id") int id, Model model)
   {
     Device dev = deviceManager.getDeviceForId(id);
@@ -67,5 +69,44 @@ public class HomeController {
     model.addAttribute("stuff", strDevClasses); 
     
    return "home"; 
+  }
+  
+  @RequestMapping(value = "/device/{id}/{method}", method = RequestMethod.GET)
+  public String device(@PathVariable("id") int id, @PathVariable("method") String method, Model model)
+  {
+    Device dev = deviceManager.getDeviceForId(id);
+    if (dev == null)
+    {
+      model.addAttribute("stuff", "stuff is null man"); 
+      return "home";
+    }
+    
+    try
+    {
+      Method meth = dev.getClass().getMethod(method);
+      meth.invoke(dev);
+    } catch (SecurityException e)
+    {
+      // TODO Auto-generated catch block
+      e.printStackTrace();
+    } catch (NoSuchMethodException e)
+    {
+      model.addAttribute("stuff", "no such method"); 
+      return "home";
+    } catch (IllegalArgumentException e)
+    {
+      // TODO Auto-generated catch block
+      e.printStackTrace();
+    } catch (IllegalAccessException e)
+    {
+      // TODO Auto-generated catch block
+      e.printStackTrace();
+    } catch (InvocationTargetException e)
+    {
+      // TODO Auto-generated catch block
+      e.printStackTrace();
+    }
+    
+    return "home"; 
   }
 }

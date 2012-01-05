@@ -581,7 +581,7 @@ public interface ApplicationLayer
   // Returns the library type and version used on the ZWaveModule
   // </summary>
   // <returns>Type and version</returns>
-  public VersionInfoType getZwaveVersion() throws FrameLayerException;
+  public VersionInfoType getZwaveVersion() throws FrameLayerException, ApplicationLayerException;
   
   public void setCallbackHandler(ApplicationLayerAsyncCallback handler);
 }

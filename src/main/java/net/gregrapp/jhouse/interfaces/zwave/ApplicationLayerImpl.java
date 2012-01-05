@@ -1226,15 +1226,15 @@ public class ApplicationLayerImpl implements ApplicationLayer,
    * 
    * @see net.gregrapp.jhouse.interfaces.zwave.ApplicationLayer#zwaveVersion()
    */
-  public VersionInfoType getZwaveVersion() throws FrameLayerException
+  public VersionInfoType getZwaveVersion() throws FrameLayerException, ApplicationLayerException
   {
     DataPacket req = new DataPacket();
 
     TXStatus rc = sessionLayer.requestWithResponse(
         DataFrame.CommandType.CmdZWaveGetVersion, req);
     if (rc != TXStatus.CompleteOk)
-      return libraryType;// throw new
-                         // ApplicationLayerException("CmdZWaveGetVersion");
+      //return libraryType;
+      throw new ApplicationLayerException(String.format("CmdZWaveGetVersion - {}", rc.toString()));
 
     libraryType = new VersionInfoType();
 

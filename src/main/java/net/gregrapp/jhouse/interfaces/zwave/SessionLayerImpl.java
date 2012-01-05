@@ -242,7 +242,7 @@ public class SessionLayerImpl implements SessionLayer, FrameLayerAsyncCallback
         responses[i] = queue.poll(timeout);
         if (responses[i] != null)
         {
-          logger.debug("{} responses received", responses.length);
+          logger.debug("Response {} out of a max of {} received", i+1, maxResponses);
           
           // Strip the sequence number if used by the request
           // The sequence number is placed as the first byte in the payload
