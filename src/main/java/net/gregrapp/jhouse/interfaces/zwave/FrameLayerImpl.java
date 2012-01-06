@@ -279,7 +279,7 @@ public class FrameLayerImpl implements FrameLayer
   
   private boolean parseRawData(int buffer)
   {
-    logger.trace("Parsing raw frame byte [{}]", String.format("%#04x", buffer));
+    //logger.trace("Parsing raw frame byte [{}]", String.format("%#04x", buffer));
     if (parserState == FrameReceiveState.FRS_SOF_HUNT)
     {
       if (DataFrame.HeaderType.StartOfFrame == DataFrame.HeaderType

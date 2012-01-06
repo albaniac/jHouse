@@ -1032,6 +1032,7 @@ public class ApplicationLayerImpl implements ApplicationLayer,
   public Node[] enumerateNodes() throws FrameLayerException,
       ApplicationLayerException
   {
+    logger.debug("Enumerating ZWave nodes");
     synchronized (this)
     {
       DataPacket req = new DataPacket();
@@ -1228,13 +1229,14 @@ public class ApplicationLayerImpl implements ApplicationLayer,
    */
   public VersionInfoType getZwaveVersion() throws FrameLayerException, ApplicationLayerException
   {
+    logger.debug("Getting version from ZWave interface");
     DataPacket req = new DataPacket();
 
     TXStatus rc = sessionLayer.requestWithResponse(
         DataFrame.CommandType.CmdZWaveGetVersion, req);
     if (rc != TXStatus.CompleteOk)
-      //return libraryType;
-      throw new ApplicationLayerException(String.format("CmdZWaveGetVersion - {}", rc.toString()));
+      throw new ApplicationLayerException(String.format("CmdZWaveGetVersion - TXStatus.%s", rc.toString()));
+    //return libraryType;
 
     libraryType = new VersionInfoType();
 

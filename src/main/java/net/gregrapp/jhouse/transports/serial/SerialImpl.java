@@ -11,17 +11,13 @@ import gnu.io.SerialPort;
 import gnu.io.UnsupportedCommOperationException;
 
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.util.Arrays;
 import java.util.List;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import net.gregrapp.jhouse.transports.AbstractTransport;
 import net.gregrapp.jhouse.transports.TransportException;
-import net.gregrapp.jhouse.utils.ArrayUtils;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @author Greg Rapp
@@ -31,10 +27,6 @@ public class SerialImpl extends AbstractTransport
 {
   private static final Logger logger = LoggerFactory
       .getLogger(SerialImpl.class);
-
-  private InputStream in;
-
-  private OutputStream out;
 
   /**
    * Serial baud rate
@@ -58,32 +50,11 @@ public class SerialImpl extends AbstractTransport
   /*
    * (non-Javadoc)
    * 
-   * @see net.gregrapp.jhouse.transports.Transport#available()
-   */
-  public int available()
-  {
-    int bytesAvailable = 0;
-
-    try
-    {
-      bytesAvailable = in.available();
-    } catch (IOException e)
-    {
-      logger.error("Error determining number of bytes available on interface", e);
-    }
-
-    return bytesAvailable;
-  }
-
-  /*
-   * (non-Javadoc)
-   * 
    * @see net.gregrapp.jhouse.transports.Transport#destroy()
    */
   public void destroy()
   {
     // TODO Auto-generated method stub
-
   }
 
   /*
@@ -93,7 +64,8 @@ public class SerialImpl extends AbstractTransport
    */
   public void init() throws TransportException
   {
-    logger.info("Initialzing instance of transport {}", this.getClass().getName());
+    logger.info("Initialzing instance of transport {}", this.getClass()
+        .getName());
     CommPort commPort = null;
     try
     {
@@ -132,57 +104,4 @@ public class SerialImpl extends AbstractTransport
   {
     return true;
   }
-
-  /*
-   * (non-Javadoc)
-   * 
-   * @see net.gregrapp.jhouse.transports.Transport#read(int)
-   */
-  public int read(int[] buffer) throws TransportException
-  {
-    byte[] bytesRead = new byte[buffer.length];
-    int numBytes = 0;
-    try
-    {
-      numBytes = in.read(bytesRead);
-      for (int i = 0; i < numBytes; i++)
-      {
-        buffer[i] = (int) bytesRead[i];
-        incrementReceivedBytes();
-      }
-      /*
-       * for (int i=0;i<size;i++) { bytesRead[i] = in.read(); }
-       */
-    } catch (IOException e)
-    {
-      throw new TransportException("Transport read error", e);
-    }
-    logger.debug("Read {} bytes in from interface", numBytes);
-    logger.trace("{}", ArrayUtils.toHexStringArray((Arrays.copyOfRange(buffer, 0, numBytes))));
-    return numBytes;
-  }
-
-  /*
-   * (non-Javadoc)
-   * 
-   * @see net.gregrapp.jhouse.transports.Transport#write(byte[])
-   */
-  public int write(int[] buffer) throws TransportException
-  {
-    logger.debug("Writing {} bytes out to interface", buffer.length);
-    logger.trace("{}", ArrayUtils.toHexStringArray(buffer));
-    try
-    {
-      for (int buf : buffer)
-      {
-        this.out.write(buf);
-        incrementTransmittedBytes();
-      }
-    } catch (IOException e)
-    {
-      throw new TransportException("Transport write error", e);
-    }
-    return buffer.length;
-  }
-
 }

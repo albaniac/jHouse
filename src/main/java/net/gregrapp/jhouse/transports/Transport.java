@@ -1,5 +1,8 @@
 package net.gregrapp.jhouse.transports;
 
+import java.io.InputStream;
+import java.io.OutputStream;
+
 /**
  * @author Greg Rapp
  * 
@@ -7,38 +10,48 @@ package net.gregrapp.jhouse.transports;
 public interface Transport
 {
   /**
-   * Initialize the Transport
-   * @return
-   * @throws TransportException 
-   */
-  public void init() throws TransportException;
-
-  /**
-   * Write bytes to the Transport
-   * 
-   * @param buffer
-   *          bytes to write
-   * @return number of bytes successfully written
-   * @throws TransportException 
-   */
-  public int write(int[] buffer) throws TransportException;
-
-  /**
-   * Read bytes from the Transport
-   * 
-   * @param buffer
-   *          bytes read
-   * @return number of bytes read from the Transport
-   * @throws TransportException 
-   */
-  public int read(int[] buffer) throws TransportException;
-
-  /**
    * Get number of bytes available to be read from the Transport
    * 
    * @return number of bytes
    */
   public int available();
+
+  /**
+   * Shutdown the Transport
+   */
+  public void destroy();
+
+  /**
+   * @return an InputStream instance for this Transport
+   */
+  public InputStream getReader();
+
+  /**
+   * Get number of bytes received by this Transport
+   * 
+   * @return number of bytes
+   */
+  public int getReceivedBytes();
+
+  /**
+   * Get number of bytes transmitted by this Transport
+   * 
+   * @return number of bytes
+   */
+  public int getTransmittedBytes();
+
+  /**
+   * @return an OutputStream instance for this Transport
+   */
+  public OutputStream getWriter();
+
+  /**
+   * Initialize the Transport
+   * 
+   * @return
+   * @throws TransportException
+   */
+  public void init() throws TransportException;
 
   /**
    * Is the interface available for sending/receiving
@@ -48,19 +61,22 @@ public interface Transport
   public boolean isOpen();
 
   /**
-   * Get number of bytes transmitted by this Transport
-   * @return number of bytes
+   * Read bytes from the Transport
+   * 
+   * @param buffer
+   *          bytes read
+   * @return number of bytes read from the Transport
+   * @throws TransportException
    */
-  public int getTransmittedBytes();
-  
+  public int read(int[] buffer) throws TransportException;
+
   /**
-   * Get number of bytes received by this Transport
-   * @return number of bytes
+   * Write bytes to the Transport
+   * 
+   * @param buffer
+   *          bytes to write
+   * @return number of bytes successfully written
+   * @throws TransportException
    */
-  public int getReceivedBytes();
-  
-  /**
-   * Shutdown the Transport
-   */
-  public void destroy();
+  public int write(int[] buffer) throws TransportException;
 }

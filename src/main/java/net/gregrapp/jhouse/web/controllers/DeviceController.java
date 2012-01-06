@@ -37,33 +37,18 @@ public class DeviceController
   @Autowired
   DeviceManager deviceManager;
   
-  @RequestMapping(value = "/{id}", method = RequestMethod.GET)
-  public @ResponseBody String deviceDetails(@PathVariable("id") int id, Model model)
-  {
-    Device dev = deviceManager.getDeviceForId(id);
-    String[] devclass = null;
-    if (dev != null)
-      devclass = deviceManager.getDeviceClassesForDevice(dev);
-   
-    String strDevClasses = "";
-    for (String s : devclass)
-      strDevClasses += s + ",";
-    
-    model.addAttribute("stuff", strDevClasses); 
-    
-   return "home"; 
-  }
-  
   @RequestMapping(value = "/{id}/{method}", method = RequestMethod.GET)
-  public @ResponseBody String deviceAction(@PathVariable("id") int id, @PathVariable("method") String method, Model model)
+  public @ResponseBody
+  String deviceAction(@PathVariable("id") int id,
+      @PathVariable("method") String method, Model model)
   {
     Device dev = deviceManager.getDeviceForId(id);
     if (dev == null)
     {
-      model.addAttribute("stuff", "stuff is null man"); 
+      model.addAttribute("stuff", "stuff is null man");
       return "home";
     }
-    
+
     try
     {
       Method meth = dev.getClass().getMethod(method);
@@ -74,7 +59,7 @@ public class DeviceController
       e.printStackTrace();
     } catch (NoSuchMethodException e)
     {
-      model.addAttribute("stuff", "no such method"); 
+      model.addAttribute("stuff", "no such method");
       return "home";
     } catch (IllegalArgumentException e)
     {
@@ -89,7 +74,24 @@ public class DeviceController
       // TODO Auto-generated catch block
       e.printStackTrace();
     }
+
+    return "home";
+  }
+  
+  @RequestMapping(value = "/{id}", method = RequestMethod.GET, produces="application/json")
+  public @ResponseBody String deviceDetails(@PathVariable("id") int id, Model model)
+  {
+    Device dev = deviceManager.getDeviceForId(id);
+    String[] devclass = null;
+    if (dev != null)
+      devclass = deviceManager.getDeviceClassesForDevice(dev);
+   
+    String strDevClasses = "";
+    for (String s : devclass)
+      strDevClasses += s + ",";
+    strDevClasses.substring(0, strDevClasses.length()-1);
+    model.addAttribute("stuff", strDevClasses); 
     
-    return "home"; 
+   return "home"; 
   }
 }

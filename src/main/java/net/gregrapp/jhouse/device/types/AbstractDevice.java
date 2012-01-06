@@ -3,10 +3,6 @@
  */
 package net.gregrapp.jhouse.device.types;
 
-import net.gregrapp.jhouse.interfaces.Interface;
-
-
-
 /**
  * @author Greg Rapp
  * 
@@ -16,9 +12,10 @@ public abstract class AbstractDevice implements Device
   protected String deviceStatus = null;
   protected String deviceValue = null;
   protected int deviceId;
-  
+
   /**
-   * @param deviceId device's id
+   * @param deviceId
+   *          device's id
    */
   public AbstractDevice(int deviceId)
   {
@@ -32,7 +29,7 @@ public abstract class AbstractDevice implements Device
   {
     return this.deviceId;
   }
-  
+
   /**
    * @return the device status text
    */
