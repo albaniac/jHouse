@@ -36,31 +36,9 @@ public class ZwaveMultilevelSwitch extends ZwaveDevice implements BinarySwitch, 
     super(deviceId, deviceInterface, nodeId);
   }
 
-  public void setLevel(int level)
-  {
-    this.commandClassSwitchMultilevelSet(level);
-  }
-
-  public void commandClassSwitchMultilevelStartLevelChange()
-  {
-    // TODO Auto-generated method stub
-    
-  }
-
-  public void commandClassSwitchMultilevelStopLevelChange()
-  {
-    // TODO Auto-generated method stub
-    
-  }
-
   public void commandClassSwitchMultilevelGet()
   {
     deviceInterface.zwaveSendData(this.nodeId, CommandClass.COMMAND_CLASS_SWITCH_MULTILEVEL.get(), CommandSwitchMultilevel.SWITCH_MULTILEVEL_GET.get());        
-  }
-
-  public void commandClassSwitchMultilevelSet(int value)
-  {
-    deviceInterface.zwaveSendData(this.nodeId, CommandClass.COMMAND_CLASS_SWITCH_MULTILEVEL.get(), CommandSwitchMultilevel.SWITCH_MULTILEVEL_SET.get(), value);            
   }
 
   public void commandClassSwitchMultilevelReport(int value)
@@ -69,30 +47,20 @@ public class ZwaveMultilevelSwitch extends ZwaveDevice implements BinarySwitch, 
     this.switchLevel = value;    
   }
 
-  public void setOn()
+  public void commandClassSwitchMultilevelSet(int value)
   {
-    this.commandClassSwitchMultilevelSet(0xFF);
+    deviceInterface.zwaveSendData(this.nodeId, CommandClass.COMMAND_CLASS_SWITCH_MULTILEVEL.get(), CommandSwitchMultilevel.SWITCH_MULTILEVEL_SET.get(), value);            
   }
 
-  public void setOff()
+  public void commandClassSwitchMultilevelStartLevelChange(int direction)
   {
-    this.commandClassSwitchMultilevelSet(0x0);    
+    deviceInterface.zwaveSendData(this.nodeId, CommandClass.COMMAND_CLASS_SWITCH_MULTILEVEL.get(), CommandSwitchMultilevel.SWITCH_MULTILEVEL_START_LEVEL_CHANGE.get(), direction);           
   }
 
-  public void toggleOnOff()
+  public void commandClassSwitchMultilevelStopLevelChange()
   {
-    if (this.switchLevel > 0)
-      this.setOff();
-    else if (this.switchLevel == 0)
-      this.setOn();
-    else
-      logger.warn("Invalid switch level for device {}, ignoring toggle command", this.deviceId);
-  }
-
-  @Override
-  public void poll()
-  {
-    this.commandClassSwitchMultilevelGet();
+    deviceInterface.zwaveSendData(this.nodeId, CommandClass.COMMAND_CLASS_SWITCH_MULTILEVEL.get(), CommandSwitchMultilevel.SWITCH_MULTILEVEL_STOP_LEVEL_CHANGE.get());
+    this.poll();
   }
 
   /*
@@ -104,5 +72,50 @@ public class ZwaveMultilevelSwitch extends ZwaveDevice implements BinarySwitch, 
   {
     logger.debug("Interface ready callback received");
     this.poll();
+  }
+
+  @Override
+  public void poll()
+  {
+    this.commandClassSwitchMultilevelGet();
+  }
+
+  public void setLevel(int level)
+  {
+    this.commandClassSwitchMultilevelSet(level);
+  }
+
+  public void setOff()
+  {
+    this.commandClassSwitchMultilevelSet(0x0);    
+    this.switchLevel = 0x0;    
+  }
+
+  public void setOn()
+  {
+    this.commandClassSwitchMultilevelSet(0xFF);
+    this.switchLevel = 0xFF;    
+  }
+
+  @Override
+  public void startLevelChange(int direction)
+  {
+    this.commandClassSwitchMultilevelStartLevelChange(direction);    
+  }
+
+  @Override
+  public void stopLevelChange()
+  {
+    this.commandClassSwitchMultilevelStopLevelChange();    
+  }
+
+  public void toggleOnOff()
+  {
+    if (this.switchLevel > 0)
+      this.setOff();
+    else if (this.switchLevel == 0)
+      this.setOn();
+    else
+      logger.warn("Invalid switch level for device {}, ignoring toggle command", this.deviceId);
   }
 }

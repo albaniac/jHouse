@@ -9,7 +9,7 @@ package net.gregrapp.jhouse.interfaces.zwave.command;
  */
 public interface CommandClassSwitchMultilevel extends CommandClass
 {
-  public void commandClassSwitchMultilevelStartLevelChange();
+  public void commandClassSwitchMultilevelStartLevelChange(int direction);
   public void commandClassSwitchMultilevelStopLevelChange();
   public void commandClassSwitchMultilevelSet(int value);
   public void commandClassSwitchMultilevelGet();
