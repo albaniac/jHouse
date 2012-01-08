@@ -32,318 +32,94 @@ import java.util.Calendar;
  * 
  */
 
-// <summary>
-// DataFrame
-// </summary>
+/**
+ * A data frame
+ * @author Greg Rapp
+ *
+ */
 public class DataFrame
 {
-  // <summary>
-  // Data frame command IDs
-  // </summary>
-  //
+  /**
+   * Data frame command IDs
+   * 
+   * @author Greg Rapp
+   *
+   */
   public enum CommandType
   {
-    // <summary>
-    //
-    // </summary>
     CmdApplicationCommandHandler(0x04),
-    // <summary>
-    //
-    // </summary>
     CmdApplicationControllerUpdate(0x49),
-    // <summary>
-    //
-    // </summary>
     CmdApplicationSlaveCommandHandler(0xa1),
-    // <summary>
-    //
-    // </summary>
     CmdClockCompare(0x32),
-    // <summary>
-    //
-    // </summary>
     CmdClockGet(0x31),
-    // <summary>
-    //
-    // </summary>
     CmdClockSet(0x30),
-    // <summary>
-    //
-    // </summary>
     CmdGetRoutingTableLine(0x80),
-    // <summary>
-    //
-    // </summary>
     CmdGetTXCounter(0x81),
-    // <summary>
-    //
-    // </summary>
     CmdLockRouteResponse(0x90),
-    // <summary>
-    //
-    // </summary>
     CmdMemoryGetBuffer(0x23),
-    // <summary>
-    //
-    // </summary>
     CmdMemoryGetByte(0x21),
-    // SERIALAPI VER. 4 added END
-    // <summary>
-    //
-    // </summary>
     CmdMemoryGetId(0x20),
-    // <summary>
-    //
-    // </summary>
     CmdMemoryPutBuffer(0x24),
-    // <summary>
-    //
-    // </summary>
     CmdMemoryPutByte(0x22),
-    // <summary>
-    //
-    // </summary>
     CmdResetTXCounter(0x82),
-    // <summary>
-    //
-    // </summary>
     CmdRtcTimerCall(0x36),
-    // <summary>
-    //
-    // </summary>
     CmdRtcTimerCreate(0x33),
-    // <summary>
-    //
-    // </summary>
     CmdRtcTimerDelete(0x35),
-    // <summary>
-    //
-    // </summary>
     CmdRtcTimerRead(0x34),
-    // <summary>
-    //
-    // </summary>
     CmdSerialApiApplNodeInformation(0x03),
-    // <summary>
-    //
-    // </summary>
     CmdSerialApiGetCapabilities(0x07),
-    // <summary>
-    //
-    // </summary>
     CmdSerialApiGetInitData(0x02),
-    // <summary>
-    //
-    // </summary>
     CmdSerialApiSetTimeouts(0x06),
-    // <summary>
-    //
-    // </summary>
     CmdSerialApiSlaveNodeInfo(0xa0),
-    // <summary>
-    //
-    // </summary>
     CmdSerialApiSoftReset(0x08),
-    // <summary>
-    //
-    // </summary>
     CmdSerialApiTest(0x95),
-    // <summary>
-    //
-    // </summary>
     CmdStoreHomeId(0x84),
-    // <summary>
-    //
-    // </summary>
     CmdStoreNodeInfo(0x83),
-    // <summary>
-    //
-    // </summary>
     CmdTimerCall(0x73),
-    // <summary>
-    //
-    // </summary>
     CmdTimerCancel(0x72),
-    // <summary>
-    //
-    // </summary>
     CmdTimerRestart(0x71),
-    // <summary>
-    //
-    // </summary>
     CmdTimerStart(0x70),
-    // Slave now also has the Update functionality
-    // CMD_APPLICATION_UPDATE = 0x49),
-    // <summary>
-    //
-    // </summary>
     CmdZWaveAddNodeToNetwork(0x4a),
-    // <summary>
-    //
-    // </summary>
     CmdZWaveAssignReturnRoute(0x46),
-    // <summary>
-    //
-    // </summary>
     CmdZWaveAssignSucReturnRoute(0x51),
-    // <summary>
-    //
-    // </summary>
     CmdZWaveControllerChange(0x4d),
-    // <summary>
-    //
-    // </summary>
     CmdZWaveCreateNewPrimary(0x4c),
-    // <summary>
-    //
-    // </summary>
     CmdZWaveDeleteReturnRoute(0x47),
-    // <summary>
-    //
-    // </summary>
     CmdZWaveDeleteSucReturnRoute(0x55),
-    // <summary>
-    //
-    // </summary>
     CmdZWaveEnableSuc(0x52),
-    // <summary>
-    //
-    // </summary>
     CmdZWaveGetControllerCapabilities(0x05),
-    // <summary>
-    //
-    // </summary>
     CmdZWaveGetNodeProtocolInfo(0x41),
-    // <summary>
-    //
-    // </summary>
     CmdZWaveGetSucNodeId(0x56),
-    // <summary>
-    //
-    // </summary>
-    // CMD_ZWaveGET_VERSION = 0x15),
     CmdZWaveGetVersion(0x15),
-    // <summary>
-    //
-    // </summary>
     CmdZWaveGetVirtualNodes(0xa5),
-    // <summary>
-    //
-    // </summary>
     CmdZWaveIsFailedNode(0x62),
-    // <summary>
-    //
-    // </summary>
     CmdZWaveIsVirtualNode(0xa6),
-    // <summary>
-    // Rediscovery needed call
-    // </summary>
     CmdZWaveRediscoveryNeeded(0x59),
-    // <summary>
-    //
-    // </summary>
     CmdZWaveRemoveFailedNodeId(0x61),
-
-    // <summary>
-    //
-    // </summary>
     CmdZWaveRemoveNodeFromNetwork(0x4b),
-    // <summary>
-    //
-    // </summary>
     CmdZWaveReplaceFailedNode(0x63),
-    // <summary>
-    //
-    // </summary>
     CmdZWaveReplicationCommandComplete(0x44),
-    // <summary>
-    //
-    // </summary>
     CmdZWaveReplicationSendData(0x45),
-    // <summary>
-    //
-    // </summary>
     CmdZWaveRequestNetworkUpdate(0x53),
-    // <summary>
-    //
-    // </summary>
     CmdZWaveRequestNodeInfo(0x60),
-    // <summary>
-    //
-    // </summary>
     CmdZWaveRequestNodeNeighborUpdate(0x48),
-    // <summary>
-    //
-    // </summary>
     CmdZWaveRFPowerLevelSet(0x17),
-    // <summary>
-    //
-    // </summary>
     CmdZWaveSendData(0x13),
-    // SERIALAPI VER. 4 added START
-    // <summary>
-    //
-    // </summary>
     CmdZWaveSendDataAbort(0x16),
-    // <summary>
-    //
-    // </summary>
     CmdZWaveSendDataMeta(0x18),
-    // <summary>
-    //
-    // </summary>
     CmdZWaveSendDataMulti(0x14),
-    // <summary>
-    //
-    // </summary>
     CmdZWaveSendDataRouteDemo(0x91),
-    // <summary>
-    //
-    // </summary>
     CmdZWaveSendNodeInformation(0x12),
-    // <summary>
-    //
-    // </summary>
     CmdZWaveSendSlaveData(0xa3),
-    // <summary>
-    //
-    // </summary>
     CmdZWaveSendSlaveNodeInfo(0xa2),
-    // <summary>
-    //
-    // </summary>
     CmdZWaveSendSucId(0x57),
-    // <summary>
-    //
-    // </summary>
     CmdZWaveSetDefault(0x42),
-    // <summary>
-    //
-    // </summary>
     CmdZWaveSetLearnMode(0x50),
-    // <summary>
-    //
-    // </summary>
     CmdZWaveSetPromiscuousMode(0xd0),
-    // <summary>
-    //
-    // </summary>
     CmdZWaveSetRFReceiveMode(0x10),
-    // <summary>
-    //
-    // </summary>
     CmdZWaveSetSlaveLearnMode(0xa4),
-    // <summary>
-    //
-    // </summary>
     CmdZWaveSetSleepMode(0x11),
-    // <summary>
-    //
-    // </summary>
     CmdZWaveSetSucNodeId(0x54),
-    // <summary>
-    //
-    // </summary>
     None(0x00);
 
     public static CommandType getByVal(int value)

@@ -29,6 +29,10 @@ package net.gregrapp.jhouse.interfaces.zwave;
  * @author Greg Rapp
  * 
  */
+/**
+ * @author grapp
+ *
+ */
 public class Node
 {
   private static final int LISTENING_SUPPORT = 0x80;
@@ -38,10 +42,13 @@ public class Node
   private int generic;
   private int id;
   private boolean isVirtual;
+  private int manufacturer;
+  private int productId;
+  private int productType;
   private int reserved;
   private int security;
   private int specific;
-
+  
   // <summary>
   //
   // </summary>
@@ -116,161 +123,171 @@ public class Node
     }
   }
 
-  // <summary>
-  //
-  // </summary>
+  /**
+   * @return Z-Wave node basic device type
+   */
   public int getBasic()
   {
     return basic;
   }
 
-  // <summary>
-  //
-  // </summary>
+  /**
+   * @return Z-Wave node capability bitmask
+   */
   public int getCapability()
   {
     return capability;
   }
 
-  // <summary>
-  // Get Generic and specific Device Type
-  // </summary>
+  /**
+   * @return Z-Wave node generic device type
+   */
   public int getGeneric()
   {
     return generic;
   }
 
-  // <summary>
-  // get Node Id
-  // </summary>
+  /**
+   * @return Z-Wave node ID
+   */
   public int getId()
   {
     return id;
   }
 
-  // <summary>
-  //
-  // </summary>
+  /**
+   * @return the manufacturer
+   */
+  public int getManufacturer()
+  {
+    return manufacturer;
+  }
+
+  /**
+   * @return the productId
+   */
+  public int getProductId()
+  {
+    return productId;
+  }
+
+  /**
+   * @return the productType
+   */
+  public int getProductType()
+  {
+    return productType;
+  }
+
   public int getReserved()
   {
     return reserved;
   }
 
-  // <summary>
-  //
-  // </summary>
   public int getSecurity()
   {
     return security;
   }
 
-  // <summary>
-  //
-  // </summary>
+  /**
+   * @return Z-Wave node specific device type
+   */
   public int getSpecific()
   {
     return specific;
   }
 
-  // <summary>
-  //
-  // </summary>
   public int[] getSupportedCmdClasses()
   {
     return cmdClasses;
   }
 
-  // <summary>
-  // Verify if node is a listening node
-  // </summary>
-  // <returns>True is Node is a listening device, False if Node is not a
-  // listening device</returns>
+  /**
+   * Verify if node is a listening node
+   * 
+   * @return True if Node is a listening device, False if not
+   */
   public boolean isNodeListening()
   {
     return ((capability & LISTENING_SUPPORT) != 0);
   }
 
-  // <summary>
-  //
-  // </summary>
+  /**
+   * @return True if Node is a virtual device, False if not
+   */
   public boolean isVirtual()
   {
     return isVirtual;
   }
 
-  // <summary>
-  //
-  // </summary>
   public void setBasic(int value)
   {
     basic = value;
   }
 
-  // <summary>
-  //
-  // </summary>
   public void setCapability(int value)
   {
     capability = value;
   }
 
-  // <summary>
-  // Set Generic and specific Device Type
-  // </summary>
   public void setGeneric(int value)
   {
     generic = value;
   }
 
-  // <summary>
-  //
-  // </summary>
+  /**
+   * @param manufacturer the manufacturer to set
+   */
+  public void setManufacturer(int manufacturer)
+  {
+    this.manufacturer = manufacturer;
+  }
+
+  /**
+   * @param productId the productId to set
+   */
+  public void setProductId(int productId)
+  {
+    this.productId = productId;
+  }
+
+  /**
+   * @param productType the productType to set
+   */
+  public void setProductType(int productType)
+  {
+    this.productType = productType;
+  }
+
   public void setReserved(int value)
   {
     reserved = value;
   }
 
-  // <summary>
-  //
-  // </summary>
   public void setSecurity(int value)
   {
     security = value;
   }
 
-  // <summary>
-  //
-  // </summary>
   public void setSpecific(int value)
   {
     specific = value;
   }
 
-  // <summary>
-  //
-  // </summary>
   public void setSupportedCmdClasses(int[] value)
   {
     cmdClasses = value;
   }
 
-  // <summary>
-  //
-  // </summary>
   public void setVirtual(boolean value)
   {
     isVirtual = value;
   }
 
-  // <summary>
-  //
-  // </summary>
-  // <returns></returns>
   @Override
   public String toString()
   {
     return "NodeId: " + id + " Type: " + basic + " Cap: " + capability
         + " Sec: " + security + " Res: " + reserved;
   }
-
 }

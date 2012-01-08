@@ -31,12 +31,10 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import net.gregrapp.jhouse.interfaces.zwave.Constants.ChipType;
 import net.gregrapp.jhouse.interfaces.zwave.Constants.CommandBasic;
 import net.gregrapp.jhouse.interfaces.zwave.Constants.CommandClass;
+import net.gregrapp.jhouse.interfaces.zwave.Constants.CommandManufacturerSpecific;
 import net.gregrapp.jhouse.interfaces.zwave.Constants.ControllerChangeMode;
 import net.gregrapp.jhouse.interfaces.zwave.Constants.CreateNewPrimaryControllerMode;
 import net.gregrapp.jhouse.interfaces.zwave.Constants.LearnMode;
@@ -54,6 +52,9 @@ import net.gregrapp.jhouse.interfaces.zwave.DataFrame.CommandType;
 import net.gregrapp.jhouse.transports.Transport;
 import net.gregrapp.jhouse.utils.ArrayUtils;
 import net.gregrapp.jhouse.utils.CollectionUtils;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @author Greg Rapp
@@ -88,7 +89,12 @@ public class ApplicationLayerImpl implements ApplicationLayer,
       return this.value;
     }
   }
-  
+
+  /**
+   * Controller capabilities
+   * 
+   * @author Greg Rapp
+   */
   public class ControllerCapabilities
   {
     private int[] capabilities;
@@ -101,42 +107,62 @@ public class ApplicationLayerImpl implements ApplicationLayer,
       this.slave = slave;
     }
 
+    /**
+     * @return Capabilities flag:<br>
+     *         Bit 0 : 0 = Controller API; 1 = Slave API<br>
+     *         Bit 1 : 0 = Timer functions not supported; 1 = Timer functions
+     *         supported.<br>
+     *         Bit 2 : 0 = Primary Controller; 1 = Secondary Controller <br>
+     *         Bit 3-7: reserved <br>
+     */
     public int[] getCapabilities()
     {
       return capabilities;
     }
 
+    /**
+     * @return <code>true</code> if this is a slave controller
+     */
     public boolean isSlave()
     {
       return slave;
+    }
+
+    /**
+     * @param slave
+     *          the slave to set
+     */
+    public void setSlave(boolean slave)
+    {
+      this.slave = slave;
     }
   }
 
   private enum CtrlCapabilities
   {
-    // <summary>
-    // Return value mask for ZWaveGetControllerCapabilities
-    // Controller is the original owner of the current Z-Wave network HomeID
-    // </summary>
+    /**
+     * Controller is the original owner of the current Z-Wave network Home ID
+     */
     IS_REAL_PRIMARY(0x08),
-    // <summary>
-    // Return value mask for ZWaveGetControllerCapabilities
-    // Controller is secondary on current Z-Wave network
-    // </summary>
+
+    /**
+     * Controller is secondary on current Z-Wave network
+     */
     IS_SECONDARY(0x01),
-    // <summary>
-    // Return value mask for ZWaveGetControllerCapabilities
-    // Controller is the SUC in current Z-WAve network
-    // </summary>
+
+    /**
+     * Controller is the SUC in current Z-Wave network
+     */
     IS_SUC(0x10),
-    // <summary>
-    // Return value mask for ZWaveGetControllerCapabilities
-    // Controller is a member of a Z-Wave network with a NodeID Server present
-    // </summary>
+
+    /**
+     * Controller is a member of a Z-Wave network with a Node ID Server present
+     */
     NODEID_SERVER_PRESENT(0x04),
-    // <summary>
-    // Return value mask for ZWaveGetControllerCapabilities
-    // </summary>
+
+    /**
+     *
+     */
     ON_OTHER_NETWORK(0x02);
 
     private int value;
@@ -180,27 +206,32 @@ public class ApplicationLayerImpl implements ApplicationLayer,
     }
   }
 
-  // <summary>
-  // Nodemask handling class
-  // </summary>
+  /**
+   * Nodemask handling class
+   * 
+   * @author Greg Rapp
+   * 
+   */
   public class NodeBitmask
   {
     private int[] mask;
 
     // private int maxNodeID;
 
-    // <summary>
-    // Initializes a new instance of the <see cref="T:NodeBitmask"/> class.
-    // </summary>
+    /**
+     * Initializes a new instance of a {@link NodeBitMask}
+     */
     public NodeBitmask()
     {
       mask = null;
     }
 
-    // <summary>
-    // Creates a nodemask object
-    // </summary>
-    // <param name="length">length of nodemask (number of ids/8)</param>
+    /**
+     * Creates a nodemask object
+     * 
+     * @param length
+     *          length of node mask (number of node IDs divided by 8)
+     */
     public NodeBitmask(int length)
     {
       if (length > 0)
@@ -210,10 +241,11 @@ public class ApplicationLayerImpl implements ApplicationLayer,
       }
     }
 
-    // <summary>
-    // Gets the nodemask as an bit array
-    // </summary>
-    // <returns></returns>
+    /**
+     * Gets the node mask as an bit array
+     * 
+     * @return node mask bit array
+     */
     public int[] get()
     {
       return mask;
@@ -229,10 +261,9 @@ public class ApplicationLayerImpl implements ApplicationLayer,
       return mask[nodeId >> 3];
     }
 
-    // <summary>
-    // Gets the length.
-    // </summary>
-    // <value>The length.</value>
+    /**
+     * @return node mask array length
+     */
     public int getLength()
     {
       if (mask != null)
@@ -244,10 +275,12 @@ public class ApplicationLayerImpl implements ApplicationLayer,
       }
     }
 
-    // <summary>
-    // Stores an entire array
-    // </summary>
-    // <param name="array">The array.</param>
+    /**
+     * Store an array as the node mask
+     * 
+     * @param array
+     *          array of node masks
+     */
     public void store(int[] array)
     {
       if (array == null)
@@ -265,10 +298,11 @@ public class ApplicationLayerImpl implements ApplicationLayer,
 
     }
 
-    // <summary>
-    // Returns true if any bits in mask
-    // </summary>
-    // <returns>true if bits set, false if not</returns>
+    /**
+     * Returns true if any bits in mask are set
+     * 
+     * @return <code>true</code> if any bits are set, <code>false</code> if not
+     */
     public boolean zwaveNodeMaskBitsIn()
     {
       if (mask != null)
@@ -284,9 +318,9 @@ public class ApplicationLayerImpl implements ApplicationLayer,
       return false;
     }
 
-    // <summary>
-    // Clears the nodemask
-    // </summary>
+    /**
+     * Clear the node mask
+     */
     public void zwaveNodeMaskClear()
     {
       logger.debug("Clearning node mask");
@@ -299,13 +333,14 @@ public class ApplicationLayerImpl implements ApplicationLayer,
       }
     }
 
-    // <summary>
-    // Clears the bit corresponding to then nodeID supplied
-    // </summary>
-    // <param name="nodeId"></param>
+    /**
+     * Clears the bit corresponding to the node ID supplied
+     * 
+     * @param nodeId
+     *          node ID to clear
+     */
     public void zwaveNodeMaskClearBit(int nodeId)
     {
-      logger.debug("Clearing nodemask bit for node {}", nodeId);
       if (nodeId < 1)
       {
         return;
@@ -314,15 +349,15 @@ public class ApplicationLayerImpl implements ApplicationLayer,
       mask[nodeId >> 3] &= ~(0x1 << (nodeId & 7));
     }
 
-    // <summary>
-    // Checks if the bit corresponding to the node ID is set
-    // </summary>
-    // <param name="nodeId"></param>
-    // <returns>true if bit is set</returns>
+    /**
+     * Checks if the bit corresponding to the node ID is set
+     * 
+     * @param nodeId
+     *          node ID to check
+     * @return <code>true</code> if bit is set
+     */
     public boolean zwaveNodeMaskNodeIn(int nodeId)
     {
-      logger.debug("Getting nodemask bit for node {}", nodeId);
-
       if (nodeId < 1)
       {
         return false;
@@ -337,14 +372,14 @@ public class ApplicationLayerImpl implements ApplicationLayer,
       }
     }
 
-    // <summary>
-    // Set the bit corresponding to the nodeID supplied
-    // </summary>
-    // <param name="nodeId"></param>
+    /**
+     * Set the bit corresponding to the node ID supplied
+     * 
+     * @param nodeId
+     *          node ID of bit to set
+     */
     public void zwaveNodeMaskSetBit(int nodeId)
     {
-      logger.debug("Setting nodemask bit for node {}", nodeId);
-
       if (nodeId < 1)
       {
         return;
@@ -353,10 +388,7 @@ public class ApplicationLayerImpl implements ApplicationLayer,
       mask[nodeId >> 3] |= (0x1 << (nodeId & 7));
     }
 
-  }// Class BitMask
-   // <summary>
-   // NodeMask
-   // </summary>
+  }
 
   public class NodeMask
   {
@@ -494,6 +526,88 @@ public class ApplicationLayerImpl implements ApplicationLayer,
     }
   }
 
+  // <summary>
+  // NodeMask
+  // </summary>
+
+  /**
+   * @author Greg Rapp
+   * 
+   */
+  public class SerialApiCapabilities
+  {
+    NodeBitmask capabilityMask;
+    private int manufacturer;
+    private int productId;
+    private int productType;
+    private String version;
+
+    /**
+     * @param version
+     * @param manufacturer
+     * @param productType
+     * @param productId
+     */
+    public SerialApiCapabilities(String version, int manufacturer,
+        int productType, int productId)
+    {
+      this.version = version;
+      this.manufacturer = manufacturer;
+      this.productType = productType;
+      this.productId = productId;
+      capabilityMask = new NodeBitmask();
+    }
+
+    /**
+     * @return the serialCapabilityMask
+     */
+    public NodeBitmask getCapabilityMask()
+    {
+      return capabilityMask;
+    }
+
+    /**
+     * @return the manufacturer
+     */
+    public int getManufacturer()
+    {
+      return manufacturer;
+    }
+
+    /**
+     * @return the productId
+     */
+    public int getProductId()
+    {
+      return productId;
+    }
+
+    /**
+     * @return the productType
+     */
+    public int getProductType()
+    {
+      return productType;
+    }
+
+    /**
+     * @return the version
+     */
+    public String getVersion()
+    {
+      return version;
+    }
+
+    /**
+     * @param serialCapabilityMask
+     *          the serialCapabilityMask to set
+     */
+    public void setCapabilityMask(NodeBitmask capabilityMask)
+    {
+      this.capabilityMask = capabilityMask;
+    }
+  }
+
   private static final int DEFAULT_TIMEOUT = 10000; // How long in ms to wait
 
   private static final int GET_INIT_DATA_FLAG_IS_SUC = 0x08;
@@ -508,7 +622,7 @@ public class ApplicationLayerImpl implements ApplicationLayer,
       .getLogger(ApplicationLayerImpl.class);
 
   // for an response
-  private static final int TIMEOUT = 180000; // wait 3 minuttes before timing
+  private static final int TIMEOUT = 180000; // wait 3 minutes before timing out
 
   private static final int ZWavePROTECT_TIME = 30000;
 
@@ -544,29 +658,33 @@ public class ApplicationLayerImpl implements ApplicationLayer,
 
   private VersionInfoType libraryType;
 
+  private MemoryGetId memoryGetId;
+
   private Node[] nodeList;
 
   private NodeTable nodeTable = new NodeTable(100);
 
   private Node removedNode;
 
+  private SerialApiCapabilities serialApiCapabilities;
+
   int serialAPIver = 0;
 
   // <summary>
   // Contains a mask of which SerialAPI commands supported by connected module
   // </summary>
-  NodeBitmask serialCapabilityMask = new NodeBitmask();
+  // NodeBitmask serialCapabilityMask = new NodeBitmask();
 
   private SessionLayer sessionLayer;
 
   private boolean slaveApi;
 
-  private boolean slaveController;
+  private boolean secondaryController;
 
   private Transport transport;
 
   private ScheduledExecutorService waitForNodeInfoExecutor;
-  
+
   public ApplicationLayerImpl(SessionLayer sessionLayer)
   {
     this.sessionLayer = sessionLayer;
@@ -586,30 +704,6 @@ public class ApplicationLayerImpl implements ApplicationLayer,
     req.addPayload(txOptInt);
     req.addPayload(capabilities);
     return req;
-  }
-
-  /*
-   * (non-Javadoc)
-   * 
-   * @see net.gregrapp.jhouse.interfaces.zwave.ApplicationLayer#chipRev()
-   */
-  public int chipRev()
-  {
-    logger.info("Getting chip revision");
-
-    return chipRev;
-  }
-
-  /*
-   * (non-Javadoc)
-   * 
-   * @see net.gregrapp.jhouse.interfaces.zwave.ApplicationLayer#chipType()
-   */
-  public ChipType chipType()
-  {
-    logger.info("Getting chip type");
-
-    return ChipType.getByVal(chipType);
   }
 
   public boolean clockCompare(Time time) throws FrameLayerException,
@@ -677,8 +771,7 @@ public class ApplicationLayerImpl implements ApplicationLayer,
   public void dataPacketReceived(CommandType cmd, DataPacket packet)
   {
     logger.debug("Data packet received for command [{}]", cmd);
-    
-    
+
     if (packet == null)
     {
       logger.warn("Null data packet received");
@@ -686,17 +779,41 @@ public class ApplicationLayerImpl implements ApplicationLayer,
     }
 
     int[] payload = packet.getPayload();
-    /*if (cmd == DataFrame.CommandType.CmdApplicationCommandHandler)
+
+    if (cmd == DataFrame.CommandType.CmdApplicationCommandHandler)
     {
       if (payload[3] == CommandClass.COMMAND_CLASS_BASIC.get())
       {
         logger.info("COMMAND_CLASS_BASIC");
         if (payload[4] == CommandBasic.BASIC_REPORT.get())
         {
-          logger.info("Received BASIC_REPORT from node {} with a value of {}", payload[1], payload[5]);
+          logger.info("Received BASIC_REPORT from node {} with a value of {}",
+              payload[1], payload[5]);
+        }
+      } else if (payload[3] == CommandClass.COMMAND_CLASS_MANUFACTURER_SPECIFIC
+          .get())
+      {
+        if (payload[4] == CommandManufacturerSpecific.MANUFACTURER_SPECIFIC_REPORT
+            .get())
+        {
+          int nodeId = payload[1];
+          int manufacturer = (payload[5] << 8) | payload[6];
+          int productType = (payload[7] << 8) | payload[8];
+          int productId = (payload[9] << 8) | payload[10];
+          logger
+              .debug(
+                  "Received MANUFACTURER_SPECIFIC_REPORT for node {}, manufacturer: {}, product type: {}, product id: {}",
+                  new Object[] { nodeId, String.format("%#02x", manufacturer),
+                      String.format("%#x", productType),
+                      String.format("%#x", productId) });
+          Node node = nodeTable.get(payload[1]);
+          node.setManufacturer(manufacturer);
+          node.setProductType(productType);
+          node.setProductId(productId);
         }
       }
-    } else*/ if (cmd == DataFrame.CommandType.CmdApplicationSlaveCommandHandler)
+    }
+    else if (cmd == DataFrame.CommandType.CmdApplicationSlaveCommandHandler)
     {
       // ApplicationSlaveCommandEventArgs e = new
       // ApplicationSlaveCommandEventArgs(packet);
@@ -725,11 +842,12 @@ public class ApplicationLayerImpl implements ApplicationLayer,
             if ((payload.length - 7) > 0)
             {
               int[] supportedCmdClasses = new int[payload.length - 7];
-              for (byte i = 0; i < addedNode.getSupportedCmdClasses().length; i++)
+              for (int i = 0; i < addedNode.getSupportedCmdClasses().length; i++)
               {
                 supportedCmdClasses[i] = payload[i + 7];
               }
-              logger.debug("Supported command classes: {}", ArrayUtils.toHexStringArray(supportedCmdClasses));
+              logger.debug("Supported command classes: {}",
+                  ArrayUtils.toHexStringArray(supportedCmdClasses));
               addedNode.setSupportedCmdClasses(supportedCmdClasses);
             }
             nodeTable.add(addedNode);
@@ -811,7 +929,7 @@ public class ApplicationLayerImpl implements ApplicationLayer,
       {
         if (nodeTable.contains(nid))
         {
-          //Node node = nodeTable.get(nid);
+          // Node node = nodeTable.get(nid);
           nodeTable.remove(nid);
           // RemoveNodeEventArgs e = new RemoveNodeEventArgs(node, cmd);
           // if (RemoveNodeEvent != null) RemoveNodeEvent(this, e);
@@ -914,7 +1032,7 @@ public class ApplicationLayerImpl implements ApplicationLayer,
       else if (learnMode == LearnMode.Done)
         try
         {
-          enumerateNodes();
+          zwaveEnumerateNodes();
         } catch (FrameLayerException e)
         {
           // TODO Auto-generated catch block
@@ -1027,69 +1145,35 @@ public class ApplicationLayerImpl implements ApplicationLayer,
   /*
    * (non-Javadoc)
    * 
-   * @see net.gregrapp.jhouse.interfaces.zwave.ApplicationLayer#enumerateNodes()
-   */
-  public Node[] enumerateNodes() throws FrameLayerException,
-      ApplicationLayerException
-  {
-    logger.debug("Enumerating ZWave nodes");
-    synchronized (this)
-    {
-      DataPacket req = new DataPacket();
-
-      TXStatus rc = sessionLayer.requestWithResponse(
-          DataFrame.CommandType.CmdSerialApiGetInitData, req);
-      if (rc != TXStatus.CompleteOk)
-        throw new ApplicationLayerException("CMD_SERIAL_API_GET_INIT_DATA");
-
-      int[] payload = rc.getResponse().getPayload();
-      serialAPIver = payload[0];
-      int capab = payload[1];
-      int len = payload[2];
-
-      slaveController = (capab & GET_INIT_DATA_FLAG_SECONDARY_CTRL) > 0;
-      slaveApi = (capab & GET_INIT_DATA_FLAG_SLAVE_API) != 0;
-
-      if (payload.length > len)
-      {
-        chipType = payload[3 + len];
-        chipRev = payload[4 + len];
-      }
-
-      nodeTable.clear();
-
-      MemoryGetId ret = zwaveMemoryGetId();
-      _controllerHomeId = ret.getHomeId();
-      _controllerNodeId = ret.getNodeId();
-
-      NodeMask virtualNodeMask = zwaveGetVirtualNodes();
-      int nodeIdx = 0;
-      for (int i = 0; i < len; i++)
-      {
-        int availabilityMask = payload[3 + i];
-        for (int bit = 0; bit < 8; bit++)
-        {
-          nodeIdx++;
-          if ((availabilityMask & (1 << bit)) > 0)
-          {
-            Node node = zwaveGetNodeProtocolInfo(nodeIdx, false);
-            node.setVirtual(virtualNodeMask.get(nodeIdx));
-            nodeTable.add(node);
-          }
-        }
-      }
-      return nodeTable.getList();
-    }
-  }
-
-  /*
-   * (non-Javadoc)
-   * 
    * @see net.gregrapp.jhouse.interfaces.zwave.ApplicationLayer#getAllNodes()
    */
   public Node[] getAllNodes()
   {
     return nodeTable.getList();
+  }
+
+  /*
+   * (non-Javadoc)
+   * 
+   * @see net.gregrapp.jhouse.interfaces.zwave.ApplicationLayer#chipRev()
+   */
+  public int getChipRev()
+  {
+    logger.info("Getting chip revision");
+
+    return chipRev;
+  }
+
+  /*
+   * (non-Javadoc)
+   * 
+   * @see net.gregrapp.jhouse.interfaces.zwave.ApplicationLayer#chipType()
+   */
+  public ChipType getChipType()
+  {
+    logger.info("Getting chip type");
+
+    return ChipType.getByVal(chipType);
   }
 
   /*
@@ -1126,6 +1210,16 @@ public class ApplicationLayerImpl implements ApplicationLayer,
   /*
    * (non-Javadoc)
    * 
+   * @see net.gregrapp.jhouse.interfaces.zwave.ApplicationLayer#getMemoryGetId()
+   */
+  public MemoryGetId getMemoryGetId()
+  {
+    return memoryGetId;
+  }
+
+  /*
+   * (non-Javadoc)
+   * 
    * @see net.gregrapp.jhouse.interfaces.zwave.ApplicationLayer#getNode(int)
    */
   public Node getNode(int nodeId)
@@ -1146,14 +1240,12 @@ public class ApplicationLayerImpl implements ApplicationLayer,
     return nodeTable.size();
   }
 
-  /*
-   * (non-Javadoc)
-   * 
-   * @see net.gregrapp.jhouse.interfaces.zwave.ApplicationLayer#getNodeList()
+  /**
+   * @return an instance of {@link SerialApiCapabilities}
    */
-  public Node[] getNodeList()
+  public SerialApiCapabilities getSerialApiCapabilities()
   {
-    return nodeTable.getList();
+    return serialApiCapabilities;
   }
 
   /*
@@ -1215,41 +1307,47 @@ public class ApplicationLayerImpl implements ApplicationLayer,
   /*
    * (non-Javadoc)
    * 
-   * @see net.gregrapp.jhouse.interfaces.zwave.ApplicationLayer#getTransport()
+   * @see
+   * net.gregrapp.jhouse.interfaces.zwave.ApplicationLayer#zwaveSupportedSerialCmds
+   * ()
    */
-  public Transport getTransport()
+  public String getSupportedSerialCmds()
   {
-    return transport;
+    StringBuffer retString = new StringBuffer();
+    /*
+     * ctrlCapabilities format:0 APPL_VERSION,1 APPL_REVISION,2 MAN_ID1,
+     * 3MAN_ID2,4 PRODUCT_TYPE1, 5 PRODUCT_TYPE2, 6 PRODUCT_ID1,7 PRODUCT_ID2, 8
+     * FUNCID_SUPPORTED...
+     */
+    if (serialApiCapabilities.getCapabilityMask() != null)
+    {
+      int i = 1;
+      while (i < serialApiCapabilities.getCapabilityMask().getLength() * 8)
+      {
+        if (serialApiCapabilities.getCapabilityMask().zwaveNodeMaskNodeIn(i))
+        {
+          if (retString.length() > 0)
+            retString.append(",");
+          DataFrame.CommandType ct = DataFrame.CommandType.getByVal(i);
+          if (ct != null)
+            retString.append(ct.toString());
+          else
+            retString.append(String.format("%#02x", i));
+        }
+        i++;
+      }
+    }
+    return retString.toString();
   }
 
   /*
    * (non-Javadoc)
    * 
-   * @see net.gregrapp.jhouse.interfaces.zwave.ApplicationLayer#zwaveVersion()
+   * @see net.gregrapp.jhouse.interfaces.zwave.ApplicationLayer#getTransport()
    */
-  public VersionInfoType getZwaveVersion() throws FrameLayerException, ApplicationLayerException
+  public Transport getTransport()
   {
-    logger.debug("Getting version from ZWave interface");
-    DataPacket req = new DataPacket();
-
-    TXStatus rc = sessionLayer.requestWithResponse(
-        DataFrame.CommandType.CmdZWaveGetVersion, req);
-    if (rc != TXStatus.CompleteOk)
-      throw new ApplicationLayerException(String.format("CmdZWaveGetVersion - TXStatus.%s", rc.toString()));
-    //return libraryType;
-
-    libraryType = new VersionInfoType();
-
-    int[] payload = rc.getResponse().getPayload();
-    libraryType.version = new String(payload, 6, 6);
-    if (libraryType.version.endsWith("\0"))
-    {
-      libraryType.version = libraryType.version.substring(0,
-          libraryType.version.length() - 1);
-    }
-    libraryType.library = Library.getByVal(payload[12]);
-
-    return libraryType;
+    return transport;
   }
 
   /*
@@ -1375,21 +1473,9 @@ public class ApplicationLayerImpl implements ApplicationLayer,
    */
   public boolean isSlaveController()
   {
-    return slaveController;
+    return secondaryController;
   }
 
-  /*
-   * (non-Javadoc)
-   * 
-   * @see
-   * net.gregrapp.jhouse.interfaces.zwave.ApplicationLayer#isSupportedSerialCmd
-   * (int)
-   */
-  public boolean isSupportedSerialCmd(int CommandId)
-  {
-    return serialCapabilityMask.zwaveNodeMaskNodeIn(CommandId);
-  }
-  
   /*
    * (non-Javadoc)
    * 
@@ -1398,16 +1484,26 @@ public class ApplicationLayerImpl implements ApplicationLayer,
    * , java.lang.String)
    */
   /*
-  public void open(String transportLayerLibrary, String connectionString)
+   * public void open(String transportLayerLibrary, String connectionString) {
+   * // transportLayer = (ITransportLayer)FindInterface(a, "ITransportLayer");
+   * frameLayer = new FrameLayerImpl(); sessionLayer = new SessionLayerImpl();
+   * sessionLayer.setCallbackHandler(this); sessionLayer.open(frameLayer,
+   * transport); }
+   */
+
+  /*
+   * (non-Javadoc)
+   * 
+   * @see
+   * net.gregrapp.jhouse.interfaces.zwave.ApplicationLayer#isSupportedSerialCmd
+   * (int)
+   */
+  public boolean isSupportedSerialCmd(int commandId)
   {
-    // transportLayer = (ITransportLayer)FindInterface(a, "ITransportLayer");
-    frameLayer = new FrameLayerImpl();
-    sessionLayer = new SessionLayerImpl();
-    sessionLayer.setCallbackHandler(this);
-    sessionLayer.open(frameLayer, transport);
+    return serialApiCapabilities.getCapabilityMask().zwaveNodeMaskNodeIn(
+        commandId);
   }
-  */
-  
+
   // <summary>
   // Remove Node from the nodeTable
   // </summary>
@@ -1437,6 +1533,7 @@ public class ApplicationLayerImpl implements ApplicationLayer,
 
   private void requestNodeInfo(int[] payload, int nid)
   {
+    logger.debug("Processing node info for node {}", nid);
     // FuncID|status|nodeId|len|basic|generic|specific|data[0]|data[1],data[2]..data[len-7]....
     Node node = nodeTable.get(nid);
     node.setGeneric(payload[4]);
@@ -1444,8 +1541,9 @@ public class ApplicationLayerImpl implements ApplicationLayer,
     if (payload.length > 6)
     {
       int[] supportedCmdClasses = new int[payload.length - 6];
-      for (int i = 0; i < node.getSupportedCmdClasses().length; i++)
+      for (int i = 0; i < supportedCmdClasses.length; i++)
       {
+        logger.debug("Discovered supported command class for node {}: {}", nid, CommandClass.getByVal(payload[i+6]));
         supportedCmdClasses[i] = payload[i + 6];
       }
       node.setSupportedCmdClasses(supportedCmdClasses);
@@ -1681,6 +1779,71 @@ public class ApplicationLayerImpl implements ApplicationLayer,
   /*
    * (non-Javadoc)
    * 
+   * @see net.gregrapp.jhouse.interfaces.zwave.ApplicationLayer#enumerateNodes()
+   */
+  public Node[] zwaveEnumerateNodes() throws FrameLayerException,
+      ApplicationLayerException
+  {
+    logger.debug("Enumerating ZWave nodes");
+    synchronized (this)
+    {
+      DataPacket req = new DataPacket();
+
+      TXStatus rc = sessionLayer.requestWithResponse(
+          DataFrame.CommandType.CmdSerialApiGetInitData, req);
+      if (rc != TXStatus.CompleteOk)
+        throw new ApplicationLayerException("CMD_SERIAL_API_GET_INIT_DATA");
+
+      int[] payload = rc.getResponse().getPayload();
+      serialAPIver = payload[0];
+      int capab = payload[1];
+      int len = payload[2];
+
+      secondaryController = (capab & GET_INIT_DATA_FLAG_SECONDARY_CTRL) > 0;
+      slaveApi = (capab & GET_INIT_DATA_FLAG_SLAVE_API) != 0;
+
+      if (payload.length > len)
+      {
+        chipType = payload[3 + len];
+        chipRev = payload[4 + len];
+      }
+
+      nodeTable.clear();
+
+      MemoryGetId ret = zwaveMemoryGetId();
+      _controllerHomeId = ret.getHomeId();
+      _controllerNodeId = ret.getNodeId();
+
+      NodeMask virtualNodeMask = zwaveGetVirtualNodes();
+      int nodeIdx = 0;
+      for (int i = 0; i < len; i++)
+      {
+        int availabilityMask = payload[3 + i];
+        for (int bit = 0; bit < 8; bit++)
+        {
+          nodeIdx++;
+          if ((availabilityMask & (1 << bit)) > 0)
+          {
+            Node node = zwaveGetNodeProtocolInfo(nodeIdx, false);
+            node.setVirtual(virtualNodeMask.get(nodeIdx));
+            nodeTable.add(node);
+          }
+        }
+      }
+
+      for (Node n : nodeTable.getList())
+      {
+        zwaveNodeManufacturerSpecific(n.getId());
+        zwaveRequestNodeInfo(n.getId());
+      }
+
+      return nodeTable.getList();
+    }
+  }
+
+  /*
+   * (non-Javadoc)
+   * 
    * @see net.gregrapp.jhouse.interfaces.zwave.ApplicationLayer#
    * zwaveGetControllerCapabilities()
    */
@@ -1696,9 +1859,9 @@ public class ApplicationLayerImpl implements ApplicationLayer,
           "CMD_ZWaveGET_CONTROLLER_CAPABILITIES");
     int[] payload = rc.getResponse().getPayload();
     ctrlCapabilities = payload;
-    slaveController = ((payload[0] & CtrlCapabilities.IS_SECONDARY.get()) != 0);
+    secondaryController = ((payload[0] & CtrlCapabilities.IS_SECONDARY.get()) != 0);
     ControllerCapabilities caps = new ControllerCapabilities(payload,
-        slaveController);
+        secondaryController);
     return caps;
   }
 
@@ -1724,7 +1887,8 @@ public class ApplicationLayerImpl implements ApplicationLayer,
     TXStatus rc = sessionLayer.requestWithResponse(
         DataFrame.CommandType.CmdZWaveGetNodeProtocolInfo, req);
     if (rc != TXStatus.CompleteOk)
-      throw new ApplicationLayerException(String.format("CMD_ZWaveGET_NODE_PROTOCOL_INFO - status: {}", rc.toString()));
+      throw new ApplicationLayerException(String.format(
+          "CMD_ZWaveGET_NODE_PROTOCOL_INFO - status: {}", rc.toString()));
     int[] payload = rc.getResponse().getPayload();
 
     boolean isVirtual = false;
@@ -1742,6 +1906,17 @@ public class ApplicationLayerImpl implements ApplicationLayer,
         payload[4], payload[5], null, isVirtual);
   }
 
+  public void zwaveNodeManufacturerSpecific(int nodeId)
+      throws FrameLayerException, ApplicationLayerException
+  {
+    int[] data = new int[] {
+        CommandClass.COMMAND_CLASS_MANUFACTURER_SPECIFIC.get(),
+        CommandManufacturerSpecific.MANUFACTURER_SPECIFIC_GET.get() };
+    TXStatus rc = zwaveSendData(nodeId, data,
+        new TXOption[] { TXOption.TransmitOptionAcknowledge,
+            TXOption.TransmitOptionAutoRoute });
+  }
+
   /*
    * (non-Javadoc)
    * 
@@ -1757,6 +1932,38 @@ public class ApplicationLayerImpl implements ApplicationLayer,
     if (rc != TXStatus.CompleteOk)
       throw new ApplicationLayerException("CMD_ZWaveGET_SUC_NODE_ID");
     return rc.getResponse().getPayload()[0];
+  }
+
+  /*
+   * (non-Javadoc)
+   * 
+   * @see net.gregrapp.jhouse.interfaces.zwave.ApplicationLayer#zwaveVersion()
+   */
+  public VersionInfoType zwaveGetVersion() throws FrameLayerException,
+      ApplicationLayerException
+  {
+    logger.debug("Getting version from ZWave interface");
+    DataPacket req = new DataPacket();
+
+    TXStatus rc = sessionLayer.requestWithResponse(
+        DataFrame.CommandType.CmdZWaveGetVersion, req);
+    if (rc != TXStatus.CompleteOk)
+      throw new ApplicationLayerException(String.format(
+          "CmdZWaveGetVersion - TXStatus.%s", rc.toString()));
+    // return libraryType;
+
+    libraryType = new VersionInfoType();
+
+    int[] payload = rc.getResponse().getPayload();
+    libraryType.version = new String(payload, 6, 6);
+    if (libraryType.version.endsWith("\0"))
+    {
+      libraryType.version = libraryType.version.substring(0,
+          libraryType.version.length() - 1);
+    }
+    libraryType.library = Library.getByVal(payload[12]);
+
+    return libraryType;
   }
 
   public NodeMask zwaveGetVirtualNodes() throws FrameLayerException,
@@ -1883,6 +2090,12 @@ public class ApplicationLayerImpl implements ApplicationLayer,
     return rc.getResponse().getPayload()[0];
   }
 
+  /*
+   * (non-Javadoc)
+   * 
+   * @see
+   * net.gregrapp.jhouse.interfaces.zwave.ApplicationLayer#zwaveMemoryGetId()
+   */
   public MemoryGetId zwaveMemoryGetId() throws FrameLayerException,
       ApplicationLayerException
   {
@@ -1897,7 +2110,8 @@ public class ApplicationLayerImpl implements ApplicationLayer,
         | payload[3];
     int controllerNode = payload[4];
 
-    return new MemoryGetId(homeId, controllerNode, rc);
+    this.memoryGetId = new MemoryGetId(homeId, controllerNode, rc);
+    return this.memoryGetId;
   }
 
   /*
@@ -2097,11 +2311,11 @@ public class ApplicationLayerImpl implements ApplicationLayer,
     {
       throw new NullPointerException("data");
     }
-    
+
     int txOptInt = 0;
     for (TXOption txOpt : txOptions)
       txOptInt |= txOpt.get();
-        
+
     DataPacket req = new DataPacket();
     req.addPayload(nodeId);
     req.addPayload(data.length);
@@ -2157,8 +2371,7 @@ public class ApplicationLayerImpl implements ApplicationLayer,
     {
       _requestNodeInfo = true;
       waitForNodeInfoExecutor = Executors.newSingleThreadScheduledExecutor();
-      waitForNodeInfoExecutor.schedule(new Runnable()
-      {
+      waitForNodeInfoExecutor.schedule(new Runnable() {
         public void run()
         {
           waitForNodeInfoCallbackHandler();
@@ -2244,7 +2457,7 @@ public class ApplicationLayerImpl implements ApplicationLayer,
     {
       throw new NullPointerException("data");
     }
-    
+
     int txOptInt = 0;
     for (TXOption txOpt : txOptions)
       txOptInt |= txOpt.get();
@@ -2301,14 +2514,14 @@ public class ApplicationLayerImpl implements ApplicationLayer,
    * net.gregrapp.jhouse.interfaces.zwave.ApplicationLayer#zwaveSendDataMeta
    * (int, int[], net.gregrapp.jhouse.interfaces.zwave.Constants.TXOption, int)
    */
-  public TXStatus zwaveSendDataMeta(int nodeId, int[] data, TXOption[] txOptions,
-      int timeout) throws FrameLayerException
+  public TXStatus zwaveSendDataMeta(int nodeId, int[] data,
+      TXOption[] txOptions, int timeout) throws FrameLayerException
   {
     if (data == null)
     {
       throw new NullPointerException("data");
     }
-    
+
     int txOptInt = 0;
     for (TXOption txOpt : txOptions)
       txOptInt |= txOpt.get();
@@ -2334,7 +2547,7 @@ public class ApplicationLayerImpl implements ApplicationLayer,
     {
       throw new NullPointerException("nodeIdList");
     }
-    
+
     int txOptInt = 0;
     for (TXOption txOpt : txOptions)
       txOptInt |= txOpt.get();
@@ -2389,7 +2602,8 @@ public class ApplicationLayerImpl implements ApplicationLayer,
    * 
    * @see
    * net.gregrapp.jhouse.interfaces.zwave.ApplicationLayer#zwaveSendSlaveData
-   * (int, int, int[], net.gregrapp.jhouse.interfaces.zwave.Constants.TXOption[])
+   * (int, int, int[],
+   * net.gregrapp.jhouse.interfaces.zwave.Constants.TXOption[])
    */
   public TXStatus zwaveSendSlaveData(int sourceId, int destinationId,
       int[] data, TXOption[] txOptions) throws FrameLayerException
@@ -2413,14 +2627,14 @@ public class ApplicationLayerImpl implements ApplicationLayer,
       throw new NullPointerException("data");
     }
 
-     TXStatus rc;
+    TXStatus rc;
     if (libraryType.library == Library.ControllerBridgeLib)
     {
       int txOptInt = 0;
       for (TXOption txOpt : txOptions)
         txOptInt |= txOpt.get();
 
-     DataPacket req = new DataPacket();
+      DataPacket req = new DataPacket();
       req.addPayload(sourceId);
       req.addPayload(destinationId);
       req.addPayload(data.length);
@@ -2527,7 +2741,8 @@ public class ApplicationLayerImpl implements ApplicationLayer,
    * @see net.gregrapp.jhouse.interfaces.zwave.ApplicationLayer#
    * zwaveSerialApiGetCapabilities()
    */
-  public int[] zwaveSerialApiGetCapabilities() throws FrameLayerException,
+  public SerialApiCapabilities zwaveSerialApiGetCapabilities()
+      throws FrameLayerException,
       ApplicationLayerException
   {
     DataPacket req = new DataPacket();
@@ -2537,18 +2752,26 @@ public class ApplicationLayerImpl implements ApplicationLayer,
     if (rc != TXStatus.CompleteOk)
       throw new ApplicationLayerException("CMD_SERIAL_API_GET_CAPABILITIES");
     int[] payload = rc.getResponse().getPayload();
-    ctrlCapabilities = payload;
-    if (ctrlCapabilities.length > 8)
+    // ctrlCapabilities = payload;
+    String version = String.format("%d.%d", payload[0], payload[1]);
+    int manufacturer = (payload[2] << 8) | payload[3];
+    int productType = (payload[4] << 8) | payload[5];
+    int productId = (payload[6] << 8) | payload[7];
+
+    serialApiCapabilities = new SerialApiCapabilities(version, manufacturer,
+        productType, productId);
+
+    if (payload.length > 8)
     {
-      serialCapabilityMask = new NodeBitmask();
-      int[] temp = new int[ctrlCapabilities.length - 8];
+      // serialCapabilityMask = new NodeBitmask();
+      int[] temp = new int[payload.length - 8];
       for (int n = 0; n < temp.length; n++)
       {
-        temp[n] = ctrlCapabilities[n + 8];
+        temp[n] = payload[n + 8];
       }
-      serialCapabilityMask.store(temp);
+      serialApiCapabilities.getCapabilityMask().store(temp);
     }
-    return payload;
+    return serialApiCapabilities;
   }
 
   /*
@@ -2606,7 +2829,7 @@ public class ApplicationLayerImpl implements ApplicationLayer,
         DataFrame.CommandType.CmdZWaveSetDefault, req, true);
     if (rc != TXStatus.CompleteOk)
       throw new ApplicationLayerException("CMD_ZWaveSET_DEFAULT");
-    enumerateNodes();
+    zwaveEnumerateNodes();
   }
 
   /*
@@ -2716,7 +2939,7 @@ public class ApplicationLayerImpl implements ApplicationLayer,
       throws FrameLayerException, ApplicationLayerException
   {
     int suc = 0;
-    if (slaveController)
+    if (secondaryController)
       return -1;
 
     MemoryGetId ret = zwaveMemoryGetId();
@@ -2727,7 +2950,7 @@ public class ApplicationLayerImpl implements ApplicationLayer,
       return -1;
 
     if (zwaveSetSucNodeId(_controllerNodeId, sucState,
-        new TXOption[] {TXOption.TransmitOptionNone}, capabilities))
+        new TXOption[] { TXOption.TransmitOptionNone }, capabilities))
     {
       suc = _controllerNodeId;
       return suc;
@@ -2878,40 +3101,6 @@ public class ApplicationLayerImpl implements ApplicationLayer,
     {
       return rc;
     }
-  }
-
-  /*
-   * (non-Javadoc)
-   * 
-   * @see
-   * net.gregrapp.jhouse.interfaces.zwave.ApplicationLayer#zwaveSupportedSerialCmds
-   * ()
-   */
-  public String zwaveSupportedSerialCmds()
-  {
-    String retString = null;
-    /*
-     * ctrlCapabilities format:0 APPL_VERSION,1 APPL_REVISION,2 MAN_ID1,
-     * 3MAN_ID2,4 PRODUCT_TYPE1, 5 PRODUCT_TYPE2, 6 PRODUCT_ID1,7 PRODUCT_ID2, 8
-     * FUNCID_SUPPORTED...
-     */
-    if (serialCapabilityMask != null)
-    {
-      int i = 1;
-      while (i < serialCapabilityMask.getLength() * 8)
-      {
-        if (serialCapabilityMask.zwaveNodeMaskNodeIn(i))
-        {
-          DataFrame.CommandType ct = DataFrame.CommandType.getByVal(i);
-          if (ct != null)
-            retString += ct.toString() + ",";
-          else
-            retString += i + ",";
-        }
-        i++;
-      }
-    }
-    return retString;
   }
 
   /*

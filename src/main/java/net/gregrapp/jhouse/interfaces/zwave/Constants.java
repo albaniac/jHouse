@@ -74,6 +74,25 @@ public class Constants
     }
   }
   
+  public enum CommandManufacturerSpecific
+  {
+    MANUFACTURER_SPECIFIC_GET(0x04),
+    MANUFACTURER_SPECIFIC_REPORT(0x05);
+
+    private int value;
+
+    CommandManufacturerSpecific(int value)
+    {
+      this.value = value;
+    }
+
+    public int get()
+    {
+      return this.value;
+    }
+  }
+  
+  
   public enum CommandSwitchMultilevel
   {
     // <summary>
@@ -258,18 +277,10 @@ public class Constants
   // </summary>
   public enum ChipType
   {
-    // <summary>
-    //
-    // </summary>
     Unknown(0),
-    // <summary>
-    //
-    // </summary>
     ZW0102(1),
-    // <summary>
-    //
-    // </summary>
-    ZW0201(2);
+    ZW0201(2),
+    ZW0301(3);
 
     private int value;
 
@@ -288,7 +299,7 @@ public class Constants
       for (ChipType t : ChipType.class.getEnumConstants())
         if (t.get() == value)
           return t;
-      return null;
+      return Unknown;
     }
   }
 

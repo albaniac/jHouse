@@ -4,12 +4,17 @@
 package net.gregrapp.jhouse.interfaces.zwave;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
 import net.gregrapp.jhouse.device.types.Device;
 import net.gregrapp.jhouse.device.types.ZwaveDevice;
 import net.gregrapp.jhouse.interfaces.AbstractInterface;
+import net.gregrapp.jhouse.interfaces.NodeInterface;
+import net.gregrapp.jhouse.interfaces.zwave.ApplicationLayerImpl.ControllerCapabilities;
+import net.gregrapp.jhouse.interfaces.zwave.ApplicationLayerImpl.MemoryGetId;
+import net.gregrapp.jhouse.interfaces.zwave.ApplicationLayerImpl.SerialApiCapabilities;
 import net.gregrapp.jhouse.interfaces.zwave.Constants.CommandBasic;
 import net.gregrapp.jhouse.interfaces.zwave.Constants.CommandClass;
 import net.gregrapp.jhouse.interfaces.zwave.Constants.TXOption;
@@ -27,7 +32,7 @@ import org.slf4j.LoggerFactory;
  * 
  */
 public class ZwaveInterface extends AbstractInterface implements
-    ApplicationLayerAsyncCallback
+    ApplicationLayerAsyncCallback, NodeInterface
 {
   private static final Logger logger = LoggerFactory
       .getLogger(ZwaveInterface.class);
@@ -48,7 +53,7 @@ public class ZwaveInterface extends AbstractInterface implements
       throw new ClassCastException(
           "Cannot attach non ZWave device to this interface");
     }
-    
+
     ZwaveDevice zwaveDevice = (ZwaveDevice) device;
 
     if (devices.containsKey(zwaveDevice.getNodeId()))
@@ -68,9 +73,9 @@ public class ZwaveInterface extends AbstractInterface implements
       tmp.add(zwaveDevice);
       devices.put(zwaveDevice.getNodeId(), tmp);
     }
-    
-    //if (this.interfaceReady)
-    //  device.interfaceReady();
+
+    // if (this.interfaceReady)
+    // device.interfaceReady();
   }
 
   public void dataPacketReceived(CommandType cmd, DataPacket packet)
@@ -109,6 +114,31 @@ public class ZwaveInterface extends AbstractInterface implements
 
   }
 
+  @Override
+  public HashMap<String, HashMap<String, String>> getNodes()
+  {
+    HashMap<String, HashMap<String, String>> nodes = new HashMap<String, HashMap<String, String>>();
+
+    HashMap<String, String> node;
+
+    Node[] nodeList = appLayer.getAllNodes();
+
+    for (Node n : nodeList)
+    {
+      node = new HashMap<String, String>();
+      node.put("basic", String.valueOf(n.getBasic()));
+      node.put("capabilities", String.valueOf(n.getCapability()));
+      node.put("generic", String.valueOf(n.getGeneric()));
+      node.put("reserved", String.valueOf(n.getReserved()));
+      node.put("security", String.valueOf(n.getSecurity()));
+      node.put("specific", String.valueOf(n.getSpecific()));
+      node.put("commandclasses", Arrays.toString(n.getSupportedCmdClasses()));
+      nodes.put(String.valueOf(n.getId()), node);
+    }
+
+    return nodes;
+  }
+
   /*
    * (non-Javadoc)
    * 
@@ -121,8 +151,7 @@ public class ZwaveInterface extends AbstractInterface implements
       this.transport.init();
     } catch (TransportException e)
     {
-      logger
-          .error("Aborting ZWave initialization, error opening transport", e);
+      logger.error("Aborting ZWave initialization, error opening transport", e);
       return;
     }
 
@@ -130,10 +159,12 @@ public class ZwaveInterface extends AbstractInterface implements
     SessionLayer sessionLayer = new SessionLayerImpl(frameLayer);
     appLayer = new ApplicationLayerImpl(sessionLayer);
     appLayer.setCallbackHandler(this);
-    
+
     try
     {
-      appLayer.getZwaveVersion();
+      VersionInfoType zwaveVersion = appLayer.zwaveGetVersion();
+      logger.info("Controller library: {}, version: {}",
+          zwaveVersion.library.toString(), zwaveVersion.version.trim());
     } catch (FrameLayerException e)
     {
       logger.error("Error retrieving version info from ZWave controller", e);
@@ -146,7 +177,73 @@ public class ZwaveInterface extends AbstractInterface implements
 
     try
     {
-      appLayer.enumerateNodes();
+      MemoryGetId zwaveId = appLayer.zwaveMemoryGetId();
+      logger.info("Controller home ID: {}, node ID: {}",
+          String.format("%#06x", zwaveId.getHomeId()), zwaveId.getNodeId());
+    } catch (FrameLayerException e)
+    {
+      logger.error(
+          "Error retrieving home ID and node ID from ZWave controller", e);
+      return;
+    } catch (ApplicationLayerException e)
+    {
+      logger.error(
+          "Error retrieving home ID and node ID from ZWave controller", e);
+      return;
+    }
+
+    try
+    {
+      appLayer.zwaveGetControllerCapabilities();
+      if (appLayer.isControllerIsRealPrimary())
+        logger
+            .info("Controller is the original owner of the current Z-Wave network Home ID");
+      if (appLayer.isSlaveController())
+        logger.info("Controller is a slave controller");
+      if (appLayer.isControllerIsSuc())
+        logger.info("Controller is the SUC");
+      if (appLayer.isControllerOnOtherNetwork())
+        logger.info("Controller is on other network");
+      if (appLayer.isNodeIdServerPresent())
+        logger.info("A SIS server is present on this network");
+    } catch (ApplicationLayerException e)
+    {
+      logger.error("Error retrieving ZWave controller capabilities", e);
+      return;
+    } catch (FrameLayerException e)
+    {
+      logger.error("Error retrieving ZWave controller capabilities", e);
+      return;
+    }
+
+    try
+    {
+      SerialApiCapabilities serialApiCapabilities = appLayer
+          .zwaveSerialApiGetCapabilities();
+      logger
+          .info(
+              "Serial API capabilities version: {}, manufacturer ID: {}, manufacturer product type: {}, manufacturer product: {}",
+              new Object[] { serialApiCapabilities.getVersion(),
+                  String.format("%#02x",serialApiCapabilities.getManufacturer()),
+                  String.format("%#02x",serialApiCapabilities.getProductType()),
+                  String.format("%#02x",serialApiCapabilities.getProductId()) });
+      logger.info("Supported serial commands: {}",
+          appLayer.getSupportedSerialCmds());
+    } catch (FrameLayerException e)
+    {
+      logger.error("Error retrieving ZWave serial API capabilities", e);
+      return;
+    } catch (ApplicationLayerException e)
+    {
+      logger.error("Error retrieving ZWave serial API capabilities", e);
+      return;
+    }
+
+    try
+    {
+      appLayer.zwaveEnumerateNodes();
+      logger.debug("Z-Wave chip informtion: {}{}", appLayer.getChipType(), appLayer.getChipRev());
+
     } catch (FrameLayerException e)
     {
       logger.error("Error enumerating ZWave nodes", e);
@@ -155,8 +252,8 @@ public class ZwaveInterface extends AbstractInterface implements
       logger.error("Error enumerating ZWave nodes", e);
     }
 
-   setInterfaceReady(true);
-    
+    setInterfaceReady(true);
+
     try
     {
       appLayer.zwaveSendData(14, new int[] { 0x20,
@@ -179,6 +276,25 @@ public class ZwaveInterface extends AbstractInterface implements
     }
   }
 
+  /**
+   * Tells attached devices that this interface is ready for traffic
+   */
+  private void setInterfaceReady(boolean ready)
+  {
+    this.interfaceReady = ready;
+
+    if (ready && this.devices != null)
+    {
+      for (ArrayList<ZwaveDevice> zwaveDevices : this.devices.values())
+      {
+        for (ZwaveDevice dev : zwaveDevices)
+        {
+          dev.interfaceReady();
+        }
+      }
+    }
+  }
+
   public boolean zwaveSendData(int nodeId, int... data)
   {
     try
@@ -194,24 +310,5 @@ public class ZwaveInterface extends AbstractInterface implements
     }
 
     return false;
-  }
-
-  /**
-   * Tells attached devices that this interface is ready for traffic
-   */
-  private void setInterfaceReady(boolean ready)
-  {
-    this.interfaceReady = ready;
-    
-    if (ready && this.devices != null)
-    {
-      for (ArrayList<ZwaveDevice> zwaveDevices : this.devices.values())
-      {
-        for (ZwaveDevice dev : zwaveDevices)
-        {
-          dev.interfaceReady();
-        }
-      }
-    }
   }
 }
