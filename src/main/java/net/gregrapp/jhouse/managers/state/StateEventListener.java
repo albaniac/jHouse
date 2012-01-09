@@ -1,10 +1,10 @@
 /**
  * 
  */
-package net.gregrapp.jhouse.managers;
+package net.gregrapp.jhouse.managers.state;
 
-import net.gregrapp.jhouse.managers.StateManagerImpl.StateEventType;
-import net.gregrapp.jhouse.managers.StateManagerImpl.StateType;
+import net.gregrapp.jhouse.managers.state.StateManagerImpl.StateEventType;
+import net.gregrapp.jhouse.managers.state.StateManagerImpl.StateType;
 
 /**
  * @author grapp

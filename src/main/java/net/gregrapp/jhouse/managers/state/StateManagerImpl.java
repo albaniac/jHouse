@@ -1,12 +1,15 @@
 /**
  * 
  */
-package net.gregrapp.jhouse.managers;
+package net.gregrapp.jhouse.managers.state;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import net.gregrapp.jhouse.device.types.Device;
 
@@ -16,16 +19,18 @@ import net.gregrapp.jhouse.device.types.Device;
  */
 public class StateManagerImpl implements StateManager
 {
+  public enum StateEventType
+  {
+    CHANGED, NONE, SET
+  }
+
   public enum StateType
   {
     SWITCHLEVEL
   }
 
-  public enum StateEventType
-  {
-    NONE, SET, CHANGED
-  }
-
+  private static final Logger logger = LoggerFactory
+      .getLogger(StateManagerImpl.class);
   private Map<Integer, HashMap<StateType, String>> state;
   private List<StateEventListener> wildcardListeners;
 
@@ -46,8 +51,50 @@ public class StateManagerImpl implements StateManager
      */
   }
 
-  /* (non-Javadoc)
-   * @see net.gregrapp.jhouse.managers.StateManager#setState(net.gregrapp.jhouse.device.types.Device, net.gregrapp.jhouse.managers.StateManagerImpl.StateType, java.lang.String)
+  /*
+   * (non-Javadoc)
+   * 
+   * @see
+   * net.gregrapp.jhouse.managers.StateManager#addListener(net.gregrapp.jhouse
+   * .managers.StateEventListener)
+   */
+  @Override
+  public void addListener(StateEventListener listener)
+  {
+    this.wildcardListeners.add(listener);
+  }
+
+  public String getState(int deviceId, StateType stateType)
+  {
+    if (!this.state.containsKey(deviceId)
+        || !this.state.get(deviceId).containsKey(stateType))
+      return null;
+    else
+      return this.state.get(deviceId).get(stateType);
+  }
+
+  private void notifyEvent(int deviceId, StateType stateType,
+      StateEventType eventType, String stateValue)
+  {
+    for (StateEventListener listener : this.wildcardListeners)
+    {
+      listener.stateEvent(deviceId, stateType, eventType, stateValue);
+    }
+
+    /*
+     * for (StateEventListener listener : this.typeListeners.keySet()) {
+     * 
+     * listener.stateEvent(deviceId, stateType, stateValue); }
+     */
+  }
+
+  /*
+   * (non-Javadoc)
+   * 
+   * @see
+   * net.gregrapp.jhouse.managers.StateManager#setState(net.gregrapp.jhouse.
+   * device.types.Device,
+   * net.gregrapp.jhouse.managers.StateManagerImpl.StateType, java.lang.String)
    */
   @Override
   public void setState(Device device, StateType stateType, String stateValue)
@@ -55,13 +102,20 @@ public class StateManagerImpl implements StateManager
     this.setState(device.getDeviceId(), stateType, stateValue);
   }
 
-  /* (non-Javadoc)
-   * @see net.gregrapp.jhouse.managers.StateManager#setState(int, net.gregrapp.jhouse.managers.StateManagerImpl.StateType, java.lang.String)
+  /*
+   * (non-Javadoc)
+   * 
+   * @see net.gregrapp.jhouse.managers.StateManager#setState(int,
+   * net.gregrapp.jhouse.managers.StateManagerImpl.StateType, java.lang.String)
    */
   @Override
   public void setState(final int deviceId, final StateType stateType,
       final String stateValue)
   {
+    logger
+        .debug(
+            "State manager state update for device {}, state type: {}, state value: {}",
+            new Object[] { deviceId, stateType.toString(), stateValue });
     StateEventType eventType = StateEventType.NONE;
 
     if (!this.state.containsKey(deviceId))
@@ -94,38 +148,6 @@ public class StateManagerImpl implements StateManager
         notifyEvent(deviceId, stateType, finalEventType, stateValue);
       }
     }).start();
-  }
-
-  public String getState(int deviceId, StateType stateType)
-  {
-    if (!this.state.containsKey(deviceId) || !this.state.get(deviceId).containsKey(stateType))
-      return null;
-    else
-      return this.state.get(deviceId).get(stateType);
-  }
-  
-  private void notifyEvent(int deviceId, StateType stateType,
-      StateEventType eventType, String stateValue)
-  {
-    for (StateEventListener listener : this.wildcardListeners)
-    {
-      listener.stateEvent(deviceId, stateType, eventType, stateValue);
-    }
-
-    /*
-     * for (StateEventListener listener : this.typeListeners.keySet()) {
-     * 
-     * listener.stateEvent(deviceId, stateType, stateValue); }
-     */
-  }
-
-  /* (non-Javadoc)
-   * @see net.gregrapp.jhouse.managers.StateManager#addListener(net.gregrapp.jhouse.managers.StateEventListener)
-   */
-  @Override
-  public void addListener(StateEventListener listener)
-  {
-    this.wildcardListeners.add(listener);
   }
 
   /*

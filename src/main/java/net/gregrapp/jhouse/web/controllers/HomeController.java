@@ -8,7 +8,7 @@ import java.util.Locale;
 
 import net.gregrapp.jhouse.device.classes.BinarySwitch;
 import net.gregrapp.jhouse.device.types.Device;
-import net.gregrapp.jhouse.managers.DeviceManager;
+import net.gregrapp.jhouse.managers.device.DeviceManager;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

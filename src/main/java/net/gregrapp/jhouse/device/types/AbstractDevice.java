@@ -3,15 +3,22 @@
  */
 package net.gregrapp.jhouse.device.types;
 
+import net.gregrapp.jhouse.managers.state.StateManager;
+
+import org.springframework.beans.factory.annotation.Autowired;
+
 /**
  * @author Greg Rapp
  * 
  */
 public abstract class AbstractDevice implements Device
 {
+  protected int deviceId;
   protected String deviceStatus = null;
   protected String deviceValue = null;
-  protected int deviceId;
+
+  @Autowired
+  protected StateManager stateManager;
 
   /**
    * @param deviceId

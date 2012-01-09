@@ -7,7 +7,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
 import net.gregrapp.jhouse.device.types.Device;
-import net.gregrapp.jhouse.managers.DeviceManager;
+import net.gregrapp.jhouse.managers.device.DeviceManager;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -78,7 +78,7 @@ public class DeviceController
     return "home";
   }
   
-  @RequestMapping(value = "/{id}", method = RequestMethod.GET, produces="application/json")
+  @RequestMapping(value = "/{id}", method = RequestMethod.GET)
   public @ResponseBody String deviceDetails(@PathVariable("id") int id, Model model)
   {
     Device dev = deviceManager.getDeviceForId(id);

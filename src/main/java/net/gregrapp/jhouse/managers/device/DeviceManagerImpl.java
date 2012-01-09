@@ -1,7 +1,7 @@
 /**
  * 
  */
-package net.gregrapp.jhouse.managers;
+package net.gregrapp.jhouse.managers.device;
 
 import java.util.ArrayList;
 import java.util.List;

@@ -1831,12 +1831,24 @@ public class ApplicationLayerImpl implements ApplicationLayer,
         }
       }
 
+      /*
       for (Node n : nodeTable.getList())
       {
-        zwaveNodeManufacturerSpecific(n.getId());
-        zwaveRequestNodeInfo(n.getId());
+        if (n.isNodeListening())
+        {
+          zwaveRequestNodeInfo(n.getId());
+        }
       }
 
+      for (Node n : nodeTable.getList())
+      {
+        if (n.isNodeListening())
+        {
+          zwaveNodeManufacturerSpecific(n.getId());
+        }
+      }
+      */
+      
       return nodeTable.getList();
     }
   }
@@ -1909,6 +1921,7 @@ public class ApplicationLayerImpl implements ApplicationLayer,
   public void zwaveNodeManufacturerSpecific(int nodeId)
       throws FrameLayerException, ApplicationLayerException
   {
+    logger.debug("Requesting manufacturer specific report from node {}", nodeId);
     int[] data = new int[] {
         CommandClass.COMMAND_CLASS_MANUFACTURER_SPECIFIC.get(),
         CommandManufacturerSpecific.MANUFACTURER_SPECIFIC_GET.get() };
@@ -2363,6 +2376,8 @@ public class ApplicationLayerImpl implements ApplicationLayer,
    */
   public TXStatus zwaveRequestNodeInfo(int nodeId) throws FrameLayerException
   {
+    logger.debug("Requesting node info from node {}", nodeId);
+
     DataPacket req = new DataPacket();
     req.addPayload(nodeId);
     TXStatus rc = sessionLayer.requestWithResponse(

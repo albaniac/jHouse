@@ -5,13 +5,40 @@ package net.gregrapp.jhouse.interfaces.zwave.command;
 
 /**
  * @author Greg Rapp
- *
+ * 
  */
 public interface CommandClassSwitchMultilevel extends CommandClass
 {
-  public void commandClassSwitchMultilevelStartLevelChange(int direction);
-  public void commandClassSwitchMultilevelStopLevelChange();
-  public void commandClassSwitchMultilevelSet(int value);
+  /**
+   * Request switch report indicating current level
+   */
   public void commandClassSwitchMultilevelGet();
-  public void commandClassSwitchMultilevelReport(int value); 
+
+  /**
+   * Switch report callback indicating current level
+   * 
+   * @param value
+   *          level
+   */
+  public void commandClassSwitchMultilevelReport(int value);
+
+  /**
+   * Set switch level
+   * 
+   * @param value
+   *          level
+   */
+  public void commandClassSwitchMultilevelSet(int value);
+
+  /**
+   * Start switch level change
+   * 
+   * @param direction
+   */
+  public void commandClassSwitchMultilevelStartLevelChange(int direction);
+
+  /**
+   * Stop switch level change
+   */
+  public void commandClassSwitchMultilevelStopLevelChange();
 }

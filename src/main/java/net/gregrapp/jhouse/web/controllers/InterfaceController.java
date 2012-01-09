@@ -8,7 +8,8 @@ import java.lang.reflect.Method;
 import java.util.HashMap;
 
 import net.gregrapp.jhouse.device.types.Device;
-import net.gregrapp.jhouse.managers.DeviceManager;
+import net.gregrapp.jhouse.interfaces.NodeInterface;
+import net.gregrapp.jhouse.managers.device.DeviceManager;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -37,6 +38,22 @@ public class InterfaceController
   
   @Autowired
   DeviceManager deviceManager;
+
+  @RequestMapping(value = "/{name}/nodes", method = RequestMethod.GET)
+  public @ResponseBody
+  HashMap<String, HashMap<String,String>> deviceAction(@PathVariable("name") String name, Model model)
+  { 
+    if (ctx.containsBean(name))
+    {
+      Object bean = ctx.getBean(name);
+      
+      if (bean instanceof NodeInterface)
+      {
+        return ((NodeInterface) bean).getNodes();
+      }
+    }
+    return null;
+  }
   
   @RequestMapping(value = "/{name}/{method}", method = RequestMethod.GET)
   public @ResponseBody
@@ -59,8 +76,8 @@ public class InterfaceController
         e.printStackTrace();
       } catch (NoSuchMethodException e)
       {
-        // TODO Auto-generated catch block
-        e.printStackTrace();
+        model.addAttribute("errorDetail", "No such method found");
+        return "error";
       } catch (IllegalArgumentException e)
       {
         // TODO Auto-generated catch block
@@ -76,22 +93,5 @@ public class InterfaceController
       }
     }
     return "home";
-  }
-  
-  @RequestMapping(value = "/{id}", method = RequestMethod.GET, produces="application/json")
-  public @ResponseBody String deviceDetails(@PathVariable("id") int id, Model model)
-  {
-    Device dev = deviceManager.getDeviceForId(id);
-    String[] devclass = null;
-    if (dev != null)
-      devclass = deviceManager.getDeviceClassesForDevice(dev);
-   
-    String strDevClasses = "";
-    for (String s : devclass)
-      strDevClasses += s + ",";
-    strDevClasses.substring(0, strDevClasses.length()-1);
-    model.addAttribute("stuff", strDevClasses); 
-    
-   return "home"; 
   }
 }

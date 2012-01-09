@@ -42,5 +42,12 @@ public abstract class ZwaveDevice extends AbstractDevice
    * Poll the device to obtain its current state
    */
   public abstract void poll();
-
+  
+  /**
+   * Request Z-Wave command classes supported by this device
+   */
+  public void requestNodeInfo()
+  {
+    deviceInterface.requestNodeInfo(this.nodeId);
+  }
 }

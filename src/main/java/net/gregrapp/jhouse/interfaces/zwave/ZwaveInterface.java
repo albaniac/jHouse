@@ -12,15 +12,16 @@ import net.gregrapp.jhouse.device.types.Device;
 import net.gregrapp.jhouse.device.types.ZwaveDevice;
 import net.gregrapp.jhouse.interfaces.AbstractInterface;
 import net.gregrapp.jhouse.interfaces.NodeInterface;
-import net.gregrapp.jhouse.interfaces.zwave.ApplicationLayerImpl.ControllerCapabilities;
 import net.gregrapp.jhouse.interfaces.zwave.ApplicationLayerImpl.MemoryGetId;
 import net.gregrapp.jhouse.interfaces.zwave.ApplicationLayerImpl.SerialApiCapabilities;
 import net.gregrapp.jhouse.interfaces.zwave.Constants.CommandBasic;
 import net.gregrapp.jhouse.interfaces.zwave.Constants.CommandClass;
+import net.gregrapp.jhouse.interfaces.zwave.Constants.CommandManufacturerSpecific;
 import net.gregrapp.jhouse.interfaces.zwave.Constants.TXOption;
 import net.gregrapp.jhouse.interfaces.zwave.Constants.TXStatus;
 import net.gregrapp.jhouse.interfaces.zwave.DataFrame.CommandType;
 import net.gregrapp.jhouse.interfaces.zwave.command.CommandClassBasic;
+import net.gregrapp.jhouse.interfaces.zwave.command.CommandClassManufacturerSpecific;
 import net.gregrapp.jhouse.transports.Transport;
 import net.gregrapp.jhouse.transports.TransportException;
 
@@ -99,6 +100,26 @@ public class ZwaveInterface extends AbstractInterface implements
                 ((CommandClassBasic) device).commandClassBasicReport(value);
           }
         }
+      } else if (payload[3] == CommandClass.COMMAND_CLASS_MANUFACTURER_SPECIFIC
+          .get())
+      {
+        if (payload[4] == CommandManufacturerSpecific.MANUFACTURER_SPECIFIC_REPORT
+            .get())
+        {
+          int nodeId = payload[1];
+
+          if (devices.containsKey(nodeId))
+          {
+            int manufacturer = (payload[5] << 8) | payload[6];
+            int productType = (payload[7] << 8) | payload[8];
+            int productId = (payload[9] << 8) | payload[10];
+            for (Object device : devices.get(nodeId))
+              if (device instanceof CommandClassManufacturerSpecific)
+                ((CommandClassManufacturerSpecific) device)
+                    .commandClassManufacturerSpecificReport(manufacturer,
+                        productType, productId);
+          }
+        }
       }
     }
   }
@@ -132,7 +153,10 @@ public class ZwaveInterface extends AbstractInterface implements
       node.put("reserved", String.valueOf(n.getReserved()));
       node.put("security", String.valueOf(n.getSecurity()));
       node.put("specific", String.valueOf(n.getSpecific()));
-      node.put("commandclasses", Arrays.toString(n.getSupportedCmdClasses()));
+      node.put("commandClasses", Arrays.toString(n.getSupportedCmdClasses()));
+      node.put("manufacturer", String.valueOf(n.getManufacturer()));
+      node.put("productType", String.valueOf(n.getProductType()));
+      node.put("productId", String.valueOf(n.getProductId()));
       nodes.put(String.valueOf(n.getId()), node);
     }
 
@@ -223,10 +247,12 @@ public class ZwaveInterface extends AbstractInterface implements
       logger
           .info(
               "Serial API capabilities version: {}, manufacturer ID: {}, manufacturer product type: {}, manufacturer product: {}",
-              new Object[] { serialApiCapabilities.getVersion(),
-                  String.format("%#02x",serialApiCapabilities.getManufacturer()),
-                  String.format("%#02x",serialApiCapabilities.getProductType()),
-                  String.format("%#02x",serialApiCapabilities.getProductId()) });
+              new Object[] {
+                  serialApiCapabilities.getVersion(),
+                  String.format("%#02x",
+                      serialApiCapabilities.getManufacturer()),
+                  String.format("%#02x", serialApiCapabilities.getProductType()),
+                  String.format("%#02x", serialApiCapabilities.getProductId()) });
       logger.info("Supported serial commands: {}",
           appLayer.getSupportedSerialCmds());
     } catch (FrameLayerException e)
@@ -242,7 +268,8 @@ public class ZwaveInterface extends AbstractInterface implements
     try
     {
       appLayer.zwaveEnumerateNodes();
-      logger.debug("Z-Wave chip informtion: {}{}", appLayer.getChipType(), appLayer.getChipRev());
+      logger.debug("Z-Wave chip informtion: {}{}", appLayer.getChipType(),
+          appLayer.getChipRev());
 
     } catch (FrameLayerException e)
     {
@@ -311,4 +338,22 @@ public class ZwaveInterface extends AbstractInterface implements
 
     return false;
   }
+
+  /**
+   * Request node command classes
+   * 
+   * @param nodeId
+   *          Z-Wave node ID
+   */
+  public void requestNodeInfo(int nodeId)
+  {
+    try
+    {
+      appLayer.zwaveRequestNodeInfo(nodeId);
+    } catch (FrameLayerException e)
+    {
+      logger.error("Error requesting node info from node {}", nodeId, e);
+    }
+  }
+
 }

@@ -738,4 +738,14 @@ public interface ApplicationLayer
   int zwaveTest(int testCmd, int testDelay, int testPayloadLength,
       int testCount, TXOption[] testTXOptions, int maxLength, int[] testNodeMask)
       throws FrameLayerException;
+  
+  /**
+   * Request manufacturer specific info from a node
+   * 
+   * @param nodeId Z-Wave node ID
+   * @throws ApplicationLayerException 
+   * @throws FrameLayerException 
+   */
+  public void zwaveNodeManufacturerSpecific(int nodeId) throws FrameLayerException, ApplicationLayerException;
+
 }
