@@ -136,24 +136,24 @@ public class ZwaveInterface extends AbstractInterface implements
   }
 
   @Override
-  public HashMap<String, HashMap<String, String>> getNodes()
+  public HashMap<String, HashMap<String, Object>> getNodes()
   {
-    HashMap<String, HashMap<String, String>> nodes = new HashMap<String, HashMap<String, String>>();
+    HashMap<String, HashMap<String, Object>> nodes = new HashMap<String, HashMap<String, Object>>();
 
-    HashMap<String, String> node;
+    HashMap<String, Object> node;
 
     Node[] nodeList = appLayer.getAllNodes();
 
     for (Node n : nodeList)
     {
-      node = new HashMap<String, String>();
+      node = new HashMap<String, Object>();
       node.put("basic", String.valueOf(n.getBasic()));
       node.put("capabilities", String.valueOf(n.getCapability()));
       node.put("generic", String.valueOf(n.getGeneric()));
       node.put("reserved", String.valueOf(n.getReserved()));
       node.put("security", String.valueOf(n.getSecurity()));
       node.put("specific", String.valueOf(n.getSpecific()));
-      node.put("commandClasses", Arrays.toString(n.getSupportedCmdClasses()));
+      node.put("commandClasses", n.getSupportedCmdClasses());
       node.put("manufacturer", String.valueOf(n.getManufacturer()));
       node.put("productType", String.valueOf(n.getProductType()));
       node.put("productId", String.valueOf(n.getProductId()));

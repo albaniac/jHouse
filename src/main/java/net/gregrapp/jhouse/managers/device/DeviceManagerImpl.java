@@ -13,7 +13,7 @@ import net.gregrapp.jhouse.device.types.Device;
 
 /**
  * @author Greg Rapp
- *
+ * 
  */
 public class DeviceManagerImpl implements DeviceManager
 {
@@ -25,8 +25,22 @@ public class DeviceManagerImpl implements DeviceManager
    */
   public DeviceManagerImpl()
   {
-    
-  }  
+
+  }
+
+  public String[] getDeviceClassesForDevice(Device device)
+  {
+    List<String> klasses = new ArrayList<String>();
+
+    for (Class<?> iface : device.getClass().getInterfaces())
+    {
+      if (DeviceClass.class.isAssignableFrom(iface))
+      {
+        klasses.add(iface.getSimpleName());
+      }
+    }
+    return klasses.toArray(new String[0]);
+  }
 
   public Device getDeviceForId(int deviceId)
   {
@@ -39,18 +53,10 @@ public class DeviceManagerImpl implements DeviceManager
     }
     return null;
   }
-  
-  public String[] getDeviceClassesForDevice(Device device)
+
+  @Override
+  public Device[] getDevices()
   {
-    List<String> klasses = new ArrayList<String>();
-    
-    for (Class<?> iface : device.getClass().getInterfaces())
-    {
-      if (DeviceClass.class.isAssignableFrom(iface))
-      {
-        klasses.add(iface.getSimpleName());
-      }
-    }
-   return klasses.toArray(new String[0]); 
+    return this.devices;
   }
 }

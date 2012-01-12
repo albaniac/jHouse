@@ -3,6 +3,7 @@
  */
 package net.gregrapp.jhouse.device.types;
 
+import net.gregrapp.jhouse.managers.event.EventManager;
 import net.gregrapp.jhouse.managers.state.StateManager;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,6 +21,9 @@ public abstract class AbstractDevice implements Device
   @Autowired
   protected StateManager stateManager;
 
+  @Autowired
+  protected EventManager eventManager;
+  
   /**
    * @param deviceId
    *          device's id

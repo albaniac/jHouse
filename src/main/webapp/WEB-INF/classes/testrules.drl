@@ -1,0 +1,21 @@
+import net.gregrapp.jhouse.events.BinarySwitchStateEvent
+
+declare BinarySwitchStateEvent
+	@role( event )
+end
+
+rule "1"
+	when
+		BinarySwitchStateEvent(deviceId == 1)
+	then
+		System.out.println("********** GOT SWITCH EVENT FOR DEVICE 1");
+	end
+
+rule "2"
+	timer ( cron: 0 * * * * ? )
+	when
+	
+	then
+		System.out.println("*********** TIMER EXPIRED");
+	end
+	

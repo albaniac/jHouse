@@ -13,4 +13,5 @@ public interface DeviceManager
 {
   public Device getDeviceForId(int deviceId);
   public String[] getDeviceClassesForDevice(Device device);
+  public Device[] getDevices();
 }

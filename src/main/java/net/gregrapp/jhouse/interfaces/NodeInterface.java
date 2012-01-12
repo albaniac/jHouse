@@ -14,5 +14,5 @@ public interface NodeInterface
   /**
    * @return node information, key is the node address and value contains node attributes
    */
-  public HashMap<String, HashMap<String,String>> getNodes();
+  public HashMap<String, HashMap<String, Object>> getNodes();
 }

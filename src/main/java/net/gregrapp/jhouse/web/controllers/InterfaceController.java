@@ -41,7 +41,7 @@ public class InterfaceController
 
   @RequestMapping(value = "/{name}/nodes", method = RequestMethod.GET)
   public @ResponseBody
-  HashMap<String, HashMap<String,String>> deviceAction(@PathVariable("name") String name, Model model)
+  HashMap<String, HashMap<String,Object>> deviceAction(@PathVariable("name") String name, Model model)
   { 
     if (ctx.containsBean(name))
     {
