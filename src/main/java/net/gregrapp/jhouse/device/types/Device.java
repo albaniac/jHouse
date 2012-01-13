@@ -14,8 +14,8 @@ public interface Device
   public String getStatus();
   public void setStatus(String status);
   
-  public String getValue();
-  public void setValue(String value);
+  public Object getValue();
+  public void setValue(Object value);
   
   /**
    * Called by an interface to notify attached devices that it is ready to accept data

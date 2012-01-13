@@ -23,23 +23,17 @@
 		<constructor-arg ref="zwaveTransport" />
 	</bean>
 
-	<bean name="dinningRoomLight" class="net.gregrapp.jhouse.device.drivers.ZwaveBinarySwitch">
-		<!-- Unique device ID -->
-		<constructor-arg value="1" />
-		<!-- Interface bean reference -->
-		<constructor-arg ref="zwaveInterface" />
-		<!-- ZWave node ID -->
-		<constructor-arg value="14" />
-	</bean>
-
+	<import resource="devices.xml"/>
+	
 	<bean name="deviceManager" class="net.gregrapp.jhouse.managers.device.DeviceManagerImpl" />
 
 	<bean name="stateManager" class="net.gregrapp.jhouse.managers.state.StateManagerImpl" />
 
 	<bean name="eventManager" class="net.gregrapp.jhouse.managers.event.EventManagerImpl">
 		<constructor-arg ref="ksession" />
+<!--  		<property name="deviceManager" ref="deviceManager" />-->
 	</bean>
-	
+
 	<drools:kbase id="kbase">
 		<drools:resources>
 			<drools:resource type="DRL" source="classpath:testrules.drl"></drools:resource>
@@ -51,6 +45,8 @@
 
 	<drools:ksession id="ksession" type="stateful" name="ksession"
 		kbase="kbase">
+		<drools:script>
+			<drools:fire-until-halt />
+		</drools:script>
 	</drools:ksession>
-	<!-- <drools:fire-until-halt /> -->
 </beans>

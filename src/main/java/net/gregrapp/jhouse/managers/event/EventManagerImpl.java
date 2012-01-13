@@ -13,7 +13,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
 /**
- * @author grapp
+ * @author Greg Rapp
  * 
  */
 public class EventManagerImpl implements EventManager
@@ -29,20 +29,23 @@ public class EventManagerImpl implements EventManager
   /**
    * 
    */
-  public EventManagerImpl(final StatefulKnowledgeSession session)
+  public EventManagerImpl(StatefulKnowledgeSession session)
   {
     this.session = session;
     
-    new Thread(
-        new Runnable() {
-          public void run()
-          {
-            session.fireUntilHalt();
-          }
 
-        }).start();
   }
 
+  public void setDeviceManager(DeviceManager deviceManager)
+  {
+    this.deviceManager = deviceManager;
+
+    for (Device device : deviceManager.getDevices())
+    {
+      session.insert(device);
+    }
+  }
+  
   /*
    * (non-Javadoc)
    * 
@@ -59,6 +62,5 @@ public class EventManagerImpl implements EventManager
       session.insert(device);
     }
     session.insert(event);
-    //session.fireAllRules();
   }
 }

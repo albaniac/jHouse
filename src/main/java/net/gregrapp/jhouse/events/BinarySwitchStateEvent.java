@@ -6,6 +6,7 @@ package net.gregrapp.jhouse.events;
 import java.util.Calendar;
 
 import net.gregrapp.jhouse.device.types.Device;
+import net.gregrapp.jhouse.states.BinarySwitchState;
 
 /**
  * Switch state change event
@@ -15,32 +16,25 @@ import net.gregrapp.jhouse.device.types.Device;
  */
 public class BinarySwitchStateEvent extends DeviceEvent
 {
-
-  public enum SwitchState
-  {
-    OFF,
-    ON
-  }
-
   /**
    * The new state of this device
    */
-  private SwitchState newState;
+  private BinarySwitchState state;
 
   /**
    * The previous state of this device
    */
-  private SwitchState previousState;
+  private BinarySwitchState previousState;
 
   /**
-   * @param newState
-   * @param previousState
+   * @param state current state
+   * @param previousState last known state
    */
-  public BinarySwitchStateEvent(Device device, SwitchState newState,
-      SwitchState previousState)
+  public BinarySwitchStateEvent(Device device, BinarySwitchState state,
+      BinarySwitchState previousState)
   {
     this.device = device;
-    this.newState = newState;
+    this.state = state;
     this.previousState = previousState;
     this.time = Calendar.getInstance();
   }
@@ -48,15 +42,15 @@ public class BinarySwitchStateEvent extends DeviceEvent
   /**
    * @return the new state
    */
-  public SwitchState getNewState()
+  public BinarySwitchState getState()
   {
-    return newState;
+    return state;
   }
 
   /**
    * @return the previous state
    */
-  public SwitchState getPreviousState()
+  public BinarySwitchState getPreviousState()
   {
     return previousState;
   }

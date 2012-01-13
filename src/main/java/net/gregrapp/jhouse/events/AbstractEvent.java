@@ -18,8 +18,8 @@ public abstract class AbstractEvent implements Event, Serializable
   /**
    * @return the event time
    */
-  public Calendar getTime()
+  public long getTime()
   {
-    return time;
+    return time.getTimeInMillis();
   }
 }

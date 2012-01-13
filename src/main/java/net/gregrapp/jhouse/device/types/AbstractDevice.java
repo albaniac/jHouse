@@ -16,7 +16,7 @@ public abstract class AbstractDevice implements Device
 {
   protected int deviceId;
   protected String deviceStatus = null;
-  protected String deviceValue = null;
+  protected Object deviceValue = null;
 
   @Autowired
   protected StateManager stateManager;
@@ -52,7 +52,7 @@ public abstract class AbstractDevice implements Device
   /**
    * @return the device value
    */
-  public String getValue()
+  public Object getValue()
   {
     return deviceValue;
   }
@@ -70,7 +70,7 @@ public abstract class AbstractDevice implements Device
    * @param deviceValue
    *          the device value to set
    */
-  public void setValue(String deviceValue)
+  public void setValue(Object deviceValue)
   {
     this.deviceValue = deviceValue;
   }

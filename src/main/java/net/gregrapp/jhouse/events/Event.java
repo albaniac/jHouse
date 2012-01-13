@@ -3,6 +3,7 @@
  */
 package net.gregrapp.jhouse.events;
 
+
 /**
  * Event marker class
  * 
@@ -11,5 +12,5 @@ package net.gregrapp.jhouse.events;
  */
 public interface Event
 {
-
+  public long getTime();
 }
