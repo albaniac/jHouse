@@ -31,12 +31,13 @@
 
 	<bean name="eventManager" class="net.gregrapp.jhouse.managers.event.EventManagerImpl">
 		<constructor-arg ref="ksession" />
-<!--  		<property name="deviceManager" ref="deviceManager" />-->
+  		<property name="deviceManager" ref="deviceManager" />
 	</bean>
 
 	<drools:kbase id="kbase">
 		<drools:resources>
-			<drools:resource type="DRL" source="classpath:testrules.drl"></drools:resource>
+			<drools:resource type="DRL" source="classpath:config.drl"></drools:resource>
+			<drools:resource type="DRL" source="classpath:rules.drl"></drools:resource>
 		</drools:resources>
 		<drools:configuration>
 			<drools:event-processing-mode mode="STREAM" />

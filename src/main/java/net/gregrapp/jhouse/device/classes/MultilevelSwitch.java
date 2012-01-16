@@ -4,16 +4,25 @@
 package net.gregrapp.jhouse.device.classes;
 
 /**
- * @author Greg Rapp
  * Multilevel switch device class
+ * 
+ * @author Greg Rapp
+ * 
  */
 public interface MultilevelSwitch extends BinarySwitch
 {
-  public void setLevel(int level);
-  
+  public void setLevel(Integer level);
+
   /**
-   * @param direction direction of level change (0 = up, 1 = down)
+   * Initiate a level change
+   * 
+   * @param direction
+   *          direction of level change (0 = up, 1 = down)
    */
-  public void startLevelChange(int direction);
+  public void startLevelChange(Integer direction);
+
+  /**
+   * Stop a previous started level change
+   */
   public void stopLevelChange();
 }

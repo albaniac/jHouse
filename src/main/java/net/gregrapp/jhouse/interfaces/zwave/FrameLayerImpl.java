@@ -539,7 +539,7 @@ public class FrameLayerImpl implements FrameLayer
       }
     } catch (TransportException e)
     {
-      throw new FrameLayerException("Error in Transport: "
+      throw new FrameLayerException("Error writing data to transport: "
           + e.getLocalizedMessage());
     }
   }

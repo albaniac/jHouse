@@ -4,7 +4,6 @@
 package net.gregrapp.jhouse.interfaces.zwave;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -17,11 +16,13 @@ import net.gregrapp.jhouse.interfaces.zwave.ApplicationLayerImpl.SerialApiCapabi
 import net.gregrapp.jhouse.interfaces.zwave.Constants.CommandBasic;
 import net.gregrapp.jhouse.interfaces.zwave.Constants.CommandClass;
 import net.gregrapp.jhouse.interfaces.zwave.Constants.CommandManufacturerSpecific;
+import net.gregrapp.jhouse.interfaces.zwave.Constants.CommandSensorBinary;
 import net.gregrapp.jhouse.interfaces.zwave.Constants.TXOption;
 import net.gregrapp.jhouse.interfaces.zwave.Constants.TXStatus;
 import net.gregrapp.jhouse.interfaces.zwave.DataFrame.CommandType;
 import net.gregrapp.jhouse.interfaces.zwave.command.CommandClassBasic;
 import net.gregrapp.jhouse.interfaces.zwave.command.CommandClassManufacturerSpecific;
+import net.gregrapp.jhouse.interfaces.zwave.command.CommandClassSensorBinary;
 import net.gregrapp.jhouse.transports.Transport;
 import net.gregrapp.jhouse.transports.TransportException;
 
@@ -29,6 +30,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
+ * Z-Wave network interface
+ * 
  * @author Greg Rapp
  * 
  */
@@ -79,48 +82,77 @@ public class ZwaveInterface extends AbstractInterface implements
     // device.interfaceReady();
   }
 
+  private void cmdApplicationCommandHandler(int[] payload)
+  {
+    int nodeId = payload[1];
+
+    if (payload[3] == CommandClass.COMMAND_CLASS_BASIC.get())
+    {
+      logger.info("COMMAND_CLASS_BASIC from node {}", nodeId);
+      if (payload[4] == CommandBasic.BASIC_SET.get())
+      {
+        int value = payload[5];
+        logger.info("Received BASIC_SET from node {} with a value of {}",
+            nodeId, value);
+
+        if (devices.containsKey(nodeId))
+        {
+          for (Object device : devices.get(nodeId))
+            if (device instanceof CommandClassBasic)
+              ((CommandClassBasic) device).commandClassBasicSet(value);
+        }
+      }
+      else if (payload[4] == CommandBasic.BASIC_REPORT.get())
+      {
+        int value = payload[5];
+        logger.info("Received BASIC_REPORT from node {} with a value of {}",
+            nodeId, value);
+
+        if (devices.containsKey(nodeId))
+        {
+          for (Object device : devices.get(nodeId))
+            if (device instanceof CommandClassBasic)
+              ((CommandClassBasic) device).commandClassBasicReport(value);
+        }
+      }
+    } else if (payload[3] == CommandClass.COMMAND_CLASS_MANUFACTURER_SPECIFIC
+        .get())
+    {
+      if (payload[4] == CommandManufacturerSpecific.MANUFACTURER_SPECIFIC_REPORT
+          .get())
+      {
+        if (devices.containsKey(nodeId))
+        {
+          int manufacturer = (payload[5] << 8) | payload[6];
+          int productType = (payload[7] << 8) | payload[8];
+          int productId = (payload[9] << 8) | payload[10];
+          for (Object device : devices.get(nodeId))
+            if (device instanceof CommandClassManufacturerSpecific)
+              ((CommandClassManufacturerSpecific) device)
+                  .commandClassManufacturerSpecificReport(manufacturer,
+                      productType, productId);
+        }
+      }
+    }
+    else if (payload[3] == CommandClass.COMMAND_CLASS_SENSOR_BINARY.get())
+    {
+      if (payload[4] == CommandSensorBinary.SENSOR_BINARY_REPORT.get())
+      {
+        for (Object device : devices.get(nodeId))
+          if (device instanceof CommandClassSensorBinary)
+            ((CommandClassSensorBinary) device)
+                .commandClassSensorBinaryReport(payload[5]);
+      }
+    }
+
+  }
+
   public void dataPacketReceived(CommandType cmd, DataPacket packet)
   {
     int[] payload = packet.getPayload();
     if (cmd == DataFrame.CommandType.CmdApplicationCommandHandler)
     {
-      if (payload[3] == CommandClass.COMMAND_CLASS_BASIC.get())
-      {
-        logger.info("COMMAND_CLASS_BASIC");
-        if (payload[4] == CommandBasic.BASIC_REPORT.get())
-        {
-          logger.info("Received BASIC_REPORT from node {} with a value of {}",
-              payload[1], payload[5]);
-          int nodeId = payload[1];
-          if (devices.containsKey(nodeId))
-          {
-            int value = payload[5];
-            for (Object device : devices.get(nodeId))
-              if (device instanceof CommandClassBasic)
-                ((CommandClassBasic) device).commandClassBasicReport(value);
-          }
-        }
-      } else if (payload[3] == CommandClass.COMMAND_CLASS_MANUFACTURER_SPECIFIC
-          .get())
-      {
-        if (payload[4] == CommandManufacturerSpecific.MANUFACTURER_SPECIFIC_REPORT
-            .get())
-        {
-          int nodeId = payload[1];
-
-          if (devices.containsKey(nodeId))
-          {
-            int manufacturer = (payload[5] << 8) | payload[6];
-            int productType = (payload[7] << 8) | payload[8];
-            int productId = (payload[9] << 8) | payload[10];
-            for (Object device : devices.get(nodeId))
-              if (device instanceof CommandClassManufacturerSpecific)
-                ((CommandClassManufacturerSpecific) device)
-                    .commandClassManufacturerSpecificReport(manufacturer,
-                        productType, productId);
-          }
-        }
-      }
+      cmdApplicationCommandHandler(payload);
     }
   }
 
@@ -175,7 +207,7 @@ public class ZwaveInterface extends AbstractInterface implements
       this.transport.init();
     } catch (TransportException e)
     {
-      logger.error("Aborting ZWave initialization, error opening transport", e);
+      logger.error("Aborting Z-Wave initialization, error opening transport", e);
       return;
     }
 
@@ -304,6 +336,23 @@ public class ZwaveInterface extends AbstractInterface implements
   }
 
   /**
+   * Request node command classes
+   * 
+   * @param nodeId
+   *          Z-Wave node ID
+   */
+  public void requestNodeInfo(int nodeId)
+  {
+    try
+    {
+      appLayer.zwaveRequestNodeInfo(nodeId);
+    } catch (FrameLayerException e)
+    {
+      logger.error("Error requesting node info from node {}", nodeId, e);
+    }
+  }
+
+  /**
    * Tells attached devices that this interface is ready for traffic
    */
   private void setInterfaceReady(boolean ready)
@@ -338,22 +387,4 @@ public class ZwaveInterface extends AbstractInterface implements
 
     return false;
   }
-
-  /**
-   * Request node command classes
-   * 
-   * @param nodeId
-   *          Z-Wave node ID
-   */
-  public void requestNodeInfo(int nodeId)
-  {
-    try
-    {
-      appLayer.zwaveRequestNodeInfo(nodeId);
-    } catch (FrameLayerException e)
-    {
-      logger.error("Error requesting node info from node {}", nodeId, e);
-    }
-  }
-
 }

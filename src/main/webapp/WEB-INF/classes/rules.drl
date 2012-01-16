@@ -1,0 +1,58 @@
+rule "1"
+	no-loop
+	when
+		$event : BinarySwitchStateEvent(deviceId == 1, state == 255) 
+		$device : ZwaveBinarySwitch(deviceId == 2)
+	then
+		System.out.println("********** GOT SWITCH ON EVENT FOR DEVICE 1");
+		dm.execute(2, "setOff");
+		modify ( $device )
+		{
+			setOff()
+		}
+	end
+
+rule "2"
+	when
+		BinarySwitchStateEvent(deviceId == 1, state == 0)
+	then
+		System.out.println("********** GOT SWITCH OFF EVENT FOR DEVICE 1");
+	end
+
+rule "3"
+	timer ( cron: 1 * * * * ? )
+	when
+	then
+		//((MultilevelSwitch)dm.get(1)).setLevel(100);
+		System.out.println("*********** TIMER3 EXPIRED");
+	end
+
+rule "4"
+	timer ( cron: 10 * * * * ? )
+	when
+	then
+		//((MultilevelSwitch)dm.get(1)).setLevel(25);
+		System.out.println("*********** TIMER4 EXPIRED");
+	end
+
+rule "5"
+	when
+		Device(deviceId == 2, value == 255)
+	then
+		System.out.println("************ NEW SWITCH ON EVENT FOR DEVICE 2");
+	end
+
+rule "6"
+	when
+		Device(deviceId == 30, value == 255)
+	then
+		System.out.println("*********** MASTER BATHROOM DOOR OPEN");
+	end
+
+rule "7"
+	when
+		Device(deviceId == 30, value == 0)
+	then
+		System.out.println("*********** MASTER BATHROOM DOOR CLOSED");
+	end
+	

@@ -89,6 +89,8 @@ public class ZwaveMultilevelSwitch extends ZwaveDevice implements BinarySwitch,
 
   public void commandClassSwitchMultilevelSet(int value)
   {
+    logger.info("Setting device ID {} to level {}", this.deviceId, value);
+
     deviceInterface.zwaveSendData(this.nodeId,
         CommandClass.COMMAND_CLASS_SWITCH_MULTILEVEL.get(),
         CommandSwitchMultilevel.SWITCH_MULTILEVEL_SET.get(), value);
@@ -127,8 +129,13 @@ public class ZwaveMultilevelSwitch extends ZwaveDevice implements BinarySwitch,
     this.commandClassSwitchMultilevelGet();
   }
 
-  public void setLevel(int level)
+  public void setLevel(Integer level)
   {
+    level--;
+    
+    if (level > 99) level = 99;
+    else if (level < 0) level = 0;
+    
     this.commandClassSwitchMultilevelSet(level);
   }
 
@@ -145,7 +152,7 @@ public class ZwaveMultilevelSwitch extends ZwaveDevice implements BinarySwitch,
   }
 
   @Override
-  public void startLevelChange(int direction)
+  public void startLevelChange(Integer direction)
   {
     this.commandClassSwitchMultilevelStartLevelChange(direction);
   }

@@ -4,8 +4,10 @@
 package net.gregrapp.jhouse.device.classes;
 
 /**
- * @author Greg Rapp
  * Device class interface
+ * 
+ * @author Greg Rapp
+ * 
  */
 public interface DeviceClass
 {

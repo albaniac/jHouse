@@ -42,7 +42,7 @@ public class DeviceController
   String deviceAction(@PathVariable("id") int id,
       @PathVariable("method") String method, Model model)
   {
-    Device dev = deviceManager.getDeviceForId(id);
+    Device dev = deviceManager.get(id);
     if (dev == null)
     {
       model.addAttribute("stuff", "stuff is null man");
@@ -81,7 +81,7 @@ public class DeviceController
   @RequestMapping(value = "/{id}", method = RequestMethod.GET)
   public @ResponseBody String deviceDetails(@PathVariable("id") int id, Model model)
   {
-    Device dev = deviceManager.getDeviceForId(id);
+    Device dev = deviceManager.get(id);
     String[] devclass = null;
     if (dev != null)
       devclass = deviceManager.getDeviceClassesForDevice(dev);

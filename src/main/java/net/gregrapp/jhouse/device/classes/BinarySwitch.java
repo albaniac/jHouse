@@ -4,8 +4,10 @@
 package net.gregrapp.jhouse.device.classes;
 
 /**
- * @author Greg Rapp
  * Binary (on/off) switch device class
+ * 
+ * @author Greg Rapp
+ * 
  */
 public interface BinarySwitch extends DeviceClass
 {

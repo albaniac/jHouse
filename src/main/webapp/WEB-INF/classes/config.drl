@@ -1,0 +1,27 @@
+import net.gregrapp.jhouse.events.*
+import net.gregrapp.jhouse.states.*
+import net.gregrapp.jhouse.device.types.*
+import net.gregrapp.jhouse.device.drivers.*
+import net.gregrapp.jhouse.device.classes.*
+global net.gregrapp.jhouse.managers.device.DeviceManager dm
+
+declare BinarySwitchStateEvent
+	@role( event )
+	@timestamp ( time )
+end
+
+declare Device
+	@propertyChangeSupport
+end
+
+declare ZwaveBinarySwitch
+	@propertyChangeSupport
+end
+
+declare ZwaveMultilevelSwitch
+	@propertyChangeSupport
+end
+
+declare ZwaveBinarySensor
+	@propertyChangeSupport
+end

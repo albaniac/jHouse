@@ -7,10 +7,11 @@ import net.gregrapp.jhouse.device.types.Device;
 import net.gregrapp.jhouse.events.Event;
 import net.gregrapp.jhouse.managers.device.DeviceManager;
 
+import org.drools.event.rule.DebugAgendaEventListener;
+import org.drools.event.rule.DebugWorkingMemoryEventListener;
 import org.drools.runtime.StatefulKnowledgeSession;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 
 /**
  * @author Greg Rapp
@@ -21,10 +22,9 @@ public class EventManagerImpl implements EventManager
   private static final Logger logger = LoggerFactory
       .getLogger(EventManagerImpl.class);
 
-  private StatefulKnowledgeSession session;
-
-  @Autowired
   private DeviceManager deviceManager;
+
+  private StatefulKnowledgeSession session;
 
   /**
    * 
@@ -33,19 +33,11 @@ public class EventManagerImpl implements EventManager
   {
     this.session = session;
     
+    session.addEventListener( new DebugWorkingMemoryEventListener() );     
 
+    session.addEventListener( new DebugAgendaEventListener() );     
   }
 
-  public void setDeviceManager(DeviceManager deviceManager)
-  {
-    this.deviceManager = deviceManager;
-
-    for (Device device : deviceManager.getDevices())
-    {
-      session.insert(device);
-    }
-  }
-  
   /*
    * (non-Javadoc)
    * 
@@ -57,10 +49,16 @@ public class EventManagerImpl implements EventManager
   public void eventCallback(Event event)
   {
     logger.debug("New event callback of type {}", event.getClass().getName());
-    for (Device device : deviceManager.getDevices())
+  }
+  
+  public void setDeviceManager(DeviceManager deviceManager)
+  {
+    this.deviceManager = deviceManager;
+
+    for (Device device : this.deviceManager.getDevices())
     {
       session.insert(device);
     }
-    session.insert(event);
+    session.setGlobal("dm", deviceManager);
   }
 }
