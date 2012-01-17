@@ -29,14 +29,7 @@ package net.gregrapp.jhouse.interfaces.zwave;
  * @author Greg Rapp
  *
  */
-// <summary>
-// 
-// </summary>
 public interface FrameLayerAsyncCallback 
 {
-  // <summary>
-  // 
-  // </summary>
-  // <param name="frame"></param>
   void frameReceived(DataFrame frame);
 }

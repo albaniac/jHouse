@@ -16,7 +16,7 @@ import net.gregrapp.jhouse.utils.ArrayUtils;
 
 /**
  * @author Greg Rapp
- *
+ * 
  */
 public abstract class AbstractTransport implements Transport
 {
@@ -25,13 +25,13 @@ public abstract class AbstractTransport implements Transport
    */
   private static final Logger logger = LoggerFactory
       .getLogger(AbstractTransport.class);
-  
+
   protected List<String> config;
-  
+
   protected InputStream in;
-  
+
   protected OutputStream out;
- 
+
   protected int receivedBytes;
 
   protected int transmittedBytes;
@@ -58,29 +58,33 @@ public abstract class AbstractTransport implements Transport
   }
 
   @Override
-  public InputStream getReader()
+  public InputStream getInputStream()
   {
     return this.in;
   }
 
-  /* (non-Javadoc)
+  /*
+   * (non-Javadoc)
+   * 
    * @see net.gregrapp.jhouse.transports.Transport#getReceivedBytes()
    */
   public int getReceivedBytes()
   {
     return receivedBytes;
   }
-  
-  /* (non-Javadoc)
+
+  /*
+   * (non-Javadoc)
+   * 
    * @see net.gregrapp.jhouse.transports.Transport#getTransmittedBytes()
    */
   public int getTransmittedBytes()
   {
     return transmittedBytes;
-  }  
-  
+  }
+
   @Override
-  public OutputStream getWriter()
+  public OutputStream getOutputStream()
   {
     return this.out;
   }
@@ -89,49 +93,41 @@ public abstract class AbstractTransport implements Transport
   {
     receivedBytes++;
   }
-  
+
   protected void incrementTransmittedBytes()
   {
     transmittedBytes++;
   }
 
-  public int read(int[] buffer) throws TransportException
+  public int read(int[] buffer) throws IOException
   {
     byte[] bytesRead = new byte[buffer.length];
     int numBytes = 0;
-    try
+
+    numBytes = in.read(bytesRead);
+    for (int i = 0; i < numBytes; i++)
     {
-      numBytes = in.read(bytesRead);
-      for (int i = 0; i < numBytes; i++)
-      {
-        buffer[i] = (int) bytesRead[i];
-        incrementReceivedBytes();
-      }
-    } catch (IOException e)
-    {
-      throw new TransportException("Transport read error", e);
+      buffer[i] = (int) bytesRead[i];
+      incrementReceivedBytes();
     }
+
     logger.debug("Read {} bytes in from interface", numBytes);
     logger.trace("{}",
         ArrayUtils.toHexStringArray((Arrays.copyOfRange(buffer, 0, numBytes))));
     return numBytes;
   }
 
-  public int write(int[] buffer) throws TransportException
+  public int write(int[] buffer) throws IOException
   {
     logger.debug("Writing {} bytes out to interface", buffer.length);
     logger.trace("{}", ArrayUtils.toHexStringArray(buffer));
-    try
+
+    for (int buf : buffer)
     {
-      for (int buf : buffer)
-      {
-        this.out.write(buf);
-        incrementTransmittedBytes();
-      }
-    } catch (IOException e)
-    {
-      throw new TransportException("Transport write error", e);
+      this.out.write(buf);
+      incrementTransmittedBytes();
     }
+
     return buffer.length;
   }
 

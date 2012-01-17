@@ -1,5 +1,6 @@
 package net.gregrapp.jhouse.transports;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
@@ -24,7 +25,7 @@ public interface Transport
   /**
    * @return an InputStream instance for this Transport
    */
-  public InputStream getReader();
+  public InputStream getInputStream();
 
   /**
    * Get number of bytes received by this Transport
@@ -43,7 +44,7 @@ public interface Transport
   /**
    * @return an OutputStream instance for this Transport
    */
-  public OutputStream getWriter();
+  public OutputStream getOutputStream();
 
   /**
    * Initialize the Transport
@@ -66,9 +67,9 @@ public interface Transport
    * @param buffer
    *          bytes read
    * @return number of bytes read from the Transport
-   * @throws TransportException
+   * @throws IOException
    */
-  public int read(int[] buffer) throws TransportException;
+  public int read(int[] buffer) throws IOException;
 
   /**
    * Write bytes to the Transport
@@ -76,7 +77,7 @@ public interface Transport
    * @param buffer
    *          bytes to write
    * @return number of bytes successfully written
-   * @throws TransportException
+   * @throws IOException
    */
-  public int write(int[] buffer) throws TransportException;
+  public int write(int[] buffer) throws IOException;
 }

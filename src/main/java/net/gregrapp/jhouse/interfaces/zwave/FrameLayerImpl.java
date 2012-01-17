@@ -25,6 +25,7 @@
 
 package net.gregrapp.jhouse.interfaces.zwave;
 
+import java.io.IOException;
 import java.util.Stack;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -46,9 +47,12 @@ public class FrameLayerImpl implements FrameLayer
   private static final Logger logger = LoggerFactory
       .getLogger(FrameLayerImpl.class);
 
-  // / <summary>
-  // / The Data Frame received will be splitted up into the following states
-  // / </summary>
+  /**
+   * The Data Frame received will be split up into the following states
+   * 
+   * @author Greg Rapp
+   *
+   */
   private enum FrameReceiveState
   {
     FRS_CHECKSUM(0x05), FRS_COMMAND(0x03), FRS_DATA(0x04), FRS_LENGTH(0x01), FRS_RX_TIMEOUT(
@@ -92,13 +96,6 @@ public class FrameLayerImpl implements FrameLayer
   private Thread receiveThread;
   private Stack<TransmittedDataFrame> retransmissionStack = new Stack<TransmittedDataFrame>();
   private ScheduledExecutorService retransmissionTimeoutExecutor;
-
-  // private boolean disposed;
-
-  // private ResourceManager resourceManager = new
-  // ResourceManager("ZWave.Properties.Resources",
-  // Assembly.GetExecutingAssembly());
-
   private ScheduledFuture<?> retransmissionTimeoutExecutorFuture;
 
   private FrameStatistics stats;
@@ -117,10 +114,6 @@ public class FrameLayerImpl implements FrameLayer
 
     stats = new FrameStatistics();
 
-    // TimerCallback tc = new
-    // TimerCallback(this.ReTransmissionTimeOutCallbackHandler);
-    // this.retransmissionTimeoutTimer = new Timer(tc, this,
-    // System.Threading.Timeout.Infinite, System.Threading.Timeout.Infinite);
     this.retransmissionTimeoutExecutor = Executors
         .newSingleThreadScheduledExecutor();
 
@@ -205,40 +198,6 @@ public class FrameLayerImpl implements FrameLayer
     return true;
   }
 
-  /*
-   * (non-Javadoc)
-   * 
-   * @see
-   * net.gregrapp.jhouse.interfaces.zwave.FrameLayer#open(net.gregrapp.jhouse
-   * .transports.Transport)
-   */
-  /*
-   * public void open(Transport transport) { if (transport == null) { throw new
-   * NullPointerException("transportLayer"); }
-   * 
-   * retransmissionStack = new Stack<TransmittedDataFrame>(); this.transport =
-   * transport;
-   * 
-   * this.parserState = FrameReceiveState.FRS_SOF_HUNT;
-   * 
-   * stats = new FrameStatistics();
-   * 
-   * // TimerCallback tc = new //
-   * TimerCallback(this.ReTransmissionTimeOutCallbackHandler); //
-   * this.retransmissionTimeoutTimer = new Timer(tc, this, //
-   * System.Threading.Timeout.Infinite, System.Threading.Timeout.Infinite);
-   * this.retransmissionTimeoutExecutor = Executors
-   * .newSingleThreadScheduledExecutor();
-   * 
-   * active = true;
-   * 
-   * // Start the communication receive thread receiveThread = new Thread(new
-   * Runnable() { public void run() { receiveThread(); } });
-   * receiveThread.setPriority(Thread.MAX_PRIORITY); receiveThread.start(); //
-   * //// wait for the thread to actually get spun up try { this.wait(); } catch
-   * (InterruptedException e) { // TODO Auto-generated catch block
-   * e.printStackTrace(); } }
-   */
   /*
    * (non-Javadoc)
    * 
@@ -481,7 +440,7 @@ public class FrameLayerImpl implements FrameLayer
     {
       transport
           .write(new int[] { (int) DataFrame.HeaderType.Acknowledge.get() });
-    } catch (TransportException e)
+    } catch (IOException e)
     {
       logger.error("Error transmitting ACK", e);
     }
@@ -499,7 +458,7 @@ public class FrameLayerImpl implements FrameLayer
     {
       transport.write(new int[] { (int) DataFrame.HeaderType.NotAcknowledged
           .get() });
-    } catch (TransportException e)
+    } catch (IOException e)
     {
       logger.error("Error transmitting NAK");
     }
@@ -520,7 +479,7 @@ public class FrameLayerImpl implements FrameLayer
   {
     try
     {
-      logger.debug("Writting frame to transport");
+      logger.debug("Writing frame to transport");
       TransmittedDataFrame tdf = new TransmittedDataFrame(frame);
       int bytesWritten = 0;
       synchronized (this)
@@ -537,7 +496,7 @@ public class FrameLayerImpl implements FrameLayer
 
         return bytesWritten == data.length;
       }
-    } catch (TransportException e)
+    } catch (IOException e)
     {
       throw new FrameLayerException("Error writing data to transport: "
           + e.getLocalizedMessage());
