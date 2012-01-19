@@ -207,7 +207,8 @@ public class ZwaveInterface extends AbstractInterface implements
       this.transport.init();
     } catch (TransportException e)
     {
-      logger.error("Aborting Z-Wave initialization, error opening transport", e);
+      logger
+          .error("Error opening transport, aborting Z-Wave initialization", e);
       return;
     }
 
@@ -216,6 +217,50 @@ public class ZwaveInterface extends AbstractInterface implements
     appLayer = new ApplicationLayerImpl(sessionLayer);
     appLayer.setCallbackHandler(this);
 
+    zwaveInit();
+  }
+
+  /**
+   * Request node command classes
+   * 
+   * @param nodeId
+   *          Z-Wave node ID
+   */
+  public void requestNodeInfo(int nodeId)
+  {
+    try
+    {
+      appLayer.zwaveRequestNodeInfo(nodeId);
+    } catch (FrameLayerException e)
+    {
+      logger.error("Error requesting node info from node {}", nodeId, e);
+    }
+  }
+
+  /**
+   * Tells attached devices that this interface is ready for traffic
+   */
+  private void setInterfaceReady(boolean ready)
+  {
+    this.interfaceReady = ready;
+
+    if (ready && this.devices != null)
+    {
+      for (ArrayList<ZwaveDevice> zwaveDevices : this.devices.values())
+      {
+        for (ZwaveDevice dev : zwaveDevices)
+        {
+          dev.interfaceReady();
+        }
+      }
+    }
+  }
+
+  /**
+   * Initialize the Z-Wave interface
+   */
+  public void zwaveInit()
+  {
     try
     {
       VersionInfoType zwaveVersion = appLayer.zwaveGetVersion();
@@ -312,63 +357,6 @@ public class ZwaveInterface extends AbstractInterface implements
     }
 
     setInterfaceReady(true);
-
-    try
-    {
-      appLayer.zwaveSendData(14, new int[] { 0x20,
-          CommandBasic.BASIC_SET.get(), CommandBasic.BASIC_ON.get() },
-          new TXOption[] { TXOption.TransmitOptionAcknowledge,
-              TXOption.TransmitOptionAutoRoute });
-      Thread.sleep(2000);
-      appLayer.zwaveSendData(14, new int[] { 0x20,
-          CommandBasic.BASIC_SET.get(), CommandBasic.BASIC_OFF.get() },
-          new TXOption[] { TXOption.TransmitOptionAcknowledge,
-              TXOption.TransmitOptionAutoRoute });
-    } catch (FrameLayerException e)
-    {
-      // TODO Auto-generated catch block
-      e.printStackTrace();
-    } catch (InterruptedException e)
-    {
-      // TODO Auto-generated catch block
-      e.printStackTrace();
-    }
-  }
-
-  /**
-   * Request node command classes
-   * 
-   * @param nodeId
-   *          Z-Wave node ID
-   */
-  public void requestNodeInfo(int nodeId)
-  {
-    try
-    {
-      appLayer.zwaveRequestNodeInfo(nodeId);
-    } catch (FrameLayerException e)
-    {
-      logger.error("Error requesting node info from node {}", nodeId, e);
-    }
-  }
-
-  /**
-   * Tells attached devices that this interface is ready for traffic
-   */
-  private void setInterfaceReady(boolean ready)
-  {
-    this.interfaceReady = ready;
-
-    if (ready && this.devices != null)
-    {
-      for (ArrayList<ZwaveDevice> zwaveDevices : this.devices.values())
-      {
-        for (ZwaveDevice dev : zwaveDevices)
-        {
-          dev.interfaceReady();
-        }
-      }
-    }
   }
 
   public boolean zwaveSendData(int nodeId, int... data)

@@ -89,7 +89,7 @@ public class FrameLayerImpl implements FrameLayer
   // an ack
   private static final int MAX_RETRANSMISSION = 3;
   private static final int MIN_FRAME_SIZE = 3;
-  private boolean active;
+  private boolean receiveThreadActive;
   private FrameLayerAsyncCallback callbackHandler;
   private DataFrame currentDataFrame;
   private FrameReceiveState parserState;
@@ -117,7 +117,7 @@ public class FrameLayerImpl implements FrameLayer
     this.retransmissionTimeoutExecutor = Executors
         .newSingleThreadScheduledExecutor();
 
-    active = true;
+    this.receiveThreadActive = true;
 
     logger.debug("Creating receive thread");
     // Start the communication receive thread
@@ -206,7 +206,7 @@ public class FrameLayerImpl implements FrameLayer
   public void close()
   {
     logger.info("Closing frame layer");
-    active = false;
+    this.receiveThreadActive = false;
     if (retransmissionTimeoutExecutor != null)
       retransmissionTimeoutExecutor.shutdown();
   }
@@ -384,7 +384,7 @@ public class FrameLayerImpl implements FrameLayer
       int[] buffer = new int[100];
 
       logger.debug("Starting receiver thread loop");
-      while (active)
+      while (receiveThreadActive)
       {
         int bytesRead = transport.read(buffer);
         for (int i = 0; i < bytesRead; i++)
