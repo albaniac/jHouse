@@ -3,7 +3,7 @@
  */
 package net.gregrapp.jhouse.interfaces;
 
-import net.gregrapp.jhouse.device.types.Device;
+import net.gregrapp.jhouse.device.drivers.types.DeviceDriver;
 import net.gregrapp.jhouse.transports.Transport;
 
 /**
@@ -33,7 +33,7 @@ public interface Interface
   /**
    * @param device device to attach to this interface
    */
-  public void attachDevice(Device device);
+  public void attachDevice(DeviceDriver device);
   
   /**
    * @return interface status

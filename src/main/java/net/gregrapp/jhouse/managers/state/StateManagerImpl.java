@@ -8,10 +8,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import net.gregrapp.jhouse.device.Device;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import net.gregrapp.jhouse.device.types.Device;
 
 /**
  * @author Greg Rapp
@@ -93,13 +93,13 @@ public class StateManagerImpl implements StateManager
    * 
    * @see
    * net.gregrapp.jhouse.managers.StateManager#setState(net.gregrapp.jhouse.
-   * device.types.Device,
+   * device.types.DeviceDriver,
    * net.gregrapp.jhouse.managers.StateManagerImpl.StateType, java.lang.String)
    */
   @Override
   public void setState(Device device, StateType stateType, String stateValue)
   {
-    this.setState(device.getDeviceId(), stateType, stateValue);
+    this.setState(device.getId(), stateType, stateValue);
   }
 
   /*
@@ -154,7 +154,7 @@ public class StateManagerImpl implements StateManager
    * public void addListener(StateEventListener listener, StateType stateType) {
    * this.typeListeners.put(stateType, listener); }
    * 
-   * public void addListner(StateEventListener listener, Device device) {
+   * public void addListner(StateEventListener listener, DeviceDriver device) {
    * this.addListener(listener, device.getDeviceId()); }
    * 
    * public void addListener(StateEventListener listener, int deviceId) {

@@ -3,7 +3,7 @@
  */
 package net.gregrapp.jhouse.managers.event;
 
-import net.gregrapp.jhouse.device.types.Device;
+import net.gregrapp.jhouse.device.Device;
 import net.gregrapp.jhouse.events.Event;
 import net.gregrapp.jhouse.managers.device.DeviceManager;
 
@@ -33,8 +33,7 @@ public class EventManagerImpl implements EventManager
   {
     this.session = session;
     
-    session.addEventListener( new DebugWorkingMemoryEventListener() );     
-
+    session.addEventListener( new DebugWorkingMemoryEventListener() );
     session.addEventListener( new DebugAgendaEventListener() );     
   }
 
@@ -48,11 +47,13 @@ public class EventManagerImpl implements EventManager
   @Override
   public void eventCallback(Event event)
   {
-    logger.debug("New event callback of type {}", event.getClass().getName());
+    logger.debug("New event callback of type: {}", event.getClass().getName());
+    session.insert(event);
   }
   
   public void setDeviceManager(DeviceManager deviceManager)
   {
+    logger.debug("Setting event manager device manager");
     this.deviceManager = deviceManager;
 
     for (Device device : this.deviceManager.getDevices())

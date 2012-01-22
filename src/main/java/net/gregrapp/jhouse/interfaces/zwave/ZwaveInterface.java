@@ -7,8 +7,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
-import net.gregrapp.jhouse.device.types.Device;
-import net.gregrapp.jhouse.device.types.ZwaveDevice;
+import net.gregrapp.jhouse.device.drivers.types.DeviceDriver;
+import net.gregrapp.jhouse.device.drivers.types.ZwaveDeviceDriver;
 import net.gregrapp.jhouse.interfaces.AbstractInterface;
 import net.gregrapp.jhouse.interfaces.NodeInterface;
 import net.gregrapp.jhouse.interfaces.zwave.ApplicationLayerImpl.MemoryGetId;
@@ -43,22 +43,22 @@ public class ZwaveInterface extends AbstractInterface implements
 
   private ApplicationLayer appLayer;
 
-  private Map<Integer, ArrayList<ZwaveDevice>> devices = new HashMap<Integer, ArrayList<ZwaveDevice>>();
+  private Map<Integer, ArrayList<ZwaveDeviceDriver>> devices = new HashMap<Integer, ArrayList<ZwaveDeviceDriver>>();
 
   public ZwaveInterface(Transport transport)
   {
     super(transport);
   }
 
-  public void attachDevice(Device device)
+  public void attachDevice(DeviceDriver device)
   {
-    if (!(device instanceof ZwaveDevice))
+    if (!(device instanceof ZwaveDeviceDriver))
     {
       throw new ClassCastException(
           "Cannot attach non ZWave device to this interface");
     }
 
-    ZwaveDevice zwaveDevice = (ZwaveDevice) device;
+    ZwaveDeviceDriver zwaveDevice = (ZwaveDeviceDriver) device;
 
     if (devices.containsKey(zwaveDevice.getNodeId()))
     {
@@ -67,13 +67,13 @@ public class ZwaveInterface extends AbstractInterface implements
         devices.get(zwaveDevice.getNodeId()).add(zwaveDevice);
       } else
       {
-        ArrayList<ZwaveDevice> tmp = new ArrayList<ZwaveDevice>();
+        ArrayList<ZwaveDeviceDriver> tmp = new ArrayList<ZwaveDeviceDriver>();
         tmp.add(zwaveDevice);
         devices.put(zwaveDevice.getNodeId(), tmp);
       }
     } else
     {
-      ArrayList<ZwaveDevice> tmp = new ArrayList<ZwaveDevice>();
+      ArrayList<ZwaveDeviceDriver> tmp = new ArrayList<ZwaveDeviceDriver>();
       tmp.add(zwaveDevice);
       devices.put(zwaveDevice.getNodeId(), tmp);
     }
@@ -246,9 +246,9 @@ public class ZwaveInterface extends AbstractInterface implements
 
     if (ready && this.devices != null)
     {
-      for (ArrayList<ZwaveDevice> zwaveDevices : this.devices.values())
+      for (ArrayList<ZwaveDeviceDriver> zwaveDevices : this.devices.values())
       {
-        for (ZwaveDevice dev : zwaveDevices)
+        for (ZwaveDeviceDriver dev : zwaveDevices)
         {
           dev.interfaceReady();
         }

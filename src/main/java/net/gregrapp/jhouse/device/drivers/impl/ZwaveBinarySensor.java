@@ -1,9 +1,9 @@
 /**
  * 
  */
-package net.gregrapp.jhouse.device.drivers;
+package net.gregrapp.jhouse.device.drivers.impl;
 
-import net.gregrapp.jhouse.device.types.ZwaveDevice;
+import net.gregrapp.jhouse.device.drivers.types.ZwaveDeviceDriver;
 import net.gregrapp.jhouse.interfaces.zwave.Constants.CommandBasic;
 import net.gregrapp.jhouse.interfaces.zwave.Constants.CommandClass;
 import net.gregrapp.jhouse.interfaces.zwave.Constants.CommandSensorBinary;
@@ -20,7 +20,7 @@ import org.slf4j.LoggerFactory;
  * @author Greg Rapp
  * 
  */
-public class ZwaveBinarySensor extends ZwaveDevice implements
+public class ZwaveBinarySensor extends ZwaveDeviceDriver implements
     CommandClassSensorBinary, CommandClassBasic
 {
 
@@ -28,14 +28,19 @@ public class ZwaveBinarySensor extends ZwaveDevice implements
       .getLogger(ZwaveBinarySensor.class);
 
   /**
-   * @param deviceId
-   * @param deviceInterface
-   * @param nodeId
+   * Value indexes
    */
-  public ZwaveBinarySensor(int deviceId, ZwaveInterface deviceInterface,
-      int nodeId)
+  private static final int SENSOR_VALUE_IDX = 0;
+
+  /**
+   * @param deviceInterface
+   *          interface instance for this device driver
+   * @param zwaveNodeId
+   *          Z-Wave node id
+   */
+  public ZwaveBinarySensor(ZwaveInterface deviceInterface, int zwaveNodeId)
   {
-    super(deviceId, deviceInterface, nodeId);
+    super(deviceInterface, zwaveNodeId);
   }
 
   /*
@@ -47,7 +52,8 @@ public class ZwaveBinarySensor extends ZwaveDevice implements
   @Override
   public void commandClassBasicGet()
   {
-    logger.debug("Sending COMMAND_CLASS_BASIC_GET");
+    logger.debug("Sending COMMAND_CLASS_BASIC_GET to Z-Wave node {}",
+        this.nodeId);
     deviceInterface.zwaveSendData(this.nodeId,
         CommandClass.COMMAND_CLASS_BASIC.get(), CommandBasic.BASIC_GET.get());
   }
@@ -61,10 +67,11 @@ public class ZwaveBinarySensor extends ZwaveDevice implements
   @Override
   public void commandClassBasicReport(int value)
   {
-    logger.info("Received COMMAND_CLASS_BASIC_REPORT from switch [{}]",
+    logger.info(
+        "Received COMMAND_CLASS_BASIC_REPORT from Z-Wave switch {}: {}",
+        this.nodeId,
         value == 255 ? "OPEN" : "CLOSED");
-    this.setValue(value);
-    this.setStatus(value == 255 ? "ON" : "OFF");
+    this.updateSensorState(value);
   }
 
   /*
@@ -76,10 +83,10 @@ public class ZwaveBinarySensor extends ZwaveDevice implements
   @Override
   public void commandClassBasicSet(int value)
   {
-    logger.info("Received COMMAND_CLASS_BASIC_SET from switch [{}]",
+    logger.info("Received COMMAND_CLASS_BASIC_SET from Z-Wave switch {}: {}",
+        this.nodeId,
         value == 255 ? "OPEN" : "CLOSED");
-    this.setValue(value);
-    this.setStatus(value == 255 ? "ON" : "OFF");
+    this.updateSensorState(value);
   }
 
   /*
@@ -91,7 +98,8 @@ public class ZwaveBinarySensor extends ZwaveDevice implements
   @Override
   public void commandClassSensorBinaryGet()
   {
-    logger.debug("Sending COMMAND_CLASS_SENSOR_BINARY_GET");
+    logger.debug("Sending COMMAND_CLASS_SENSOR_BINARY_GET to Z-Wave node {}",
+        this.nodeId);
     deviceInterface.zwaveSendData(this.nodeId,
         CommandClass.COMMAND_CLASS_SENSOR_BINARY.get(),
         CommandSensorBinary.SENSOR_BINARY_GET.get());
@@ -107,17 +115,17 @@ public class ZwaveBinarySensor extends ZwaveDevice implements
   public void commandClassSensorBinaryReport(int value)
   {
     logger.info(
-        "Received COMMAND_CLASS_SENSOR_BINARY_REPORT from device: {} [{}]",
-        this.deviceId, value == 255 ? "OPEN"
+        "Received COMMAND_CLASS_SENSOR_BINARY_REPORT from Z-Wave node {}: {}",
+        this.nodeId, value == 255 ? "OPEN"
             : "CLOSED");
-    this.setValue(value);
-    this.setStatus(value == 255 ? "OPEN" : "CLOSED");
+    this.updateSensorState(value);
   }
 
   /*
    * (non-Javadoc)
    * 
-   * @see net.gregrapp.jhouse.device.types.Device#interfaceReady()
+   * @see
+   * net.gregrapp.jhouse.device.drivers.impl.types.DeviceDriver#interfaceReady()
    */
   @Override
   public void interfaceReady()
@@ -129,14 +137,26 @@ public class ZwaveBinarySensor extends ZwaveDevice implements
   /*
    * (non-Javadoc)
    * 
-   * @see net.gregrapp.jhouse.device.types.ZwaveDevice#poll()
+   * @see net.gregrapp.jhouse.device.drivers.impl.types.ZwaveDeviceDriver#poll()
    */
   @Override
   public void poll()
   {
-    logger.info("Polling device ID {}", this.deviceId);
+    logger.info("Polling Z-Wave node {}", this.nodeId);
     // Request a BASIC_REPORT to get the current status of the switch
     this.commandClassBasicGet();
   }
 
+  /**
+   * Update the internal sensor state and associated device values
+   * 
+   * @param value
+   *          sensor state
+   */
+  private void updateSensorState(int value)
+  {
+    this.updateDeviceValue(SENSOR_VALUE_IDX, value);
+    this.updateDeviceText(SENSOR_VALUE_IDX,
+        String.valueOf(value == 255 ? "OPEN" : "CLOSED"));
+  }
 }

@@ -8,8 +8,9 @@ import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 
+import net.gregrapp.jhouse.device.Device;
+import net.gregrapp.jhouse.device.DriverDevice;
 import net.gregrapp.jhouse.device.classes.DeviceClass;
-import net.gregrapp.jhouse.device.types.Device;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -39,11 +40,11 @@ public class DeviceManagerImpl implements DeviceManager
     logger.debug("Executing method {} on device {}", method, deviceId);
     Device device = get(deviceId);
 
-    if (device != null)
+    if (device != null && device instanceof DriverDevice)
     {
       try
       {
-        Method meth = device.getClass().getMethod(method);
+        Method meth = ((DriverDevice)device).getDriver().getClass().getMethod(method);
         meth.invoke(device);
       } catch (SecurityException e)
       {
@@ -79,7 +80,7 @@ public class DeviceManagerImpl implements DeviceManager
     logger.debug("Executing method {} on device {}", method, deviceId);
     Device device = get(deviceId);
 
-    if (device != null)
+    if (device != null && device instanceof DriverDevice)
     {
       List<Class<?>> argClasses = new ArrayList<Class<?>>();
       for (Object arg : args)
@@ -89,20 +90,20 @@ public class DeviceManagerImpl implements DeviceManager
 
       try
       {
-        Method meth = device.getClass().getMethod(method,
+        Method meth = ((DriverDevice)device).getDriver().getClass().getMethod(method,
             argClasses.toArray(new Class[0]));
         meth.invoke(device, args);
       } catch (SecurityException e)
       {
         logger.warn(
-            "Security exception while attempting to execute method [{}]",
+            "Security exception while attempting to execute method: {}",
             method);
       } catch (NoSuchMethodException e)
       {
-        logger.warn("Method [{}] not found for device {}", method, deviceId);
+        logger.warn("Method not found for device {}: {}", deviceId, method);
       } catch (IllegalArgumentException e)
       {
-        logger.warn("Illegal arguments for method [{}]", method);
+        logger.warn("Illegal arguments for method: {}", method);
       } catch (IllegalAccessException e)
       {
         logger.warn("Error executing method", e);
@@ -124,7 +125,7 @@ public class DeviceManagerImpl implements DeviceManager
     logger.debug("Getting device {}", deviceId);
     for (Device device : devices)
     {
-      if (device.getDeviceId() == deviceId)
+      if (device.getId() == deviceId)
       {
         return device;
       }
@@ -135,18 +136,22 @@ public class DeviceManagerImpl implements DeviceManager
 
   public String[] getDeviceClassesForDevice(Device device)
   {
-    logger.debug("Getting device classes for device {}", device.getDeviceId());
+    logger.debug("Getting device classes for device {}", device.getId());
     List<String> klasses = new ArrayList<String>();
 
-    for (Class<?> iface : device.getClass().getInterfaces())
+    if (device instanceof DriverDevice)
     {
-      if (DeviceClass.class.isAssignableFrom(iface))
+      for (Class<?> iface : ((DriverDevice)device).getDriver().getClass().getInterfaces())
       {
-        klasses.add(iface.getSimpleName());
+        // Add the interface to the list if it is a DeviceClass
+        if (DeviceClass.class.isAssignableFrom(iface))
+        {
+          klasses.add(iface.getSimpleName());
+        }
       }
     }
     String[] strKlasses = klasses.toArray(new String[0]);
-    logger.debug("Device {} has classes: {}", strKlasses);
+    logger.debug("DeviceDriver {} has classes: {}", ((DriverDevice)device).getDriver().getClass().getSimpleName(), strKlasses);
     return strKlasses;
   }
 

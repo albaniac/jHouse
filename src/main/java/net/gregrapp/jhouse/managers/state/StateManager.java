@@ -1,6 +1,6 @@
 package net.gregrapp.jhouse.managers.state;
 
-import net.gregrapp.jhouse.device.types.Device;
+import net.gregrapp.jhouse.device.Device;
 import net.gregrapp.jhouse.managers.state.StateManagerImpl.StateType;
 
 public interface StateManager

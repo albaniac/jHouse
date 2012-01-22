@@ -1,7 +1,8 @@
+/*
 rule "1"
 	no-loop
 	when
-		$event : BinarySwitchStateEvent(deviceId == 1, state == 255) 
+		$event : BinarySwitchStateEvent(id == 1, state == 255) 
 		$device : ZwaveBinarySwitch(deviceId == 2)
 	then
 		System.out.println("********** GOT SWITCH ON EVENT FOR DEVICE 1");
@@ -37,22 +38,44 @@ rule "4"
 
 rule "5"
 	when
-		Device(deviceId == 2, value == 255)
+		Device(id == 15, value == 255)
 	then
-		System.out.println("************ NEW SWITCH ON EVENT FOR DEVICE 2");
+		System.out.println("************ NEW SWITCH ON EVENT FOR DEVICE 15");
 	end
 
 rule "6"
 	when
-		Device(deviceId == 30, value == 255)
+		Device(id == 30, value == 255)
 	then
 		System.out.println("*********** MASTER BATHROOM DOOR OPEN");
 	end
 
 rule "7"
 	when
-		Device(deviceId == 30, value == 0)
+		Device(id == 30, value == 0)
 	then
 		System.out.println("*********** MASTER BATHROOM DOOR CLOSED");
+	end
+*/
+
+rule "8"
+	when
+		DeviceValueEvent(id == 15, value == 255, changed == true)
+	then
+		System.out.println("************ NEW SWITCH CHANGED ON EVENT FOR DEVICE 15");	
+	end
+
+rule "9"
+	when
+		DeviceValueEvent(id == 15, value == 0, changed == true)
+	then
+		System.out.println("************ NEW SWITCH CHANGED OFF EVENT FOR DEVICE 15");	
+	end
+
+rule "10"
+	when
+		DeviceValueEvent(id == 15, value == 255, changed == false)
+	then
+		System.out.println("************ NEW SWITCH SET ON EVENT FOR DEVICE 15");	
 	end
 	

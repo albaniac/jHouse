@@ -1,11 +1,11 @@
 /**
  * 
  */
-package net.gregrapp.jhouse.device.drivers;
+package net.gregrapp.jhouse.device.drivers.impl;
 
 import net.gregrapp.jhouse.device.classes.BinarySwitch;
 import net.gregrapp.jhouse.device.classes.MultilevelSwitch;
-import net.gregrapp.jhouse.device.types.ZwaveDevice;
+import net.gregrapp.jhouse.device.drivers.types.ZwaveDeviceDriver;
 import net.gregrapp.jhouse.interfaces.zwave.Constants.CommandClass;
 import net.gregrapp.jhouse.interfaces.zwave.Constants.CommandManufacturerSpecific;
 import net.gregrapp.jhouse.interfaces.zwave.Constants.CommandSwitchMultilevel;
@@ -20,7 +20,8 @@ import org.slf4j.LoggerFactory;
  * @author Greg Rapp
  * 
  */
-public class ZwaveMultilevelSwitch extends ZwaveDevice implements BinarySwitch,
+public class ZwaveMultilevelSwitch extends ZwaveDeviceDriver implements
+    BinarySwitch,
     MultilevelSwitch, CommandClassSwitchMultilevel,
     CommandClassManufacturerSpecific
 
@@ -28,17 +29,25 @@ public class ZwaveMultilevelSwitch extends ZwaveDevice implements BinarySwitch,
   private static final Logger logger = LoggerFactory
       .getLogger(ZwaveMultilevelSwitch.class);
 
+  /**
+   * Value indexes
+   */
+  private static final int SWITCH_LEVEL_VALUE_IDX = 0;
+
+  /**
+   * Internal switch state
+   */
   private int switchLevel = -1;
 
   /**
-   * @param deviceId
    * @param deviceInterface
-   * @param nodeId
+   *          interface instance for this device driver
+   * @param zwaveNodeId
+   *          Z-Wave node id
    */
-  public ZwaveMultilevelSwitch(int deviceId, ZwaveInterface deviceInterface,
-      int nodeId)
+  public ZwaveMultilevelSwitch(ZwaveInterface deviceInterface, int zwaveNodeId)
   {
-    super(deviceId, deviceInterface, nodeId);
+    super(deviceInterface, zwaveNodeId);
   }
 
   /*
@@ -74,6 +83,13 @@ public class ZwaveMultilevelSwitch extends ZwaveDevice implements BinarySwitch,
 
   }
 
+  /*
+   * (non-Javadoc)
+   * 
+   * @see
+   * net.gregrapp.jhouse.interfaces.zwave.command.CommandClassSwitchMultilevel
+   * #commandClassSwitchMultilevelGet()
+   */
   public void commandClassSwitchMultilevelGet()
   {
     deviceInterface.zwaveSendData(this.nodeId,
@@ -81,21 +97,45 @@ public class ZwaveMultilevelSwitch extends ZwaveDevice implements BinarySwitch,
         CommandSwitchMultilevel.SWITCH_MULTILEVEL_GET.get());
   }
 
+  /*
+   * (non-Javadoc)
+   * 
+   * @see
+   * net.gregrapp.jhouse.interfaces.zwave.command.CommandClassSwitchMultilevel
+   * #commandClassSwitchMultilevelReport(int)
+   */
   public void commandClassSwitchMultilevelReport(int value)
   {
-    logger.info("Received switch level update [{}]", value);
-    this.switchLevel = value;
+    logger.info("Received switch level update from node {}: {}", this.nodeId,
+        value);
+    updateSwitchLevel(value);
   }
 
+  /*
+   * (non-Javadoc)
+   * 
+   * @see
+   * net.gregrapp.jhouse.interfaces.zwave.command.CommandClassSwitchMultilevel
+   * #commandClassSwitchMultilevelSet(int)
+   */
   public void commandClassSwitchMultilevelSet(int value)
   {
-    logger.info("Setting device ID {} to level {}", this.deviceId, value);
+    logger.info("Setting Z-Wave node {} to level: {}", this.nodeId, value);
+
+    updateSwitchLevel(value);
 
     deviceInterface.zwaveSendData(this.nodeId,
         CommandClass.COMMAND_CLASS_SWITCH_MULTILEVEL.get(),
         CommandSwitchMultilevel.SWITCH_MULTILEVEL_SET.get(), value);
   }
 
+  /*
+   * (non-Javadoc)
+   * 
+   * @see
+   * net.gregrapp.jhouse.interfaces.zwave.command.CommandClassSwitchMultilevel
+   * #commandClassSwitchMultilevelStartLevelChange(int)
+   */
   public void commandClassSwitchMultilevelStartLevelChange(int direction)
   {
     deviceInterface.zwaveSendData(this.nodeId,
@@ -104,6 +144,13 @@ public class ZwaveMultilevelSwitch extends ZwaveDevice implements BinarySwitch,
         direction);
   }
 
+  /*
+   * (non-Javadoc)
+   * 
+   * @see
+   * net.gregrapp.jhouse.interfaces.zwave.command.CommandClassSwitchMultilevel
+   * #commandClassSwitchMultilevelStopLevelChange()
+   */
   public void commandClassSwitchMultilevelStopLevelChange()
   {
     deviceInterface.zwaveSendData(this.nodeId,
@@ -115,7 +162,8 @@ public class ZwaveMultilevelSwitch extends ZwaveDevice implements BinarySwitch,
   /*
    * (non-Javadoc)
    * 
-   * @see net.gregrapp.jhouse.device.types.Device#interfaceReady()
+   * @see
+   * net.gregrapp.jhouse.device.drivers.impl.types.DeviceDriver#interfaceReady()
    */
   public void interfaceReady()
   {
@@ -123,40 +171,78 @@ public class ZwaveMultilevelSwitch extends ZwaveDevice implements BinarySwitch,
     this.poll();
   }
 
+  /*
+   * (non-Javadoc)
+   * 
+   * @see net.gregrapp.jhouse.device.drivers.types.ZwaveDeviceDriver#poll()
+   */
   @Override
   public void poll()
   {
     this.commandClassSwitchMultilevelGet();
   }
 
+  /*
+   * (non-Javadoc)
+   * 
+   * @see
+   * net.gregrapp.jhouse.device.classes.MultilevelSwitch#setLevel(java.lang.
+   * Integer)
+   */
   public void setLevel(Integer level)
   {
     level--;
-    
-    if (level > 99) level = 99;
-    else if (level < 0) level = 0;
-    
+
+    if (level > 99)
+      level = 99;
+    else if (level < 0)
+      level = 0;
+
     this.commandClassSwitchMultilevelSet(level);
   }
 
+  /* (non-Javadoc)
+   * @see net.gregrapp.jhouse.device.classes.BinarySwitch#setOff()
+   */
   public void setOff()
   {
     this.commandClassSwitchMultilevelSet(0x0);
-    this.switchLevel = 0x0;
   }
 
+  /* (non-Javadoc)
+   * @see net.gregrapp.jhouse.device.classes.BinarySwitch#setOn()
+   */
   public void setOn()
   {
     this.commandClassSwitchMultilevelSet(0xFF);
-    this.switchLevel = 0xFF;
   }
 
+  /**
+   * Update the internal switch level state and associated device values
+   * 
+   * @param value switch level
+   */
+  private void updateSwitchLevel(int value)
+  {
+    this.switchLevel = value;
+
+    this.updateDeviceValue(SWITCH_LEVEL_VALUE_IDX, value);
+    this.updateDeviceText(SWITCH_LEVEL_VALUE_IDX,
+        String.valueOf("Level " + value));
+  }
+
+  /* (non-Javadoc)
+   * @see net.gregrapp.jhouse.device.classes.MultilevelSwitch#startLevelChange(java.lang.Integer)
+   */
   @Override
   public void startLevelChange(Integer direction)
   {
     this.commandClassSwitchMultilevelStartLevelChange(direction);
   }
 
+  /* (non-Javadoc)
+   * @see net.gregrapp.jhouse.device.classes.MultilevelSwitch#stopLevelChange()
+   */
   @Override
   public void stopLevelChange()
   {
@@ -176,7 +262,7 @@ public class ZwaveMultilevelSwitch extends ZwaveDevice implements BinarySwitch,
       this.setOn();
     else
       logger.warn(
-          "Invalid switch level for device {}, ignoring toggle command",
-          this.deviceId);
+          "Invalid switch level for Z-Wave node {}, ignoring toggle command",
+          this.nodeId);
   }
 }

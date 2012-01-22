@@ -6,7 +6,7 @@ package net.gregrapp.jhouse.interfaces.dscit100;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import net.gregrapp.jhouse.device.types.Device;
+import net.gregrapp.jhouse.device.drivers.types.DeviceDriver;
 import net.gregrapp.jhouse.interfaces.AbstractInterface;
 import net.gregrapp.jhouse.transports.Transport;
 import net.gregrapp.jhouse.transports.TransportException;
@@ -44,10 +44,10 @@ public class DSCIT100Interface extends AbstractInterface implements DSCIT100Fram
   }
 
   /* (non-Javadoc)
-   * @see net.gregrapp.jhouse.interfaces.Interface#attachDevice(net.gregrapp.jhouse.device.types.Device)
+   * @see net.gregrapp.jhouse.interfaces.Interface#attachDevice(net.gregrapp.jhouse.device.drivers.impl.types.DeviceDriver)
    */
   @Override
-  public void attachDevice(Device device)
+  public void attachDevice(DeviceDriver device)
   {
     // TODO Auto-generated method stub
 

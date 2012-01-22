@@ -7,7 +7,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.HashMap;
 
-import net.gregrapp.jhouse.device.types.Device;
+import net.gregrapp.jhouse.device.drivers.types.DeviceDriver;
 import net.gregrapp.jhouse.interfaces.NodeInterface;
 import net.gregrapp.jhouse.managers.device.DeviceManager;
 

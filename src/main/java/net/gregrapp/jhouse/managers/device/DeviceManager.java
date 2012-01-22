@@ -3,7 +3,7 @@
  */
 package net.gregrapp.jhouse.managers.device;
 
-import net.gregrapp.jhouse.device.types.Device;
+import net.gregrapp.jhouse.device.Device;
 
 /**
  * @author Greg Rapp
@@ -41,7 +41,7 @@ public interface DeviceManager
    * @return the device's object instance
    */
   public Device get(int deviceId);
-
+  
   /**
    * Get device classes for a device
    * 

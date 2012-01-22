@@ -6,7 +6,9 @@ package net.gregrapp.jhouse.web.controllers;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
-import net.gregrapp.jhouse.device.types.Device;
+import net.gregrapp.jhouse.device.Device;
+import net.gregrapp.jhouse.device.DriverDevice;
+import net.gregrapp.jhouse.device.drivers.types.DeviceDriver;
 import net.gregrapp.jhouse.managers.device.DeviceManager;
 
 import org.slf4j.Logger;
@@ -42,17 +44,25 @@ public class DeviceController
   String deviceAction(@PathVariable("id") int id,
       @PathVariable("method") String method, Model model)
   {
-    Device dev = deviceManager.get(id);
-    if (dev == null)
+    Device device = deviceManager.get(id);
+    
+    if (device == null)
     {
-      model.addAttribute("stuff", "stuff is null man");
+      model.addAttribute("stuff", "device is null man");
       return "home";
     }
-
+    
+    if (!(device instanceof DriverDevice))
+    {
+      model.addAttribute("stuff", "device isn't a driver device");
+      return "home";      
+    }
+    
+    DeviceDriver driver = ((DriverDevice)device).getDriver();
     try
     {
-      Method meth = dev.getClass().getMethod(method);
-      meth.invoke(dev);
+      Method meth = driver.getClass().getMethod(method);
+      meth.invoke(driver);
     } catch (SecurityException e)
     {
       // TODO Auto-generated catch block
@@ -81,11 +91,12 @@ public class DeviceController
   @RequestMapping(value = "/{id}", method = RequestMethod.GET)
   public @ResponseBody String deviceDetails(@PathVariable("id") int id, Model model)
   {
-    Device dev = deviceManager.get(id);
+    Device device = deviceManager.get(id);
     String[] devclass = null;
-    if (dev != null)
-      devclass = deviceManager.getDeviceClassesForDevice(dev);
-   
+    if (device != null && device instanceof DriverDevice)
+    {
+      devclass = deviceManager.getDeviceClassesForDevice(device);      
+    }
     String strDevClasses = "";
     for (String s : devclass)
       strDevClasses += s + ",";

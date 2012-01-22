@@ -1,10 +1,10 @@
 /**
  * 
  */
-package net.gregrapp.jhouse.device.drivers;
+package net.gregrapp.jhouse.device.drivers.impl;
 
 import net.gregrapp.jhouse.device.classes.BinarySwitch;
-import net.gregrapp.jhouse.device.types.ZwaveDevice;
+import net.gregrapp.jhouse.device.drivers.types.ZwaveDeviceDriver;
 import net.gregrapp.jhouse.interfaces.zwave.Constants.CommandBasic;
 import net.gregrapp.jhouse.interfaces.zwave.Constants.CommandClass;
 import net.gregrapp.jhouse.interfaces.zwave.Constants.CommandManufacturerSpecific;
@@ -21,18 +21,33 @@ import org.slf4j.LoggerFactory;
  * @author Greg Rapp
  * 
  */
-public class ZwaveBinarySwitch extends ZwaveDevice implements BinarySwitch,
+public class ZwaveBinarySwitch extends ZwaveDeviceDriver implements
+    BinarySwitch,
     CommandClassBasic, CommandClassManufacturerSpecific
 {
   private static final Logger logger = LoggerFactory
       .getLogger(ZwaveBinarySwitch.class);
 
-  // private int switchState = -1;
-
-  public ZwaveBinarySwitch(int deviceId, ZwaveInterface deviceInterface,
-      int nodeId)
+  /**
+   * Internal switch state
+   */
+  private int switchState = -1;
+  
+  /**
+   * Value indexes 
+   */
+  private static final int SWITCH_VALUE_IDX = 0;
+  
+  /**
+   * @param deviceInterface
+   *          interface instance for this device driver
+   * @param zwaveNodeId
+   *          Z-Wave node id
+   */
+  public ZwaveBinarySwitch(ZwaveInterface deviceInterface,
+      int zwaveNodeId)
   {
-    super(deviceId, deviceInterface, nodeId);
+    super(deviceInterface, zwaveNodeId);
     init();
   }
 
@@ -58,12 +73,13 @@ public class ZwaveBinarySwitch extends ZwaveDevice implements BinarySwitch,
   public void commandClassBasicReport(int value)
   {
     logger.info(
-        "Received COMMAND_CLASS_BASIC_REPORT from switch device: {} [{}]",
-        this.deviceId, value == 255 ? "ON"
+        "Received COMMAND_CLASS_BASIC_REPORT from Z-Wave node {}: {}",
+        this.nodeId, value == 255 ? "ON"
             : "OFF");
 
-    this.setValue(value);
-    this.setStatus(value == 255 ? "ON":"OFF");
+    this.switchState = value;
+    this.updateDeviceValue(SWITCH_VALUE_IDX, value);
+    this.updateDeviceText(SWITCH_VALUE_IDX, value == 255 ? "ON" : "OFF");
   }
 
   /*
@@ -74,11 +90,13 @@ public class ZwaveBinarySwitch extends ZwaveDevice implements BinarySwitch,
    */
   public void commandClassBasicSet(int value)
   {
-    logger.info("Setting device ID {} to {}", this.deviceId, value==0xFF?"ON":"OFF");
+    logger.info("Setting Z-Wave node {} to {}", this.nodeId,
+        value == 0xFF ? "ON" : "OFF");
 
-    this.setValue(value);
-    this.setStatus(value == 255 ? "ON":"OFF");
-    
+    this.switchState = value;
+    this.updateDeviceValue(SWITCH_VALUE_IDX, value);
+    this.updateDeviceText(SWITCH_VALUE_IDX, value == 255 ? "ON" : "OFF");
+
     deviceInterface.zwaveSendData(this.nodeId,
         CommandClass.COMMAND_CLASS_BASIC.get(), CommandBasic.BASIC_SET.get(),
         value);
@@ -95,7 +113,8 @@ public class ZwaveBinarySwitch extends ZwaveDevice implements BinarySwitch,
   public void commandClassManufacturerSpecificGet()
   {
     logger
-        .debug("Requesting manufacturer specific report from node {}", nodeId);
+        .debug("Requesting manufacturer specific report from Z-Wave node {}",
+            nodeId);
 
     deviceInterface.zwaveSendData(nodeId,
         CommandClass.COMMAND_CLASS_MANUFACTURER_SPECIFIC.get(),
@@ -124,7 +143,8 @@ public class ZwaveBinarySwitch extends ZwaveDevice implements BinarySwitch,
   /*
    * (non-Javadoc)
    * 
-   * @see net.gregrapp.jhouse.device.types.Device#interfaceReady()
+   * @see
+   * net.gregrapp.jhouse.device.drivers.impl.types.DeviceDriver#interfaceReady()
    */
   public void interfaceReady()
   {
@@ -135,12 +155,12 @@ public class ZwaveBinarySwitch extends ZwaveDevice implements BinarySwitch,
   /*
    * (non-Javadoc)
    * 
-   * @see net.gregrapp.jhouse.device.types.ZwaveDevice#poll()
+   * @see net.gregrapp.jhouse.device.drivers.impl.types.ZwaveDeviceDriver#poll()
    */
   @Override
   public void poll()
   {
-    logger.info("Polling device ID {}", this.deviceId);
+    logger.info("Polling Z-Wave node {}", this.nodeId);
     // Request a BASIC_REPORT to get the current status of the switch
     this.commandClassBasicGet();
   }
@@ -172,14 +192,14 @@ public class ZwaveBinarySwitch extends ZwaveDevice implements BinarySwitch,
    */
   public void toggleOnOff()
   {
-    logger.debug("Toggling device {}", this.deviceId);
-    if (this.deviceValue == "")
+    logger.debug("Toggling Z-Wave node {}", this.nodeId);
+    if (this.switchState == -1)
     {
       logger.info("Switch state is unknown, polling switch");
 
       this.poll();
       long startTime = System.currentTimeMillis();
-      while (this.deviceValue == ""
+      while (this.switchState == -1
           && (System.currentTimeMillis() - startTime < 5000))
       {
         try
@@ -190,14 +210,14 @@ public class ZwaveBinarySwitch extends ZwaveDevice implements BinarySwitch,
         }
       }
     }
-    if (this.deviceValue == "255")
+    if (this.switchState == 255)
       this.setOff();
-    else if (this.deviceValue == "0")
+    else if (this.switchState == 0)
       this.setOn();
     else
       logger.warn(
-          "Invalid switch state for device {}, ignoring toggle command",
-          this.deviceId);
+          "Invalid switch state for Z-Wave node {}, ignoring toggle command",
+          this.nodeId);
   }
 
 }

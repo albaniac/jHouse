@@ -7,7 +7,7 @@ import java.util.Date;
 import java.util.Locale;
 
 import net.gregrapp.jhouse.device.classes.BinarySwitch;
-import net.gregrapp.jhouse.device.types.Device;
+import net.gregrapp.jhouse.device.drivers.types.DeviceDriver;
 import net.gregrapp.jhouse.managers.device.DeviceManager;
 
 import org.slf4j.Logger;

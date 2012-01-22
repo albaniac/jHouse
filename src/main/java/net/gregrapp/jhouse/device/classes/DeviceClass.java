@@ -4,7 +4,7 @@
 package net.gregrapp.jhouse.device.classes;
 
 /**
- * Device class interface
+ * DeviceDriver class interface
  * 
  * @author Greg Rapp
  * 

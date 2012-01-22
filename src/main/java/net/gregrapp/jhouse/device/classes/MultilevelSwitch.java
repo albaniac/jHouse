@@ -11,6 +11,9 @@ package net.gregrapp.jhouse.device.classes;
  */
 public interface MultilevelSwitch extends BinarySwitch
 {
+  /**
+   * @param level switch level as a percentage (0 - 100)
+   */
   public void setLevel(Integer level);
 
   /**

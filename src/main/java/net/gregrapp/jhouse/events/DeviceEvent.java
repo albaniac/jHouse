@@ -3,16 +3,26 @@
  */
 package net.gregrapp.jhouse.events;
 
-import net.gregrapp.jhouse.device.types.Device;
+import net.gregrapp.jhouse.device.Device;
 
 /**
- * @author grapp
+ * @author Greg Rapp
  *
  */
 public class DeviceEvent extends AbstractEvent
 {
+  /**
+   * 
+   */
+  private static final long serialVersionUID = 1L;
   protected Device device;
 
+  public DeviceEvent(Device device)
+  {
+    super();
+    this.device = device;
+  }
+  
   /**
    * @return the device
    */
@@ -24,8 +34,8 @@ public class DeviceEvent extends AbstractEvent
   /**
    * @return the device unique ID
    */
-  public int getDeviceId()
+  public int getId()
   {
-    return device.getDeviceId();
+    return device.getId();
   }
 }
