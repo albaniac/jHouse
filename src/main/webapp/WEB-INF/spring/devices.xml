@@ -8,6 +8,205 @@
 						http://drools.org/schema/drools-spring http://anonsvn.jboss.org/repos/labs/labs/jbossrules/trunk/drools-container/drools-spring/src/main/resources/org/drools/container/spring/drools-spring-1.2.0.xsd">
 
 
+	<bean name="dinningRoomLight" class="net.gregrapp.jhouse.device.DriverDevice">
+		<!-- Unique device ID -->
+		<constructor-arg value="1" />
+		<!-- Device driver -->
+		<constructor-arg>
+			<bean class="net.gregrapp.jhouse.device.drivers.impl.ZwaveMultilevelSwitch">
+				<!-- Device driver interface -->
+				<constructor-arg ref="zwaveInterface" />
+				<!-- ZWave node ID -->
+				<constructor-arg value="14" />
+			</bean>
+		</constructor-arg>
+	</bean>
+
+	<bean name="kitchenLight" class="net.gregrapp.jhouse.device.DriverDevice">
+		<!-- Unique device ID -->
+		<constructor-arg value="2" />
+		<!-- Device driver -->
+		<constructor-arg>
+			<bean class="net.gregrapp.jhouse.device.drivers.impl.ZwaveBinarySwitch">
+				<!-- Device driver interface -->
+				<constructor-arg ref="zwaveInterface" />
+				<!-- ZWave node ID -->
+				<constructor-arg value="2" />
+			</bean>
+		</constructor-arg>
+	</bean>
+
+
+	<bean name="2ndFloorStairsLight" class="net.gregrapp.jhouse.device.DriverDevice">
+		<!-- Unique device ID -->
+		<constructor-arg value="3" />
+		<!-- Device driver -->
+		<constructor-arg>
+			<bean class="net.gregrapp.jhouse.device.drivers.impl.ZwaveBinarySwitch">
+				<!-- Device driver interface -->
+				<constructor-arg ref="zwaveInterface" />
+				<!-- ZWave node ID -->
+				<constructor-arg value="7" />
+			</bean>
+		</constructor-arg>
+	</bean>
+
+
+	<bean name="basementMainLight" class="net.gregrapp.jhouse.device.DriverDevice">
+		<!-- Unique device ID -->
+		<constructor-arg value="4" />
+		<!-- Device driver -->
+		<constructor-arg>
+			<bean class="net.gregrapp.jhouse.device.drivers.impl.ZwaveMultilevelSwitch">
+				<!-- Device driver interface -->
+				<constructor-arg ref="zwaveInterface" />
+				<!-- ZWave node ID -->
+				<constructor-arg value="15" />
+			</bean>
+		</constructor-arg>
+	</bean>
+
+	<bean name="familyRoomCeilingFan" class="net.gregrapp.jhouse.device.DriverDevice">
+		<!-- Unique device ID -->
+		<constructor-arg value="5" />
+		<!-- Device driver -->
+		<constructor-arg>
+			<bean class="net.gregrapp.jhouse.device.drivers.impl.ZwaveMultilevelSwitch">
+				<!-- Device driver interface -->
+				<constructor-arg ref="zwaveInterface" />
+				<!-- ZWave node ID -->
+				<constructor-arg value="18" />
+			</bean>
+		</constructor-arg>
+	</bean>
+
+	<bean name="familyRoomFanLight" class="net.gregrapp.jhouse.device.DriverDevice">
+		<!-- Unique device ID -->
+		<constructor-arg value="6" />
+		<!-- Device driver -->
+		<constructor-arg>
+			<bean class="net.gregrapp.jhouse.device.drivers.impl.ZwaveBinarySwitch">
+				<!-- Device driver interface -->
+				<constructor-arg ref="zwaveInterface" />
+				<!-- ZWave node ID -->
+				<constructor-arg value="19" />
+			</bean>
+		</constructor-arg>
+	</bean>
+
+	<bean name="foyerLight" class="net.gregrapp.jhouse.device.DriverDevice">
+		<!-- Unique device ID -->
+		<constructor-arg value="7" />
+		<!-- Device driver -->
+		<constructor-arg>
+			<bean class="net.gregrapp.jhouse.device.drivers.impl.ZwaveBinarySwitch">
+				<!-- Device driver interface -->
+				<constructor-arg ref="zwaveInterface" />
+				<!-- ZWave node ID -->
+				<constructor-arg value="20" />
+			</bean>
+		</constructor-arg>
+	</bean>
+
+	<bean name="basementStairsLight" class="net.gregrapp.jhouse.device.DriverDevice">
+		<!-- Unique device ID -->
+		<constructor-arg value="8" />
+		<!-- Device driver -->
+		<constructor-arg>
+			<bean class="net.gregrapp.jhouse.device.drivers.impl.ZwaveBinarySwitch">
+				<!-- Device driver interface -->
+				<constructor-arg ref="zwaveInterface" />
+				<!-- ZWave node ID -->
+				<constructor-arg value="21" />
+			</bean>
+		</constructor-arg>
+	</bean>
+
+	<bean name="deckLight" class="net.gregrapp.jhouse.device.DriverDevice">
+		<!-- Unique device ID -->
+		<constructor-arg value="9" />
+		<!-- Device driver -->
+		<constructor-arg>
+			<bean class="net.gregrapp.jhouse.device.drivers.impl.ZwaveBinarySwitch">
+				<!-- Device driver interface -->
+				<constructor-arg ref="zwaveInterface" />
+				<!-- ZWave node ID -->
+				<constructor-arg value="22" />
+			</bean>
+		</constructor-arg>
+	</bean>
+
+	<bean name="frontPorchLight" class="net.gregrapp.jhouse.device.DriverDevice">
+		<!-- Unique device ID -->
+		<constructor-arg value="10" />
+		<!-- Device driver -->
+		<constructor-arg>
+			<bean class="net.gregrapp.jhouse.device.drivers.impl.ZwaveBinarySwitch">
+				<!-- Device driver interface -->
+				<constructor-arg ref="zwaveInterface" />
+				<!-- ZWave node ID -->
+				<constructor-arg value="23" />
+			</bean>
+		</constructor-arg>
+	</bean>
+
+	<bean name="officeLight" class="net.gregrapp.jhouse.device.DriverDevice">
+		<!-- Unique device ID -->
+		<constructor-arg value="11" />
+		<!-- Device driver -->
+		<constructor-arg>
+			<bean class="net.gregrapp.jhouse.device.drivers.impl.ZwaveBinarySwitch">
+				<!-- Device driver interface -->
+				<constructor-arg ref="zwaveInterface" />
+				<!-- ZWave node ID -->
+				<constructor-arg value="24" />
+			</bean>
+		</constructor-arg>
+	</bean>
+
+	<bean name="masterBedroomLight" class="net.gregrapp.jhouse.device.DriverDevice">
+		<!-- Unique device ID -->
+		<constructor-arg value="12" />
+		<!-- Device driver -->
+		<constructor-arg>
+			<bean class="net.gregrapp.jhouse.device.drivers.impl.ZwaveBinarySwitch">
+				<!-- Device driver interface -->
+				<constructor-arg ref="zwaveInterface" />
+				<!-- ZWave node ID -->
+				<constructor-arg value="27" />
+			</bean>
+		</constructor-arg>
+	</bean>
+
+	<bean name="masterToiletLight" class="net.gregrapp.jhouse.device.DriverDevice">
+		<!-- Unique device ID -->
+		<constructor-arg value="13" />
+		<!-- Device driver -->
+		<constructor-arg>
+			<bean class="net.gregrapp.jhouse.device.drivers.impl.ZwaveBinarySwitch">
+				<!-- Device driver interface -->
+				<constructor-arg ref="zwaveInterface" />
+				<!-- ZWave node ID -->
+				<constructor-arg value="28" />
+			</bean>
+		</constructor-arg>
+	</bean>
+
+
+	<bean name="masterToiletExhaustFan" class="net.gregrapp.jhouse.device.DriverDevice">
+		<!-- Unique device ID -->
+		<constructor-arg value="14" />
+		<!-- Device driver -->
+		<constructor-arg>
+			<bean class="net.gregrapp.jhouse.device.drivers.impl.ZwaveBinarySwitch">
+				<!-- Device driver interface -->
+				<constructor-arg ref="zwaveInterface" />
+				<!-- ZWave node ID -->
+				<constructor-arg value="29" />
+			</bean>
+		</constructor-arg>
+	</bean>
+
 	<bean name="masterBathroomLight" class="net.gregrapp.jhouse.device.DriverDevice">
 		<!-- Unique device ID -->
 		<constructor-arg value="15" />
@@ -18,7 +217,106 @@
 				<constructor-arg ref="zwaveInterface" />
 				<!-- ZWave node ID -->
 				<constructor-arg value="30" />
-			</bean>		
+			</bean>
+		</constructor-arg>
+	</bean>
+
+	<bean name="masterBathroomExhaustFan" class="net.gregrapp.jhouse.device.DriverDevice">
+		<!-- Unique device ID -->
+		<constructor-arg value="16" />
+		<!-- Device driver -->
+		<constructor-arg>
+			<bean class="net.gregrapp.jhouse.device.drivers.impl.ZwaveBinarySwitch">
+				<!-- Device driver interface -->
+				<constructor-arg ref="zwaveInterface" />
+				<!-- ZWave node ID -->
+				<constructor-arg value="31" />
+			</bean>
+		</constructor-arg>
+	</bean>
+
+	<bean name="2ndFloorBathroomLight" class="net.gregrapp.jhouse.device.DriverDevice">
+		<!-- Unique device ID -->
+		<constructor-arg value="17" />
+		<!-- Device driver -->
+		<constructor-arg>
+			<bean class="net.gregrapp.jhouse.device.drivers.impl.ZwaveBinarySwitch">
+				<!-- Device driver interface -->
+				<constructor-arg ref="zwaveInterface" />
+				<!-- ZWave node ID -->
+				<constructor-arg value="32" />
+			</bean>
+		</constructor-arg>
+	</bean>
+
+	<bean name="2ndFloorBathroomExhaustFan" class="net.gregrapp.jhouse.device.DriverDevice">
+		<!-- Unique device ID -->
+		<constructor-arg value="18" />
+		<!-- Device driver -->
+		<constructor-arg>
+			<bean class="net.gregrapp.jhouse.device.drivers.impl.ZwaveBinarySwitch">
+				<!-- Device driver interface -->
+				<constructor-arg ref="zwaveInterface" />
+				<!-- ZWave node ID -->
+				<constructor-arg value="33" />
+			</bean>
+		</constructor-arg>
+	</bean>
+
+	<bean name="1stFloorBathroomLight" class="net.gregrapp.jhouse.device.DriverDevice">
+		<!-- Unique device ID -->
+		<constructor-arg value="19" />
+		<!-- Device driver -->
+		<constructor-arg>
+			<bean class="net.gregrapp.jhouse.device.drivers.impl.ZwaveBinarySwitch">
+				<!-- Device driver interface -->
+				<constructor-arg ref="zwaveInterface" />
+				<!-- ZWave node ID -->
+				<constructor-arg value="34" />
+			</bean>
+		</constructor-arg>
+	</bean>
+
+	<bean name="1stFloorBathroomExhaustFan" class="net.gregrapp.jhouse.device.DriverDevice">
+		<!-- Unique device ID -->
+		<constructor-arg value="20" />
+		<!-- Device driver -->
+		<constructor-arg>
+			<bean class="net.gregrapp.jhouse.device.drivers.impl.ZwaveBinarySwitch">
+				<!-- Device driver interface -->
+				<constructor-arg ref="zwaveInterface" />
+				<!-- ZWave node ID -->
+				<constructor-arg value="35" />
+			</bean>
+		</constructor-arg>
+	</bean>
+
+	<bean name="basementStorageLight" class="net.gregrapp.jhouse.device.DriverDevice">
+		<!-- Unique device ID -->
+		<constructor-arg value="21" />
+		<!-- Device driver -->
+		<constructor-arg>
+			<bean class="net.gregrapp.jhouse.device.drivers.impl.ZwaveBinarySwitch">
+				<!-- Device driver interface -->
+				<constructor-arg ref="zwaveInterface" />
+				<!-- ZWave node ID -->
+				<constructor-arg value="41" />
+			</bean>
+		</constructor-arg>
+	</bean>
+
+
+	<bean name="guestBedroomLight" class="net.gregrapp.jhouse.device.DriverDevice">
+		<!-- Unique device ID -->
+		<constructor-arg value="22" />
+		<!-- Device driver -->
+		<constructor-arg>
+			<bean class="net.gregrapp.jhouse.device.drivers.impl.ZwaveBinarySwitch">
+				<!-- Device driver interface -->
+				<constructor-arg ref="zwaveInterface" />
+				<!-- ZWave node ID -->
+				<constructor-arg value="42" />
+			</bean>
 		</constructor-arg>
 	</bean>
 
@@ -32,8 +330,114 @@
 				<constructor-arg ref="zwaveInterface" />
 				<!-- ZWave node ID -->
 				<constructor-arg value="43" />
-			</bean>		
+			</bean>
 		</constructor-arg>
 	</bean>
+
+
+	<bean name="laundryRoomLight" class="net.gregrapp.jhouse.device.DriverDevice">
+		<!-- Unique device ID -->
+		<constructor-arg value="24" />
+		<!-- Device driver -->
+		<constructor-arg>
+			<bean class="net.gregrapp.jhouse.device.drivers.impl.ZwaveBinarySwitch">
+				<!-- Device driver interface -->
+				<constructor-arg ref="zwaveInterface" />
+				<!-- ZWave node ID -->
+				<constructor-arg value="44" />
+			</bean>
+		</constructor-arg>
+	</bean>
+
+
+	<bean name="kitchenSinkLight" class="net.gregrapp.jhouse.device.DriverDevice">
+		<!-- Unique device ID -->
+		<constructor-arg value="25" />
+		<!-- Device driver -->
+		<constructor-arg>
+			<bean class="net.gregrapp.jhouse.device.drivers.impl.ZwaveBinarySwitch">
+				<!-- Device driver interface -->
+				<constructor-arg ref="zwaveInterface" />
+				<!-- ZWave node ID -->
+				<constructor-arg value="45" />
+			</bean>
+		</constructor-arg>
+	</bean>
+
+	<bean name="garageLight" class="net.gregrapp.jhouse.device.DriverDevice">
+		<!-- Unique device ID -->
+		<constructor-arg value="26" />
+		<!-- Device driver -->
+		<constructor-arg>
+			<bean class="net.gregrapp.jhouse.device.drivers.impl.ZwaveBinarySwitch">
+				<!-- Device driver interface -->
+				<constructor-arg ref="zwaveInterface" />
+				<!-- ZWave node ID -->
+				<constructor-arg value="54" />
+			</bean>
+		</constructor-arg>
+	</bean>
+
+	<bean name="guestBedroomClosetLight" class="net.gregrapp.jhouse.device.DriverDevice">
+		<!-- Unique device ID -->
+		<constructor-arg value="27" />
+		<!-- Device driver -->
+		<constructor-arg>
+			<bean class="net.gregrapp.jhouse.device.drivers.impl.ZwaveBinarySwitch">
+				<!-- Device driver interface -->
+				<constructor-arg ref="zwaveInterface" />
+				<!-- ZWave node ID -->
+				<constructor-arg value="55" />
+			</bean>
+		</constructor-arg>
+	</bean>
+
+	<bean name="masterBedroomCeilingFan" class="net.gregrapp.jhouse.device.DriverDevice">
+		<!-- Unique device ID -->
+		<constructor-arg value="28" />
+		<!-- Device driver -->
+		<constructor-arg>
+			<bean class="net.gregrapp.jhouse.device.drivers.impl.ZwaveMultilevelSwitch">
+				<!-- Device driver interface -->
+				<constructor-arg ref="zwaveInterface" />
+				<!-- ZWave node ID -->
+				<constructor-arg value="56" />
+			</bean>
+		</constructor-arg>
+	</bean>
+
+	<bean name="basementStorageDoorSensorDriver" class="net.gregrapp.jhouse.device.drivers.impl.ZwaveBinarySensor">
+		<!-- Device driver interface -->
+		<constructor-arg ref="zwaveInterface" />
+		<!-- ZWave node ID -->
+		<constructor-arg value="47" />
+	</bean>
+	
+	<bean name="basementStorageDoorSensorState" class="net.gregrapp.jhouse.device.DriverDevice">
+		<!-- Unique device ID -->
+		<constructor-arg value="29" />
+		<!-- Driver value index -->
+		<constructor-arg value="0" />
+		<!-- Device driver -->
+		<constructor-arg ref="masterBathroomDoorSensorDriver"/>
+	</bean>
+
+
+	<bean name="masterBathroomDoorSensorDriver" class="net.gregrapp.jhouse.device.drivers.impl.ZwaveBinarySensor">
+		<!-- Device driver interface -->
+		<constructor-arg ref="zwaveInterface" />
+		<!-- ZWave node ID -->
+		<constructor-arg value="40" />
+	</bean>
+	
+	<bean name="masterBathroomDoorSensorState" class="net.gregrapp.jhouse.device.DriverDevice">
+		<!-- Unique device ID -->
+		<constructor-arg value="31" />
+		<!-- Driver value index -->
+		<constructor-arg value="0" />
+		<!-- Device driver -->
+		<constructor-arg ref="masterBathroomDoorSensorDriver"/>
+	</bean>
+
 
 </beans>

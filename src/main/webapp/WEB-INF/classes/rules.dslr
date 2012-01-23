@@ -1,0 +1,25 @@
+package net.gregrapp.jhouse
+
+expander jhouse.dsl
+/*
+rule "1"
+when
+	Device 15 value changed to 255
+then
+	Turn on binary switch 23
+	Log : "Device 15 CHANGED to ON"
+end
+*/
+rule "Master Bath Door Close / Light On"
+when
+	Device 31 value changed to 0
+then
+	Turn on binary switch 23
+end
+
+rule "Master Bath Door Open / Light Off"
+when
+	Device 31 value changed to 255
+then
+	Turn off binary switch 23
+end

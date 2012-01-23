@@ -11,11 +11,16 @@ import java.util.List;
 import net.gregrapp.jhouse.device.Device;
 import net.gregrapp.jhouse.device.DriverDevice;
 import net.gregrapp.jhouse.device.classes.DeviceClass;
+import net.gregrapp.jhouse.device.drivers.types.DeviceDriver;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
+/**
+ * @author Greg Rapp
+ * 
+ */
 /**
  * @author Greg Rapp
  * 
@@ -44,7 +49,8 @@ public class DeviceManagerImpl implements DeviceManager
     {
       try
       {
-        Method meth = ((DriverDevice)device).getDriver().getClass().getMethod(method);
+        Method meth = ((DriverDevice) device).getDriver().getClass()
+            .getMethod(method);
         meth.invoke(device);
       } catch (SecurityException e)
       {
@@ -90,8 +96,9 @@ public class DeviceManagerImpl implements DeviceManager
 
       try
       {
-        Method meth = ((DriverDevice)device).getDriver().getClass().getMethod(method,
-            argClasses.toArray(new Class[0]));
+        Method meth = ((DriverDevice) device).getDriver().getClass()
+            .getMethod(method,
+                argClasses.toArray(new Class[0]));
         meth.invoke(device, args);
       } catch (SecurityException e)
       {
@@ -134,6 +141,36 @@ public class DeviceManagerImpl implements DeviceManager
     return null;
   }
 
+  /*
+   * (non-Javadoc)
+   * 
+   * @see net.gregrapp.jhouse.managers.device.DeviceManager#get(int,
+   * java.lang.Class)
+   */
+  public <T extends Device> T get(int deviceId, Class<T> type)
+  {
+    Device device = get(deviceId);
+    if (type.isAssignableFrom(device.getClass()))
+      return type.cast(get(deviceId));
+    else
+      return null;
+  }
+
+  public <T extends DeviceClass> T getDriver(int deviceId, Class<T> type)
+  {
+    Device device = get(deviceId);
+    if (device instanceof DriverDevice)
+    {
+      DeviceDriver driver = ((DriverDevice)device).getDriver();
+      if (type.isAssignableFrom(driver.getClass()))
+        return type.cast(driver);
+      else
+        return null;
+    }
+    else
+      return null;
+  }
+  
   public String[] getDeviceClassesForDevice(Device device)
   {
     logger.debug("Getting device classes for device {}", device.getId());
@@ -141,7 +178,8 @@ public class DeviceManagerImpl implements DeviceManager
 
     if (device instanceof DriverDevice)
     {
-      for (Class<?> iface : ((DriverDevice)device).getDriver().getClass().getInterfaces())
+      for (Class<?> iface : ((DriverDevice) device).getDriver().getClass()
+          .getInterfaces())
       {
         // Add the interface to the list if it is a DeviceClass
         if (DeviceClass.class.isAssignableFrom(iface))
@@ -151,7 +189,8 @@ public class DeviceManagerImpl implements DeviceManager
       }
     }
     String[] strKlasses = klasses.toArray(new String[0]);
-    logger.debug("DeviceDriver {} has classes: {}", ((DriverDevice)device).getDriver().getClass().getSimpleName(), strKlasses);
+    logger.debug("DeviceDriver {} has classes: {}", ((DriverDevice) device)
+        .getDriver().getClass().getSimpleName(), strKlasses);
     return strKlasses;
   }
 

@@ -36,8 +36,10 @@
 
 	<drools:kbase id="kbase">
 		<drools:resources>
-			<drools:resource type="DRL" source="classpath:config.drl"></drools:resource>
-			<drools:resource type="DRL" source="classpath:rules.drl"></drools:resource>
+			<drools:resource type="DSL" source="classpath:jhouse.dsl" />
+			<drools:resource type="DRL" source="classpath:config.drl" />
+			<drools:resource type="DSLR" source="classpath:rules.dslr" />
+			<!-- <drools:resource type="DRL" source="classpath:rules.drl" />-->
 		</drools:resources>
 		<drools:configuration>
 			<drools:event-processing-mode mode="STREAM" />

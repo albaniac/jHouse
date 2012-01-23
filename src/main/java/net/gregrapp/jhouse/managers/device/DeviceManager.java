@@ -4,6 +4,7 @@
 package net.gregrapp.jhouse.managers.device;
 
 import net.gregrapp.jhouse.device.Device;
+import net.gregrapp.jhouse.device.classes.DeviceClass;
 
 /**
  * @author Greg Rapp
@@ -41,7 +42,16 @@ public interface DeviceManager
    * @return the device's object instance
    */
   public Device get(int deviceId);
-  
+
+  /**
+   * @param deviceId
+   *          the device's ID
+   * @param type
+   *          type of device to return
+   * @return the device's instance cast to type
+   */
+  public <T extends Device> T get(int deviceId, Class<T> type);
+
   /**
    * Get device classes for a device
    * 
@@ -57,4 +67,16 @@ public interface DeviceManager
    * @return array of devices
    */
   public Device[] getDevices();
+
+  /**
+   * Get driver for device, casting the driver to a device class
+   * 
+   * @param deviceId
+   *          device id
+   * @param type
+   *          device class to return
+   * @return
+   */
+  public <T extends DeviceClass> T getDriver(int deviceId, Class<T> type);
+
 }

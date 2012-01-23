@@ -31,9 +31,9 @@ public interface Interface
   public Transport getTransport();
 
   /**
-   * @param device device to attach to this interface
+   * @param device device driver to attach to this interface
    */
-  public void attachDevice(DeviceDriver device);
+  public void attachDeviceDriver(DeviceDriver device);
   
   /**
    * @return interface status

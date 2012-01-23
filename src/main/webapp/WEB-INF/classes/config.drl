@@ -1,3 +1,5 @@
+package net.gregrapp.jhouse
+
 import net.gregrapp.jhouse.events.*
 import net.gregrapp.jhouse.states.*
 import net.gregrapp.jhouse.device.*
@@ -16,11 +18,9 @@ declare DeviceTextEvent
 end
 
 declare Device
-	@role(event)
 	@propertyChangeSupport
 end
 
 declare DriverDevice
-	@role(event)
 	@propertyChangeSupport
 end

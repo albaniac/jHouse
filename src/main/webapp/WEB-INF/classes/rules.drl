@@ -62,7 +62,8 @@ rule "8"
 	when
 		DeviceValueEvent(id == 15, value == 255, changed == true)
 	then
-		System.out.println("************ NEW SWITCH CHANGED ON EVENT FOR DEVICE 15");	
+		System.out.println("************ NEW SWITCH CHANGED ON EVENT FOR DEVICE 15");
+		dm.get(23, DriverDevice.class).getDriver().setOn();
 	end
 
 rule "9"
@@ -70,6 +71,7 @@ rule "9"
 		DeviceValueEvent(id == 15, value == 0, changed == true)
 	then
 		System.out.println("************ NEW SWITCH CHANGED OFF EVENT FOR DEVICE 15");	
+		dm.get(23).getDriver().setOff();
 	end
 
 rule "10"

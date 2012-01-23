@@ -17,17 +17,17 @@ public abstract class ZwaveDeviceDriver extends AbstractDeviceDriver
   protected int nodeId;
 
   /**
-   * @param deviceInterface
-   *          Z-Wave device interface
+   * @param driverInterface
+   *          Z-Wave device driver interface
    * @param nodeId
    *          Z-Wave node ID
    */
-  public ZwaveDeviceDriver(ZwaveInterface deviceInterface, int nodeId)
+  public ZwaveDeviceDriver(ZwaveInterface driverInterface, int nodeId)
   {
     // super(deviceId);
-    this.deviceInterface = deviceInterface;
+    this.deviceInterface = driverInterface;
     this.nodeId = nodeId;
-    deviceInterface.attachDevice(this);
+    driverInterface.attachDeviceDriver(this);
   }
 
   /**

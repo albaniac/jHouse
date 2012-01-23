@@ -50,36 +50,39 @@ public class ZwaveInterface extends AbstractInterface implements
     super(transport);
   }
 
-  public void attachDevice(DeviceDriver device)
+  public void attachDeviceDriver(DeviceDriver device)
   {
     if (!(device instanceof ZwaveDeviceDriver))
     {
       throw new ClassCastException(
           "Cannot attach non ZWave device to this interface");
     }
-
-    ZwaveDeviceDriver zwaveDevice = (ZwaveDeviceDriver) device;
-
-    if (devices.containsKey(zwaveDevice.getNodeId()))
+    else
     {
-      if (devices.get(zwaveDevice.getNodeId()) instanceof ArrayList)
+      logger.info("Attaching device driver: {}", device.getClass().getName());
+      ZwaveDeviceDriver zwaveDevice = (ZwaveDeviceDriver) device;
+
+      if (devices.containsKey(zwaveDevice.getNodeId()))
       {
-        devices.get(zwaveDevice.getNodeId()).add(zwaveDevice);
+        if (devices.get(zwaveDevice.getNodeId()) instanceof ArrayList)
+        {
+          devices.get(zwaveDevice.getNodeId()).add(zwaveDevice);
+        } else
+        {
+          ArrayList<ZwaveDeviceDriver> tmp = new ArrayList<ZwaveDeviceDriver>();
+          tmp.add(zwaveDevice);
+          devices.put(zwaveDevice.getNodeId(), tmp);
+        }
       } else
       {
         ArrayList<ZwaveDeviceDriver> tmp = new ArrayList<ZwaveDeviceDriver>();
         tmp.add(zwaveDevice);
         devices.put(zwaveDevice.getNodeId(), tmp);
       }
-    } else
-    {
-      ArrayList<ZwaveDeviceDriver> tmp = new ArrayList<ZwaveDeviceDriver>();
-      tmp.add(zwaveDevice);
-      devices.put(zwaveDevice.getNodeId(), tmp);
-    }
 
-    // if (this.interfaceReady)
-    // device.interfaceReady();
+      // if (this.interfaceReady)
+      // device.interfaceReady();
+    }
   }
 
   private void cmdApplicationCommandHandler(int[] payload)
