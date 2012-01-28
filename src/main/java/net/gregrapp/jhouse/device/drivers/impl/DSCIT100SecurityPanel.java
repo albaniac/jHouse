@@ -3,6 +3,9 @@
  */
 package net.gregrapp.jhouse.device.drivers.impl;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import net.gregrapp.jhouse.device.classes.SecurityPanel;
 import net.gregrapp.jhouse.device.drivers.types.AbstractDeviceDriver;
 import net.gregrapp.jhouse.interfaces.dscit100.DSCIT100Callback;
@@ -25,31 +28,78 @@ import net.gregrapp.jhouse.interfaces.dscit100.DSCIT100Interface;
  *         80 - Partition 8
  * 
  *         101-164 - Zone 1-64 Status
- *         
+ * 
  */
 public class DSCIT100SecurityPanel extends AbstractDeviceDriver implements
-    DSCIT100Callback,SecurityPanel
+    DSCIT100Callback, SecurityPanel
 {
+  private static final Logger logger = LoggerFactory
+      .getLogger(DSCIT100SecurityPanel.class);
+  
   private DSCIT100Interface driverInterface;
 
+  // Device value indices
+  private static final int ZONE_INDEX = 100;
+  private static final int PARTITION_INDEX_MULTIPLIER = 10;
+  private static final int LAST_ARMED_BY_INDEX = 1;
+  private static final int LAST_DISARMED_BY_INDEX_MULTIPLIER = 2;
+  
   /**
    * 
    */
   public DSCIT100SecurityPanel(DSCIT100Interface driverInterface)
   {
+    logger.info("Instantiating device driver {}", this.getClass().getName());
     this.driverInterface = driverInterface;
+    driverInterface.attachDeviceDriver(this);
   }
 
   /*
    * (non-Javadoc)
    * 
-   * @see net.gregrapp.jhouse.device.drivers.types.DeviceDriver#interfaceReady()
+   * @see net.gregrapp.jhouse.device.classes.SecurityPanel#arm()
    */
   @Override
-  public void interfaceReady()
+  public void arm()
   {
-    // TODO Auto-generated method stub
+    // TODO Make partition and code configurable
+    driverInterface.sendCommand("033", "1" + "228000");
+  }
 
+  /*
+   * (non-Javadoc)
+   * 
+   * @see net.gregrapp.jhouse.device.classes.SecurityPanel#armAway()
+   */
+  @Override
+  public void armAway()
+  {
+    // TODO Make partition configurable
+    driverInterface.sendCommand("030", "1");
+  }
+
+  /*
+   * (non-Javadoc)
+   * 
+   * @see net.gregrapp.jhouse.device.classes.SecurityPanel#armNoEntryDelay()
+   */
+  @Override
+  public void armNoEntryDelay()
+  {
+    // TODO Make partition configurable
+    driverInterface.sendCommand("032", "1");
+  }
+
+  /*
+   * (non-Javadoc)
+   * 
+   * @see net.gregrapp.jhouse.device.classes.SecurityPanel#armStay()
+   */
+  @Override
+  public void armStay()
+  {
+    // TODO Make partition configurable
+    driverInterface.sendCommand("031", "1");
   }
 
   /*
@@ -62,61 +112,73 @@ public class DSCIT100SecurityPanel extends AbstractDeviceDriver implements
   @Override
   public void broadcastLabels(int zone, String label)
   {
-    // TODO Auto-generated method stub
-
+    logger.debug("Received label broadcast for zone {}: {}", zone, label);
+    
   }
 
   /*
    * (non-Javadoc)
    * 
    * @see
-   * net.gregrapp.jhouse.interfaces.dscit100.DSCIT100Callback#zoneAlarm(int,
-   * int)
+   * net.gregrapp.jhouse.interfaces.dscit100.DSCIT100Callback#codeRequired(int)
    */
   @Override
-  public void zoneAlarm(int partition, int zone)
+  public void codeRequired(int partition)
   {
-    // TODO Auto-generated method stub
+    // TODO Make code configurable
+    driverInterface.sendCommand("200", String.valueOf(partition) + "228000");
+  }
 
+  @Override
+  public void disarm()
+  {
+    // TODO Make partition and code configurable
+    driverInterface.sendCommand("040", "1" + "228000");
   }
 
   /*
    * (non-Javadoc)
    * 
-   * @see
-   * net.gregrapp.jhouse.interfaces.dscit100.DSCIT100Callback#zoneAlarmRestore
-   * (int, int)
+   * @see net.gregrapp.jhouse.device.drivers.types.DeviceDriver#interfaceReady()
    */
   @Override
-  public void zoneAlarmRestore(int partition, int zone)
+  public void interfaceReady()
   {
-    // TODO Auto-generated method stub
-
+    // Request the current panel status
+    driverInterface.sendCommand("001", "");
   }
 
   /*
    * (non-Javadoc)
    * 
-   * @see net.gregrapp.jhouse.interfaces.dscit100.DSCIT100Callback#zoneOpen(int)
+   * @see net.gregrapp.jhouse.device.classes.SecurityPanel#panic()
    */
   @Override
-  public void zoneOpen(int zone)
+  public void panic()
   {
-    // TODO Auto-generated method stub
-
+    driverInterface.sendCommand("060", "3");
   }
 
   /*
    * (non-Javadoc)
    * 
-   * @see
-   * net.gregrapp.jhouse.interfaces.dscit100.DSCIT100Callback#zoneRestore(int)
+   * @see net.gregrapp.jhouse.device.classes.SecurityPanel#panicAmbulance()
    */
   @Override
-  public void zoneRestore(int zone)
+  public void panicAmbulance()
   {
-    // TODO Auto-generated method stub
+    driverInterface.sendCommand("060", "2");
+  }
 
+  /*
+   * (non-Javadoc)
+   * 
+   * @see net.gregrapp.jhouse.device.classes.SecurityPanel#panicFire()
+   */
+  @Override
+  public void panicFire()
+  {
+    driverInterface.sendCommand("060", "1");
   }
 
   /*
@@ -129,7 +191,7 @@ public class DSCIT100SecurityPanel extends AbstractDeviceDriver implements
   @Override
   public void paritionArmed(int partition, int mode)
   {
-    // TODO Auto-generated method stub
+    logger.debug("Partition {} armed, mode {}", partition, mode);
 
   }
 
@@ -143,21 +205,7 @@ public class DSCIT100SecurityPanel extends AbstractDeviceDriver implements
   @Override
   public void partitionDisarmed(int partition)
   {
-    // TODO Auto-generated method stub
-
-  }
-
-  /*
-   * (non-Javadoc)
-   * 
-   * @see
-   * net.gregrapp.jhouse.interfaces.dscit100.DSCIT100Callback#userClosing(int,
-   * int)
-   */
-  @Override
-  public void userClosing(int partition, int userCode)
-  {
-    // TODO Auto-generated method stub
+    logger.debug("Partition disarmed: {}", partition);
 
   }
 
@@ -171,7 +219,21 @@ public class DSCIT100SecurityPanel extends AbstractDeviceDriver implements
   @Override
   public void specialClosing(int partition)
   {
-    // TODO Auto-generated method stub
+    logger.debug("Special closing for partition: {}", partition);
+
+  }
+
+  /*
+   * (non-Javadoc)
+   * 
+   * @see
+   * net.gregrapp.jhouse.interfaces.dscit100.DSCIT100Callback#userClosing(int,
+   * int)
+   */
+  @Override
+  public void userClosing(int partition, int userCode)
+  {
+    logger.debug("User closing for partition {}: {}",partition,userCode);
 
   }
 
@@ -185,36 +247,63 @@ public class DSCIT100SecurityPanel extends AbstractDeviceDriver implements
   @Override
   public void userOpening(int partition, int userCode)
   {
-    // TODO Auto-generated method stub
+    logger.debug("User opening for partition {}: {}",partition,userCode);
 
   }
 
+  /*
+   * (non-Javadoc)
+   * 
+   * @see
+   * net.gregrapp.jhouse.interfaces.dscit100.DSCIT100Callback#zoneAlarm(int,
+   * int)
+   */
   @Override
-  public void arm()
+  public void zoneAlarm(int partition, int zone)
   {
-    // TODO Auto-generated method stub
-    
+    logger.info("Zone alarm at partition {}, zone {}", partition, zone);
+
   }
 
+  /*
+   * (non-Javadoc)
+   * 
+   * @see
+   * net.gregrapp.jhouse.interfaces.dscit100.DSCIT100Callback#zoneAlarmRestore
+   * (int, int)
+   */
   @Override
-  public void armAway()
+  public void zoneAlarmRestore(int partition, int zone)
   {
-    // TODO Auto-generated method stub
-    
+    logger.info("Zone alarm restored at partition {}, zone {}", partition, zone);
+
   }
 
+  /*
+   * (non-Javadoc)
+   * 
+   * @see net.gregrapp.jhouse.interfaces.dscit100.DSCIT100Callback#zoneOpen(int)
+   */
   @Override
-  public void armStay()
+  public void zoneOpen(int zone)
   {
-    // TODO Auto-generated method stub
-    
+    logger.debug("Zone opened: {}", zone);
+    updateDeviceValue(ZONE_INDEX+zone, 255);
+    updateDeviceText(ZONE_INDEX+zone, "Open");
   }
 
+  /*
+   * (non-Javadoc)
+   * 
+   * @see
+   * net.gregrapp.jhouse.interfaces.dscit100.DSCIT100Callback#zoneRestore(int)
+   */
   @Override
-  public void disarm()
+  public void zoneRestore(int zone)
   {
-    // TODO Auto-generated method stub
-    
+    logger.debug("Zone restored: {}", zone);
+    updateDeviceValue(ZONE_INDEX+zone, 0);
+    updateDeviceText(ZONE_INDEX+zone, "Closed");
   }
 
 }

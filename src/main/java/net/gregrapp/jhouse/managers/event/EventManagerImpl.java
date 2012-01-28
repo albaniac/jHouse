@@ -6,6 +6,8 @@ package net.gregrapp.jhouse.managers.event;
 import net.gregrapp.jhouse.device.Device;
 import net.gregrapp.jhouse.events.Event;
 import net.gregrapp.jhouse.managers.device.DeviceManager;
+import net.gregrapp.jhouse.managers.event.calendars.DayTime;
+import net.gregrapp.jhouse.managers.event.calendars.NightTime;
 
 import org.drools.event.rule.DebugAgendaEventListener;
 import org.drools.event.rule.DebugWorkingMemoryEventListener;
@@ -34,7 +36,9 @@ public class EventManagerImpl implements EventManager
     this.session = session;
     
     session.addEventListener( new DebugWorkingMemoryEventListener() );
-    session.addEventListener( new DebugAgendaEventListener() );     
+    session.addEventListener( new DebugAgendaEventListener() );    
+    
+    this.setCalendars();
   }
 
   /*
@@ -61,5 +65,14 @@ public class EventManagerImpl implements EventManager
       session.insert(device);
     }
     session.setGlobal("dm", deviceManager);
+  }
+  
+  /**
+   * Add the calendar implementations to the KnowledgeSession
+   */
+  private void setCalendars()
+  {
+    session.getCalendars().set("nighttime", new NightTime());
+    session.getCalendars().set("daytime", new DayTime());
   }
 }

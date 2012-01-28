@@ -24,7 +24,6 @@ public abstract class ZwaveDeviceDriver extends AbstractDeviceDriver
    */
   public ZwaveDeviceDriver(ZwaveInterface driverInterface, int nodeId)
   {
-    // super(deviceId);
     this.deviceInterface = driverInterface;
     this.nodeId = nodeId;
     driverInterface.attachDeviceDriver(this);

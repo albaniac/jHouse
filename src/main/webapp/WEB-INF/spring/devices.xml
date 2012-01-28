@@ -8,6 +8,8 @@
 						http://drools.org/schema/drools-spring http://anonsvn.jboss.org/repos/labs/labs/jbossrules/trunk/drools-container/drools-spring/src/main/resources/org/drools/container/spring/drools-spring-1.2.0.xsd">
 
 
+	<!-- ********** Z-Wave Devices ********** -->
+
 	<bean name="dinningRoomLight" class="net.gregrapp.jhouse.device.DriverDevice">
 		<!-- Unique device ID -->
 		<constructor-arg value="1" />
@@ -439,5 +441,64 @@
 		<constructor-arg ref="masterBathroomDoorSensorDriver"/>
 	</bean>
 
+	<!-- ********** DSC Security Panel ********** -->
+	<bean name="dscIt100SecurityPanelDriver" class="net.gregrapp.jhouse.device.drivers.impl.DSCIT100SecurityPanel">
+		<!-- Device driver interface -->
+		<constructor-arg ref="dscIt100Interface" />
+	</bean>
+	
+	<bean name="securityZone1" class="net.gregrapp.jhouse.device.DriverDevice">
+		<!-- Unique device ID -->
+		<constructor-arg value="33" />
+		<!-- Driver value index -->
+		<constructor-arg value="101" />
+		<!-- Device driver -->
+		<constructor-arg ref="dscIt100SecurityPanelDriver"/>
+	</bean>
 
+	<bean name="securityZone2" class="net.gregrapp.jhouse.device.DriverDevice">
+		<!-- Unique device ID -->
+		<constructor-arg value="34" />
+		<!-- Driver value index -->
+		<constructor-arg value="102" />
+		<!-- Device driver -->
+		<constructor-arg ref="dscIt100SecurityPanelDriver"/>
+	</bean>
+
+	<bean name="securityZone3" class="net.gregrapp.jhouse.device.DriverDevice">
+		<!-- Unique device ID -->
+		<constructor-arg value="35" />
+		<!-- Driver value index -->
+		<constructor-arg value="103" />
+		<!-- Device driver -->
+		<constructor-arg ref="dscIt100SecurityPanelDriver"/>
+	</bean>
+
+	<bean name="securityZone4" class="net.gregrapp.jhouse.device.DriverDevice">
+		<!-- Unique device ID -->
+		<constructor-arg value="36" />
+		<!-- Driver value index -->
+		<constructor-arg value="104" />
+		<!-- Device driver -->
+		<constructor-arg ref="dscIt100SecurityPanelDriver"/>
+	</bean>
+
+	<bean name="securityZone5" class="net.gregrapp.jhouse.device.DriverDevice">
+		<!-- Unique device ID -->
+		<constructor-arg value="37" />
+		<!-- Driver value index -->
+		<constructor-arg value="105" />
+		<!-- Device driver -->
+		<constructor-arg ref="dscIt100SecurityPanelDriver"/>
+	</bean>
+
+	<bean name="securityZone6" class="net.gregrapp.jhouse.device.DriverDevice">
+		<!-- Unique device ID -->
+		<constructor-arg value="38" />
+		<!-- Driver value index -->
+		<constructor-arg value="106" />
+		<!-- Device driver -->
+		<constructor-arg ref="dscIt100SecurityPanelDriver"/>
+	</bean>
+	
 </beans>

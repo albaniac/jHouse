@@ -23,7 +23,6 @@ public class DSCIT100DataFrame
   {
     parseRawFrame(rawFrame);
   }
-
   
   /**
    * @param command

@@ -68,8 +68,8 @@ public class InterfaceController
       {
         Method meth = bean.getClass().getMethod(method);
         Object ret = meth.invoke(bean);
-        System.out.println(ret.toString());
-        model.addAttribute("stuff", ret);
+        //System.out.println(ret.toString());
+        //model.addAttribute("stuff", ret);
       } catch (SecurityException e)
       {
         // TODO Auto-generated catch block

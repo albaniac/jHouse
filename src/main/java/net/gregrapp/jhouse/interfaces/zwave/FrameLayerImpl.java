@@ -129,6 +129,7 @@ public class FrameLayerImpl implements FrameLayer
       }
     });
     receiveThread.setPriority(Thread.MAX_PRIORITY);
+    receiveThread.setDaemon(true);
     logger.debug("Starting receive thread");
     receiveThread.start();
     // Wait for the thread to actually get spun up

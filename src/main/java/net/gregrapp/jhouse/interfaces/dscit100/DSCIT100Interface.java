@@ -21,34 +21,14 @@ public class DSCIT100Interface extends AbstractInterface implements
   private static final Logger logger = LoggerFactory
       .getLogger(DSCIT100Interface.class);
 
-  DSCIT100FrameLayer frameLayer;
+  private DSCIT100FrameLayer frameLayer;
 
-  DSCIT100Callback panel;
-  
+  private DeviceDriver panel;
+
   public DSCIT100Interface(Transport transport)
   {
     super(transport);
-  }
-
-  /*
-   * (non-Javadoc)
-   * 
-   * @see net.gregrapp.jhouse.interfaces.Interface#init()
-   */
-  @Override
-  public void init()
-  {
-    try
-    {
-      this.transport.init();
-    } catch (TransportException e)
-    {
-      logger.error(
-          "Error opening transport, aborting DSC IT100 initialization", e);
-    }
-
-    frameLayer = new DSCIT100FrameLayerImpl(transport);
-    frameLayer.setCallbackHandler(this);
+    logger.info("Instantiating interface {}", this.getClass().getName());
   }
 
   /*
@@ -69,7 +49,10 @@ public class DSCIT100Interface extends AbstractInterface implements
     else
     {
       logger.info("Attaching device driver: {}", device.getClass().getName());
-      this.panel = (DSCIT100Callback)device;
+      this.panel = device;
+
+      if (this.interfaceReady)
+        device.interfaceReady();
     }
   }
 
@@ -92,68 +75,150 @@ public class DSCIT100Interface extends AbstractInterface implements
     {
       int zone = Integer.parseInt(frame.getData().substring(0, 3));
       String label = itrim(frame.getData().substring(3).trim());
-      logger.debug("Received label broadcast for zone {}: {}", zone, label);
-      panel.broadcastLabels(zone, label);
+      if (panel != null && panel instanceof DSCIT100Callback)
+        ((DSCIT100Callback) panel).broadcastLabels(zone, label);
     }
     else if (frame.getCommand().equals("601")) // Zone alarm
     {
-      int partition = Integer.parseInt(frame.getData().substring(0,1));
-      int zone = Integer.parseInt(frame.getData().substring(1,4));
-      logger.info("Zone alarm at partition {}, zone {}", partition, zone);
-      panel.zoneAlarm(partition, zone);
+      int partition = Integer.parseInt(frame.getData().substring(0, 1));
+      int zone = Integer.parseInt(frame.getData().substring(1, 4));
+      if (panel != null && panel instanceof DSCIT100Callback)
+        ((DSCIT100Callback) panel).zoneAlarm(partition, zone);
     }
-    else if (frame.getCommand().equals("602")) // Zone Alarm Restore
+    else if (frame.getCommand().equals("602")) // Zone alarm Restore
     {
-      int partition = Integer.parseInt(frame.getData().substring(0,1));
-      int zone = Integer.parseInt(frame.getData().substring(1,4));
-      logger.info("Zone alarm restored at partition {}, zone {}", partition, zone);
-      panel.zoneAlarmRestore(partition, zone);
+      int partition = Integer.parseInt(frame.getData().substring(0, 1));
+      int zone = Integer.parseInt(frame.getData().substring(1, 4));
+      if (panel != null && panel instanceof DSCIT100Callback)
+        ((DSCIT100Callback) panel).zoneAlarmRestore(partition, zone);
     }
     else if (frame.getCommand().equals("609")) // Zone open
     {
-      int zone = Integer.parseInt(frame.getData().substring(0,3));
-      logger.debug("Zone opened: {}", zone);
-      panel.zoneOpen(zone);
+      int zone = Integer.parseInt(frame.getData().substring(0, 3));
+      if (panel != null && panel instanceof DSCIT100Callback)
+        ((DSCIT100Callback) panel).zoneOpen(zone);
     }
     else if (frame.getCommand().equals("610")) // Zone restored
     {
-      int zone = Integer.parseInt(frame.getData().substring(0,3));
-      logger.debug("Zone restored: {}", zone);
-      panel.zoneRestore(zone);
+      int zone = Integer.parseInt(frame.getData().substring(0, 3));
+      if (panel != null && panel instanceof DSCIT100Callback)
+        ((DSCIT100Callback) panel).zoneRestore(zone);
+    }
+    else if (frame.getCommand().equals("650")) // Partition ready
+    {
+
+    }
+    else if (frame.getCommand().equals("651")) // Partition not ready
+    {
+
     }
     else if (frame.getCommand().equals("652")) // Partition armed
     {
-      int partition = Integer.parseInt(frame.getData().substring(0,1));
-      int mode = Integer.parseInt(frame.getData().substring(1,2));
-      logger.debug("Partition {} armed, mode {}", partition, mode);
-      panel.paritionArmed(partition, mode);
+      int partition = Integer.parseInt(frame.getData().substring(0, 1));
+      int mode = Integer.parseInt(frame.getData().substring(1, 2));
+      if (panel != null && panel instanceof DSCIT100Callback)
+        ((DSCIT100Callback) panel).paritionArmed(partition, mode);
+    }
+    else if (frame.getCommand().equals("654")) // Partition in alarm
+    {
+
     }
     else if (frame.getCommand().equals("655")) // Partition disarmed
     {
-      int partition = Integer.parseInt(frame.getData().substring(0,1));
-      logger.debug("Partition disarmed: {}", partition);
-      panel.partitionDisarmed(partition);
+      int partition = Integer.parseInt(frame.getData().substring(0, 1));
+      if (panel != null && panel instanceof DSCIT100Callback)
+        ((DSCIT100Callback) panel).partitionDisarmed(partition);
+    }
+    else if (frame.getCommand().equals("656")) // Exit delay in progress
+    {
+
+    }
+    else if (frame.getCommand().equals("657")) // Entry delay in progress
+    {
+
+    }
+    else if (frame.getCommand().equals("670")) // Invalid access code
+    {
+
+    }
+    else if (frame.getCommand().equals("672")) // Failed to arm
+    {
+
+    }
+    else if (frame.getCommand().equals("673")) // Partition busy
+    {
+
     }
     else if (frame.getCommand().equals("700")) // User closing
     {
-      int partition = Integer.parseInt(frame.getData().substring(0,1));
-      int userCode = Integer.parseInt(frame.getData().substring(1,5));
-      logger.debug("User closing for partition {}: {}",partition,userCode);
-      panel.userClosing(partition, userCode);
+      int partition = Integer.parseInt(frame.getData().substring(0, 1));
+      int userCode = Integer.parseInt(frame.getData().substring(1, 5));
+      if (panel != null && panel instanceof DSCIT100Callback)
+        ((DSCIT100Callback) panel).userClosing(partition, userCode);
     }
     else if (frame.getCommand().equals("701")) // Special closing
     {
-      int partition = Integer.parseInt(frame.getData().substring(0,1));
-      logger.debug("Special closing for partition: {}", partition);
-      panel.specialClosing(partition);
+      int partition = Integer.parseInt(frame.getData().substring(0, 1));
+      if (panel != null && panel instanceof DSCIT100Callback)
+        ((DSCIT100Callback) panel).specialClosing(partition);
     }
     else if (frame.getCommand().equals("750")) // User opening
     {
-      int partition = Integer.parseInt(frame.getData().substring(0,1));
-      int userCode = Integer.parseInt(frame.getData().substring(1,5));
-      logger.debug("User opening for partition {}: {}",partition,userCode);
-      panel.userOpening(partition, userCode);
+      int partition = Integer.parseInt(frame.getData().substring(0, 1));
+      int userCode = Integer.parseInt(frame.getData().substring(1, 5));
+      if (panel != null && panel instanceof DSCIT100Callback)
+        ((DSCIT100Callback) panel).userOpening(partition, userCode);
     }
+    else if (frame.getCommand().equals("900")) // Code required
+    {
+      int partition = Integer.parseInt(frame.getData().substring(0, 1));
+      if (panel != null && panel instanceof DSCIT100Callback)
+        ((DSCIT100Callback) panel).codeRequired(partition);
+    }
+
+  }
+
+  /*
+   * (non-Javadoc)
+   * 
+   * @see net.gregrapp.jhouse.interfaces.Interface#init()
+   */
+  @Override
+  public void init()
+  {
+    try
+    {
+      this.transport.init();
+    } catch (TransportException e)
+    {
+      logger.error(
+          "Error opening transport, aborting DSC IT100 initialization", e);
+    }
+
+    frameLayer = new DSCIT100FrameLayerImpl(transport);
+    frameLayer.setCallbackHandler(this);
+
+    this.interfaceReady = true;
+
+    if (panel != null)
+      panel.interfaceReady();
+
+    /*
+     * try
+     * {
+     * frameLayer.write(new DSCIT100DataFrame("001", ""));
+     * } catch (DSCIT100FrameLayerException e)
+     * {
+     * logger.warn("Error initializing DSC security system IT100 module", e);
+     * }
+     */
+
+  }
+
+  /* Replaces multiple whitespace between words with single blank */
+  private String itrim(String source)
+  {
+    return source.replaceAll("\\b\\s{2,}\\b", " ");
   }
 
   public void sendCommand(String command, String data)
@@ -165,11 +230,6 @@ public class DSCIT100Interface extends AbstractInterface implements
     {
       logger.warn("Error sending data to DSC security system IT100 module", e);
     }
-  }
-  
-  /* Replaces multiple whitespace between words with single blank */
-  private String itrim(String source) {
-      return source.replaceAll("\\b\\s{2,}\\b", " ");
   }
 
 }

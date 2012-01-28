@@ -9,7 +9,7 @@
 	<!-- Root Context: defines shared resources visible to all other web components -->
 
 	<context:annotation-config />
-
+<!-- 
 	<bean name="zwaveTransport" class="net.gregrapp.jhouse.transports.serial.SerialImpl">
 		<constructor-arg>
 			<list>
@@ -18,11 +18,33 @@
 			</list>
 		</constructor-arg>
 	</bean>
-
+ -->
+ 	<bean name="zwaveTransport" class="net.gregrapp.jhouse.transports.tcpclient.TCPClientImpl">
+		<constructor-arg>
+			<list>
+				<value>192.168.0.3</value>
+				<value>5000</value>
+			</list>
+		</constructor-arg>
+	</bean>
+ 
 	<bean name="zwaveInterface" class="net.gregrapp.jhouse.interfaces.zwave.ZwaveInterface">
 		<constructor-arg ref="zwaveTransport" />
 	</bean>
 
+	<bean name="dscIt100Transport" class="net.gregrapp.jhouse.transports.tcpclient.TCPClientImpl">
+		<constructor-arg>
+			<list>
+				<value>tristar.crazynoodle.net</value>
+				<value>5000</value>
+			</list>
+		</constructor-arg>
+	</bean>
+
+	<bean name="dscIt100Interface" class="net.gregrapp.jhouse.interfaces.dscit100.DSCIT100Interface">
+		<constructor-arg ref="dscIt100Transport"/>
+	</bean>
+	
 	<import resource="devices.xml"/>
 	
 	<bean name="deviceManager" class="net.gregrapp.jhouse.managers.device.DeviceManagerImpl" />
@@ -39,7 +61,6 @@
 			<drools:resource type="DSL" source="classpath:jhouse.dsl" />
 			<drools:resource type="DRL" source="classpath:config.drl" />
 			<drools:resource type="DSLR" source="classpath:rules.dslr" />
-			<!-- <drools:resource type="DRL" source="classpath:rules.drl" />-->
 		</drools:resources>
 		<drools:configuration>
 			<drools:event-processing-mode mode="STREAM" />

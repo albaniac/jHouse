@@ -4,10 +4,9 @@
 package net.gregrapp.jhouse.interfaces.dscit100;
 
 import java.io.BufferedReader;
-import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.io.OutputStreamWriter;
+import java.io.PrintWriter;
 
 import net.gregrapp.jhouse.transports.Transport;
 
@@ -28,7 +27,8 @@ public class DSCIT100FrameLayerImpl implements DSCIT100FrameLayer
   private boolean receiveThreadActive;
   @SuppressWarnings("unused")
   private Transport transport;
-  private BufferedWriter writer;
+  //private BufferedWriter writer;
+  private PrintWriter writer;
   
   /**
    * 
@@ -36,7 +36,8 @@ public class DSCIT100FrameLayerImpl implements DSCIT100FrameLayer
   public DSCIT100FrameLayerImpl(Transport transport)
   {
     this.transport = transport;
-    this.writer = new BufferedWriter(new OutputStreamWriter(transport.getOutputStream()));
+    //this.writer = new BufferedWriter(new OutputStreamWriter(transport.getOutputStream()));
+    this.writer = new PrintWriter(transport.getOutputStream(),true);
     this.reader = new BufferedReader(new InputStreamReader(transport.getInputStream()));
     this.receiveThreadActive = true;
     
@@ -48,13 +49,14 @@ public class DSCIT100FrameLayerImpl implements DSCIT100FrameLayer
       }
     });
     receiveThread.setPriority(Thread.MAX_PRIORITY);
+    receiveThread.setDaemon(true);
     logger.debug("Starting receive thread");
     receiveThread.start();
   }
 
   private void receiveThread()
   {
-    logger.info("Receiver thread started");
+    logger.info("Receive thread started");
     
     String stringRead;
     
@@ -63,14 +65,18 @@ public class DSCIT100FrameLayerImpl implements DSCIT100FrameLayer
       try
       {
         stringRead = reader.readLine();
+        logger.trace("Received data: {}", stringRead);
         DSCIT100DataFrame frame = new DSCIT100DataFrame(stringRead);
         if (frame.isValidChecksum())
           this.handler.frameReceived(frame);
+        else
+          logger.warn("Invalid data received: {}", stringRead);
       } catch (IOException e)
       {
         logger.warn("Error reading data: ", e);
       }
     }
+    logger.info("Receive thread exiting");
   }
 
   /* (non-Javadoc)
@@ -79,6 +85,7 @@ public class DSCIT100FrameLayerImpl implements DSCIT100FrameLayer
   @Override
   public void setCallbackHandler(DSCIT100FrameLayerAsyncCallback handler)
   {
+    logger.debug("Callback handler set to {}", handler.getClass().getName());
     this.handler = handler;
   }
 
@@ -91,13 +98,14 @@ public class DSCIT100FrameLayerImpl implements DSCIT100FrameLayer
     logger.debug("Writing frame to transport");
     synchronized (this)
     {
-      try
-      {
-        writer.write(frame.getFrame());
-      } catch (IOException e)
-      {
-        throw new DSCIT100FrameLayerException("Error writing frame to transport: " + e.getLocalizedMessage());
-      }
+     // try
+     // {
+        logger.trace("Sending Frame: {}", frame.getFrame());
+        writer.println(frame.getFrame());
+     // } catch (IOException e)
+     // {
+     //   throw new DSCIT100FrameLayerException("Error writing frame to transport: " + e.getLocalizedMessage());
+     // }
     }
   }
 
