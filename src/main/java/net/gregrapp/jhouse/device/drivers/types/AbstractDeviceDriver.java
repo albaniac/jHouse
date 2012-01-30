@@ -49,6 +49,26 @@ public abstract class AbstractDeviceDriver implements DeviceDriver
       attachedDevices.get(index).setValue(value);
   }
 
+
+  /**
+   * Set device value bit as a bit field
+   * 
+   * @param index device driver value index
+   * @param bit bit to set
+   * @param value value of bit (true = 1, false = 0)
+   */
+  protected void updateDeviceValueBitmask(int index, int bit, boolean value)
+  {
+    if (attachedDevices.containsKey(index))
+    {
+      long currentVal = attachedDevices.get(index).getValue();
+      if (value == true)
+        attachedDevices.get(index).setValue(currentVal | (1 << bit));
+      else
+        attachedDevices.get(index).setValue(currentVal & ~(1 << bit));
+    }
+  }
+
   /*
    * private final PropertyChangeSupport changes = new
    * PropertyChangeSupport(this); protected int deviceId; protected String

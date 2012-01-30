@@ -25,6 +25,11 @@ public interface DSCIT100Callback
 
   /**
    * @param partition
+   */
+  public void invalidAccessCode(int partition);
+
+  /**
+   * @param partition
    * @param mode
    */
   public void paritionArmed(int partition, int mode);
@@ -32,7 +37,42 @@ public interface DSCIT100Callback
   /**
    * @param partition
    */
+  public void partitionBusy(int partition);
+
+  /**
+   * @param partition
+   */
   public void partitionDisarmed(int partition);
+
+  /**
+   * @param partition
+   */
+  public void partitionEntryDelay(int partition);
+
+  /**
+   * @param partition
+   */
+  public void partitionExitDelay(int partition);
+
+  /**
+   * @param partition
+   */
+  public void partitionFailedToArm(int partition);
+
+  /**
+   * @param partition
+   */
+  public void partitionInAlarm(int partition);
+
+  /**
+   * @param partition
+   */
+  public void partitionNotReady(int partition);
+
+  /**
+   * @param partition
+   */
+  public void partitionReady(int partition);
 
   /**
    * @param partition
@@ -72,4 +112,5 @@ public interface DSCIT100Callback
    * @param zone
    */
   public void zoneRestore(int zone);
+
 }

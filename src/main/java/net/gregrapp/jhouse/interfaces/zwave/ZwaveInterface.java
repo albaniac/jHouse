@@ -211,7 +211,7 @@ public class ZwaveInterface extends AbstractInterface implements
     } catch (TransportException e)
     {
       logger
-          .error("Error opening transport, aborting Z-Wave initialization", e);
+          .error("Error opening transport, aborting Z-Wave initialization [{}]", e.getMessage());
       return;
     }
 

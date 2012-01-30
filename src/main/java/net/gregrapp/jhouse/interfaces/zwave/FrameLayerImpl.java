@@ -33,7 +33,6 @@ import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
 import net.gregrapp.jhouse.transports.Transport;
-import net.gregrapp.jhouse.transports.TransportException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

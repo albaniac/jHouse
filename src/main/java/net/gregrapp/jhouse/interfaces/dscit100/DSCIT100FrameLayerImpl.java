@@ -58,22 +58,34 @@ public class DSCIT100FrameLayerImpl implements DSCIT100FrameLayer
   {
     logger.info("Receive thread started");
     
-    String stringRead;
+    String stringRead = null;
     
     while (receiveThreadActive)
     {
       try
       {
         stringRead = reader.readLine();
-        logger.trace("Received data: {}", stringRead);
-        DSCIT100DataFrame frame = new DSCIT100DataFrame(stringRead);
-        if (frame.isValidChecksum())
-          this.handler.frameReceived(frame);
-        else
-          logger.warn("Invalid data received: {}", stringRead);
+        logger.trace("Received data [{}]", stringRead);
+        if (stringRead != null)
+        {
+          DSCIT100DataFrame frame = new DSCIT100DataFrame(stringRead);
+          if (frame.isValidChecksum())
+            this.handler.frameReceived(frame);
+          else
+            logger.warn("Invalid data received [{}]", stringRead);
+        }
       } catch (IOException e)
       {
         logger.warn("Error reading data: ", e);
+      } catch (DSCIT100DataFrameException e)
+      {
+        logger.warn("Error parsing raw data [{}]", stringRead);
+      }
+      
+      if (!transport.isOpen())
+      {
+        logger.error("Transport closed, exiting receive thread");
+        receiveThreadActive = false;
       }
     }
     logger.info("Receive thread exiting");
@@ -85,7 +97,7 @@ public class DSCIT100FrameLayerImpl implements DSCIT100FrameLayer
   @Override
   public void setCallbackHandler(DSCIT100FrameLayerAsyncCallback handler)
   {
-    logger.debug("Callback handler set to {}", handler.getClass().getName());
+    logger.debug("Callback handler set to [{}]", handler.getClass().getName());
     this.handler = handler;
   }
 

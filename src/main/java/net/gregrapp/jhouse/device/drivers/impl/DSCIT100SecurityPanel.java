@@ -14,8 +14,8 @@ import net.gregrapp.jhouse.interfaces.dscit100.DSCIT100Interface;
 /**
  * @author Greg Rapp
  * 
- *         Zone Value Indices
- * 
+ *         Partition State Value Indices
+ *         ---------------------------------
  *         10 - Partition 1 Status
  *         11 - Partition 1 Last Armed By
  *         12 - Partition 1 Last Disarmed By
@@ -27,9 +27,30 @@ import net.gregrapp.jhouse.interfaces.dscit100.DSCIT100Interface;
  *         70 - Partition 7
  *         80 - Partition 8
  * 
- *         101-164 - Zone 1-64 Status
+ *         Partition State Values
+ *         ------------------------------
+ *         0x00 - Partition Ready
+ *         0x01 - Partition Not Ready
+ *         0x02 - Partition Armed
+ *         0x04 - Partition Disarmed
+ *         0x08 - Partition Busy
+ *         0x10 - Partition Entry Delay
+ *         0x20 - Partition Exit Delay
+ *         0x40 - Partition Failed To Arm
+ *         0x80 - Partition In Alarm
+
+ *         Zone State Value Indices
+ *         ---------------------------------
+ *         101-164 - Zone 1-64 State
  * 
+ *         Zone State Value Bit Field
+ *         -------------------------------
+ *                 Cleared        | Set
+ *         -------------------------------
+ *         Bit 0 - Restored       | Open
+ *         Bit 1 - Alarm Restored | Alarm
  */
+
 public class DSCIT100SecurityPanel extends AbstractDeviceDriver implements
     DSCIT100Callback, SecurityPanel
 {
@@ -37,13 +58,15 @@ public class DSCIT100SecurityPanel extends AbstractDeviceDriver implements
       .getLogger(DSCIT100SecurityPanel.class);
   
   private DSCIT100Interface driverInterface;
-
-  // Device value indices
+  
+  /*
+   * Device value indices
+   */
   private static final int ZONE_INDEX = 100;
   private static final int PARTITION_INDEX_MULTIPLIER = 10;
   private static final int LAST_ARMED_BY_INDEX = 1;
-  private static final int LAST_DISARMED_BY_INDEX_MULTIPLIER = 2;
-  
+  private static final int LAST_DISARMED_BY_INDEX = 2;
+
   /**
    * 
    */
@@ -112,8 +135,7 @@ public class DSCIT100SecurityPanel extends AbstractDeviceDriver implements
   @Override
   public void broadcastLabels(int zone, String label)
   {
-    logger.debug("Received label broadcast for zone {}: {}", zone, label);
-    
+    logger.debug("Received label broadcast for zone {}: [{}]", zone, label);
   }
 
   /*
@@ -129,6 +151,9 @@ public class DSCIT100SecurityPanel extends AbstractDeviceDriver implements
     driverInterface.sendCommand("200", String.valueOf(partition) + "228000");
   }
 
+  /* (non-Javadoc)
+   * @see net.gregrapp.jhouse.device.classes.SecurityPanel#disarm()
+   */
   @Override
   public void disarm()
   {
@@ -146,6 +171,16 @@ public class DSCIT100SecurityPanel extends AbstractDeviceDriver implements
   {
     // Request the current panel status
     driverInterface.sendCommand("001", "");
+  }
+
+  /* (non-Javadoc)
+   * @see net.gregrapp.jhouse.interfaces.dscit100.DSCIT100Callback#invalidAccessCode(int)
+   */
+  @Override
+  public void invalidAccessCode(int partition)
+  {
+    // TODO Auto-generated method stub
+
   }
 
   /*
@@ -192,7 +227,19 @@ public class DSCIT100SecurityPanel extends AbstractDeviceDriver implements
   public void paritionArmed(int partition, int mode)
   {
     logger.debug("Partition {} armed, mode {}", partition, mode);
+    updateDeviceValue(PARTITION_INDEX_MULTIPLIER * partition, 0x02);
+    updateDeviceText(PARTITION_INDEX_MULTIPLIER * partition, "Armed");
+  }
 
+  /* (non-Javadoc)
+   * @see net.gregrapp.jhouse.interfaces.dscit100.DSCIT100Callback#partitionBusy(int)
+   */
+  @Override
+  public void partitionBusy(int partition)
+  {
+    logger.debug("Partition busy: {}", partition);
+    updateDeviceValue(PARTITION_INDEX_MULTIPLIER * partition, 0x08);
+    updateDeviceText(PARTITION_INDEX_MULTIPLIER * partition, "Busy");
   }
 
   /*
@@ -206,7 +253,56 @@ public class DSCIT100SecurityPanel extends AbstractDeviceDriver implements
   public void partitionDisarmed(int partition)
   {
     logger.debug("Partition disarmed: {}", partition);
+    updateDeviceValue(PARTITION_INDEX_MULTIPLIER * partition, 0x04);
+    updateDeviceText(PARTITION_INDEX_MULTIPLIER * partition, "Disarmed");
+  }
 
+  @Override
+  public void partitionEntryDelay(int partition)
+  {
+    logger.debug("Partition in entry delay: {}", partition);
+    updateDeviceValue(PARTITION_INDEX_MULTIPLIER * partition, 0x10);
+    updateDeviceText(PARTITION_INDEX_MULTIPLIER * partition, "Entry Delay");
+  }
+
+  @Override
+  public void partitionExitDelay(int partition)
+  {
+    logger.debug("Partition in exit delay: {}", partition);
+    updateDeviceValue(PARTITION_INDEX_MULTIPLIER * partition, 0x20);
+    updateDeviceText(PARTITION_INDEX_MULTIPLIER * partition, "Exit Delay");
+  }
+
+  @Override
+  public void partitionFailedToArm(int partition)
+  {
+    logger.debug("Partition failed to arm: {}", partition);
+    updateDeviceValue(PARTITION_INDEX_MULTIPLIER * partition, 0x40);
+    updateDeviceText(PARTITION_INDEX_MULTIPLIER * partition, "Failed to Arm");
+  }
+
+  @Override
+  public void partitionInAlarm(int partition)
+  {
+    logger.debug("Partition in alarm: {}", partition);
+    updateDeviceValue(PARTITION_INDEX_MULTIPLIER * partition, 0x80);
+    updateDeviceText(PARTITION_INDEX_MULTIPLIER * partition, "Alarm");
+  }
+
+  @Override
+  public void partitionNotReady(int partition)
+  {
+    logger.debug("Partition not ready: {}", partition);
+    updateDeviceValue(PARTITION_INDEX_MULTIPLIER * partition, 0x01);
+    updateDeviceText(PARTITION_INDEX_MULTIPLIER * partition, "Not Ready");
+  }
+
+  @Override
+  public void partitionReady(int partition)
+  {
+    logger.debug("Partition ready: {}", partition);
+    updateDeviceValue(PARTITION_INDEX_MULTIPLIER * partition, 0x0);
+    updateDeviceText(PARTITION_INDEX_MULTIPLIER * partition, "Ready");
   }
 
   /*
@@ -220,7 +316,8 @@ public class DSCIT100SecurityPanel extends AbstractDeviceDriver implements
   public void specialClosing(int partition)
   {
     logger.debug("Special closing for partition: {}", partition);
-
+    updateDeviceValue((PARTITION_INDEX_MULTIPLIER * partition) + LAST_ARMED_BY_INDEX, 0);
+    updateDeviceText((PARTITION_INDEX_MULTIPLIER * partition) + LAST_ARMED_BY_INDEX, "Special Closing");
   }
 
   /*
@@ -233,8 +330,10 @@ public class DSCIT100SecurityPanel extends AbstractDeviceDriver implements
   @Override
   public void userClosing(int partition, int userCode)
   {
-    logger.debug("User closing for partition {}: {}",partition,userCode);
-
+    logger.debug("User closing for partition {}: {}", partition, userCode);
+    updateDeviceValue((PARTITION_INDEX_MULTIPLIER * partition) + LAST_ARMED_BY_INDEX, userCode);
+    // TODO Add userCode to person name mapping
+    updateDeviceText((PARTITION_INDEX_MULTIPLIER * partition) + LAST_ARMED_BY_INDEX, String.valueOf(userCode));
   }
 
   /*
@@ -247,8 +346,10 @@ public class DSCIT100SecurityPanel extends AbstractDeviceDriver implements
   @Override
   public void userOpening(int partition, int userCode)
   {
-    logger.debug("User opening for partition {}: {}",partition,userCode);
-
+    logger.debug("User opening for partition {}: {}", partition, userCode);
+    updateDeviceValue((PARTITION_INDEX_MULTIPLIER * partition) + LAST_DISARMED_BY_INDEX, userCode);
+    // TODO Add userCode to person name mapping
+    updateDeviceText((PARTITION_INDEX_MULTIPLIER * partition) + LAST_DISARMED_BY_INDEX, String.valueOf(userCode));
   }
 
   /*
@@ -262,7 +363,8 @@ public class DSCIT100SecurityPanel extends AbstractDeviceDriver implements
   public void zoneAlarm(int partition, int zone)
   {
     logger.info("Zone alarm at partition {}, zone {}", partition, zone);
-
+    updateDeviceValueBitmask(ZONE_INDEX + zone, 1, true);
+    updateDeviceText(ZONE_INDEX + zone, "Alarm");
   }
 
   /*
@@ -275,8 +377,10 @@ public class DSCIT100SecurityPanel extends AbstractDeviceDriver implements
   @Override
   public void zoneAlarmRestore(int partition, int zone)
   {
-    logger.info("Zone alarm restored at partition {}, zone {}", partition, zone);
-
+    logger
+        .info("Zone alarm restored at partition {}, zone {}", partition, zone);
+    updateDeviceValueBitmask(ZONE_INDEX + zone, 1, false);
+    updateDeviceText(ZONE_INDEX + zone, "Alarm Restore");
   }
 
   /*
@@ -288,8 +392,8 @@ public class DSCIT100SecurityPanel extends AbstractDeviceDriver implements
   public void zoneOpen(int zone)
   {
     logger.debug("Zone opened: {}", zone);
-    updateDeviceValue(ZONE_INDEX+zone, 255);
-    updateDeviceText(ZONE_INDEX+zone, "Open");
+    updateDeviceValueBitmask(ZONE_INDEX + zone, 0, true);
+    updateDeviceText(ZONE_INDEX + zone, "Open");
   }
 
   /*
@@ -302,8 +406,7 @@ public class DSCIT100SecurityPanel extends AbstractDeviceDriver implements
   public void zoneRestore(int zone)
   {
     logger.debug("Zone restored: {}", zone);
-    updateDeviceValue(ZONE_INDEX+zone, 0);
-    updateDeviceText(ZONE_INDEX+zone, "Closed");
+    updateDeviceValueBitmask(ZONE_INDEX + zone, 0, false);
+    updateDeviceText(ZONE_INDEX + zone, "Closed");
   }
-
 }

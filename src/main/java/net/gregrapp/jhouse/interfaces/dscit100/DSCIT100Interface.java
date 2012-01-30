@@ -12,6 +12,8 @@ import net.gregrapp.jhouse.transports.Transport;
 import net.gregrapp.jhouse.transports.TransportException;
 
 /**
+ * Interface for the DSC IT100 Security Panel interface
+ * 
  * @author Greg Rapp
  * 
  */
@@ -106,11 +108,15 @@ public class DSCIT100Interface extends AbstractInterface implements
     }
     else if (frame.getCommand().equals("650")) // Partition ready
     {
-
+      int partition = Integer.parseInt(frame.getData().substring(0, 1));
+      if (panel != null && panel instanceof DSCIT100Callback)
+        ((DSCIT100Callback) panel).partitionReady(partition);
     }
     else if (frame.getCommand().equals("651")) // Partition not ready
     {
-
+      int partition = Integer.parseInt(frame.getData().substring(0, 1));
+      if (panel != null && panel instanceof DSCIT100Callback)
+        ((DSCIT100Callback) panel).partitionNotReady(partition);
     }
     else if (frame.getCommand().equals("652")) // Partition armed
     {
@@ -121,7 +127,9 @@ public class DSCIT100Interface extends AbstractInterface implements
     }
     else if (frame.getCommand().equals("654")) // Partition in alarm
     {
-
+      int partition = Integer.parseInt(frame.getData().substring(0, 1));
+      if (panel != null && panel instanceof DSCIT100Callback)
+        ((DSCIT100Callback) panel).partitionInAlarm(partition);
     }
     else if (frame.getCommand().equals("655")) // Partition disarmed
     {
@@ -131,23 +139,33 @@ public class DSCIT100Interface extends AbstractInterface implements
     }
     else if (frame.getCommand().equals("656")) // Exit delay in progress
     {
-
+      int partition = Integer.parseInt(frame.getData().substring(0, 1));
+      if (panel != null && panel instanceof DSCIT100Callback)
+        ((DSCIT100Callback) panel).partitionExitDelay(partition);
     }
     else if (frame.getCommand().equals("657")) // Entry delay in progress
     {
-
+      int partition = Integer.parseInt(frame.getData().substring(0, 1));
+      if (panel != null && panel instanceof DSCIT100Callback)
+        ((DSCIT100Callback) panel).partitionEntryDelay(partition);
     }
     else if (frame.getCommand().equals("670")) // Invalid access code
     {
-
+      int partition = Integer.parseInt(frame.getData().substring(0, 1));
+      if (panel != null && panel instanceof DSCIT100Callback)
+        ((DSCIT100Callback) panel).invalidAccessCode(partition);
     }
     else if (frame.getCommand().equals("672")) // Failed to arm
     {
-
+      int partition = Integer.parseInt(frame.getData().substring(0, 1));
+      if (panel != null && panel instanceof DSCIT100Callback)
+        ((DSCIT100Callback) panel).partitionFailedToArm(partition);
     }
     else if (frame.getCommand().equals("673")) // Partition busy
     {
-
+      int partition = Integer.parseInt(frame.getData().substring(0, 1));
+      if (panel != null && panel instanceof DSCIT100Callback)
+        ((DSCIT100Callback) panel).partitionBusy(partition);
     }
     else if (frame.getCommand().equals("700")) // User closing
     {
@@ -175,7 +193,6 @@ public class DSCIT100Interface extends AbstractInterface implements
       if (panel != null && panel instanceof DSCIT100Callback)
         ((DSCIT100Callback) panel).codeRequired(partition);
     }
-
   }
 
   /*
@@ -202,20 +219,9 @@ public class DSCIT100Interface extends AbstractInterface implements
 
     if (panel != null)
       panel.interfaceReady();
-
-    /*
-     * try
-     * {
-     * frameLayer.write(new DSCIT100DataFrame("001", ""));
-     * } catch (DSCIT100FrameLayerException e)
-     * {
-     * logger.warn("Error initializing DSC security system IT100 module", e);
-     * }
-     */
-
   }
 
-  /* Replaces multiple whitespace between words with single blank */
+  /* Replaces multiple whitespace between words with single whitespace */
   private String itrim(String source)
   {
     return source.replaceAll("\\b\\s{2,}\\b", " ");

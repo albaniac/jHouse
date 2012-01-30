@@ -19,7 +19,7 @@ public class DSCIT100DataFrame
   /**
    * 
    */
-  public DSCIT100DataFrame(String rawFrame)
+  public DSCIT100DataFrame(String rawFrame) throws DSCIT100DataFrameException
   {
     parseRawFrame(rawFrame);
   }
@@ -93,11 +93,18 @@ public class DSCIT100DataFrame
     return checksum.equals(calculateChecksum());
   }
 
-  private void parseRawFrame(String rawFrame)
+  private void parseRawFrame(String rawFrame) throws DSCIT100DataFrameException
   {
-    command = rawFrame.substring(0, 3);
-    data = rawFrame.substring(3, rawFrame.length() - 2);
-    checksum = rawFrame.substring(rawFrame.length() - 2);
+    try
+    {
+      command = rawFrame.substring(0, 3);
+      data = rawFrame.substring(3, rawFrame.length() - 2);
+      checksum = rawFrame.substring(rawFrame.length() - 2);
+    }
+    catch (StringIndexOutOfBoundsException e)
+    {
+      throw new DSCIT100DataFrameException("error parsing raw frame");
+    }
   }
 
   /**

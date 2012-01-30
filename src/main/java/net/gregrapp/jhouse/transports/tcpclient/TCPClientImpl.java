@@ -69,16 +69,13 @@ public class TCPClientImpl extends AbstractTransport
       tcp.connect(new InetSocketAddress(host, port), CONNECT_TIMEOUT);
     } catch (UnknownHostException e)
     {
-      // TODO Auto-generated catch block
-      e.printStackTrace();
+      throw new TransportException("unknown host " + host + ":" + String.valueOf(port));
     } catch (SocketTimeoutException e)
     {
-      // TODO Auto-generated catch block
-      e.printStackTrace();
+      throw new TransportException("connect timed out");
     } catch (IOException e)
     {
-      // TODO Auto-generated catch block
-      e.printStackTrace();
+      throw new TransportException("socket connect error: ", e);
     }
 
     try
@@ -87,8 +84,7 @@ public class TCPClientImpl extends AbstractTransport
       this.out = tcp.getOutputStream();
     } catch (IOException e)
     {
-      // TODO Auto-generated catch block
-      e.printStackTrace();
+      throw new TransportException("error getting socket input/output stream");
     }
   }
 

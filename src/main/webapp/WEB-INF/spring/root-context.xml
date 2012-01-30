@@ -1,25 +1,26 @@
 <?xml version="1.0" encoding="UTF-8"?>
+
 <beans xmlns="http://www.springframework.org/schema/beans"
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:tx="http://www.springframework.org/schema/tx"
+	xmlns:jee="http://www.springframework.org/schema/jee"
+	xmlns:jpa="http://www.springframework.org/schema/data/jpa"
 	xmlns:drools="http://drools.org/schema/drools-spring"
 	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.1.xsd
 						http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-3.1.xsd
+						http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-3.1.xsd
+						http://www.springframework.org/schema/jee http://www.springframework.org/schema/jee/spring-jee-3.1.xsd
+						http://www.springframework.org/schema/data/jpa http://www.springframework.org/schema/data/jpa/spring-jpa.xsd
 						http://drools.org/schema/drools-spring http://anonsvn.jboss.org/repos/labs/labs/jbossrules/trunk/drools-container/drools-spring/src/main/resources/org/drools/container/spring/drools-spring-1.2.0.xsd">
 
 	<!-- Root Context: defines shared resources visible to all other web components -->
 
 	<context:annotation-config />
-<!-- 
-	<bean name="zwaveTransport" class="net.gregrapp.jhouse.transports.serial.SerialImpl">
-		<constructor-arg>
-			<list>
-				<value>/dev/tty.SLAB_USBtoUART</value>
-				<value>115200</value>
-			</list>
-		</constructor-arg>
-	</bean>
- -->
- 	<bean name="zwaveTransport" class="net.gregrapp.jhouse.transports.tcpclient.TCPClientImpl">
+	<!-- <bean name="zwaveTransport" class="net.gregrapp.jhouse.transports.serial.SerialImpl"> 
+		<constructor-arg> <list> <value>/dev/tty.SLAB_USBtoUART</value> <value>115200</value> 
+		</list> </constructor-arg> </bean> -->
+	<bean name="zwaveTransport"
+		class="net.gregrapp.jhouse.transports.tcpclient.TCPClientImpl">
 		<constructor-arg>
 			<list>
 				<value>192.168.0.3</value>
@@ -27,12 +28,13 @@
 			</list>
 		</constructor-arg>
 	</bean>
- 
+
 	<bean name="zwaveInterface" class="net.gregrapp.jhouse.interfaces.zwave.ZwaveInterface">
 		<constructor-arg ref="zwaveTransport" />
 	</bean>
 
-	<bean name="dscIt100Transport" class="net.gregrapp.jhouse.transports.tcpclient.TCPClientImpl">
+	<bean name="dscIt100Transport"
+		class="net.gregrapp.jhouse.transports.tcpclient.TCPClientImpl">
 		<constructor-arg>
 			<list>
 				<value>tristar.crazynoodle.net</value>
@@ -41,21 +43,21 @@
 		</constructor-arg>
 	</bean>
 
-	<bean name="dscIt100Interface" class="net.gregrapp.jhouse.interfaces.dscit100.DSCIT100Interface">
-		<constructor-arg ref="dscIt100Transport"/>
+	<bean name="dscIt100Interface"
+		class="net.gregrapp.jhouse.interfaces.dscit100.DSCIT100Interface">
+		<constructor-arg ref="dscIt100Transport" />
 	</bean>
-	
-	<import resource="devices.xml"/>
-	
-	<bean name="deviceManager" class="net.gregrapp.jhouse.managers.device.DeviceManagerImpl" />
 
-	<bean name="stateManager" class="net.gregrapp.jhouse.managers.state.StateManagerImpl" />
+	<import resource="devices.xml" />
+
+	<bean name="deviceManager" class="net.gregrapp.jhouse.managers.device.DeviceManagerImpl" />
 
 	<bean name="eventManager" class="net.gregrapp.jhouse.managers.event.EventManagerImpl">
 		<constructor-arg ref="ksession" />
-  		<property name="deviceManager" ref="deviceManager" />
+		<property name="deviceManager" ref="deviceManager" />
 	</bean>
 
+	<!-- ========== Drools ========== -->
 	<drools:kbase id="kbase">
 		<drools:resources>
 			<drools:resource type="DSL" source="classpath:jhouse.dsl" />
@@ -73,4 +75,51 @@
 			<drools:fire-until-halt />
 		</drools:script>
 	</drools:ksession>
+
+	<!-- ========= Persistence ========== -->
+<!-- 
+	<bean id="sessionFactory"
+		class="org.springframework.orm.hibernate4.LocalSessionFactoryBean">
+		<property name="dataSource" ref="dataSource" />
+		<property name="packagesToScan" value="net.gregrapp.jhouse.models" />
+		<property name="hibernateProperties">
+			<props>
+				<prop key="hibernate.dialect">org.hibernate.dialect.MySQL5Dialect</prop>
+				<prop key="hibernate.hbm2ddl.auto">update</prop>
+				<prop key="hibernate.show_sql">true</prop>
+			</props>
+		</property>
+	</bean>
+
+	<jee:jndi-lookup id="dataSource" jndi-name="jdbc/jHouse"/>
+
+	<bean id="transactionManager"
+		class="org.springframework.orm.hibernate4.HibernateTransactionManager">
+		<property name="sessionFactory" ref="sessionFactory" />
+	</bean>
+	<tx:annotation-driven transaction-manager="transactionManager" />
+-->
+
+<bean id="entityManagerFactory" 
+ class="org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean">
+   <property name="dataSource" ref="dataSource" />
+   <property name="packagesToScan" value="net.gregrapp.jhouse.models" />
+   <property name="jpaVendorAdapter">
+      <bean class="org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter">
+         <property name="showSql" value="true" />
+         <property name="generateDdl" value="true" />
+         <property name="databasePlatform" value="org.hibernate.dialect.MySQL5Dialect" />
+      </bean>
+   </property>
+</bean>
+
+<jee:jndi-lookup id="dataSource" jndi-name="jdbc/jHouse"/>
+
+<bean id="transactionManager" class="org.springframework.orm.jpa.JpaTransactionManager">
+   <property name="entityManagerFactory" ref="entityManagerFactory" />
+</bean>
+<tx:annotation-driven transaction-manager="transactionManager" />
+
+	<jpa:repositories base-package="net.gregrapp.jhouse.dao" />
+
 </beans>
