@@ -15,32 +15,31 @@ import org.slf4j.LoggerFactory;
 
 /**
  * @author Greg Rapp
- *
+ * 
  */
 public class DSCIT100FrameLayerImpl implements DSCIT100FrameLayer
 {
   private static final Logger logger = LoggerFactory
       .getLogger(DSCIT100FrameLayerImpl.class);
-  
+
   private DSCIT100FrameLayerAsyncCallback handler;
   private BufferedReader reader;
   private boolean receiveThreadActive;
   @SuppressWarnings("unused")
   private Transport transport;
-  //private BufferedWriter writer;
   private PrintWriter writer;
-  
+
   /**
    * 
    */
   public DSCIT100FrameLayerImpl(Transport transport)
   {
     this.transport = transport;
-    //this.writer = new BufferedWriter(new OutputStreamWriter(transport.getOutputStream()));
-    this.writer = new PrintWriter(transport.getOutputStream(),true);
-    this.reader = new BufferedReader(new InputStreamReader(transport.getInputStream()));
+    this.writer = new PrintWriter(transport.getOutputStream(), true);
+    this.reader = new BufferedReader(new InputStreamReader(
+        transport.getInputStream()));
     this.receiveThreadActive = true;
-    
+
     Thread receiveThread = new Thread(new Runnable()
     {
       public void run()
@@ -57,9 +56,9 @@ public class DSCIT100FrameLayerImpl implements DSCIT100FrameLayer
   private void receiveThread()
   {
     logger.info("Receive thread started");
-    
+
     String stringRead = null;
-    
+
     while (receiveThreadActive)
     {
       try
@@ -81,7 +80,7 @@ public class DSCIT100FrameLayerImpl implements DSCIT100FrameLayer
       {
         logger.warn("Error parsing raw data [{}]", stringRead);
       }
-      
+
       if (!transport.isOpen())
       {
         logger.error("Transport closed, exiting receive thread");
@@ -91,8 +90,12 @@ public class DSCIT100FrameLayerImpl implements DSCIT100FrameLayer
     logger.info("Receive thread exiting");
   }
 
-  /* (non-Javadoc)
-   * @see net.gregrapp.jhouse.interfaces.dscit100.DSCIT100FrameLayer#setCallbackHandler(net.gregrapp.jhouse.interfaces.dscit100.DSCIT100FrameLayerAsyncCallback)
+  /*
+   * (non-Javadoc)
+   * 
+   * @see
+   * net.gregrapp.jhouse.interfaces.dscit100.DSCIT100FrameLayer#setCallbackHandler
+   * (net.gregrapp.jhouse.interfaces.dscit100.DSCIT100FrameLayerAsyncCallback)
    */
   @Override
   public void setCallbackHandler(DSCIT100FrameLayerAsyncCallback handler)
@@ -101,8 +104,12 @@ public class DSCIT100FrameLayerImpl implements DSCIT100FrameLayer
     this.handler = handler;
   }
 
-  /* (non-Javadoc)
-   * @see net.gregrapp.jhouse.interfaces.dscit100.DSCIT100FrameLayer#write(net.gregrapp.jhouse.interfaces.zwave.DataFrame)
+  /*
+   * (non-Javadoc)
+   * 
+   * @see
+   * net.gregrapp.jhouse.interfaces.dscit100.DSCIT100FrameLayer#write(net.gregrapp
+   * .jhouse.interfaces.zwave.DataFrame)
    */
   @Override
   public void write(DSCIT100DataFrame frame) throws DSCIT100FrameLayerException
@@ -110,14 +117,8 @@ public class DSCIT100FrameLayerImpl implements DSCIT100FrameLayer
     logger.debug("Writing frame to transport");
     synchronized (this)
     {
-     // try
-     // {
-        logger.trace("Sending Frame: {}", frame.getFrame());
-        writer.println(frame.getFrame());
-     // } catch (IOException e)
-     // {
-     //   throw new DSCIT100FrameLayerException("Error writing frame to transport: " + e.getLocalizedMessage());
-     // }
+      logger.trace("Sending Frame: {}", frame.getFrame());
+      writer.println(frame.getFrame());
     }
   }
 

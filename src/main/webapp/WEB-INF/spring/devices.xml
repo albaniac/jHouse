@@ -446,6 +446,7 @@
 	<bean name="dscIt100SecurityPanelDriver" class="net.gregrapp.jhouse.device.drivers.impl.DSCIT100SecurityPanel">
 		<!-- Device driver interface -->
 		<constructor-arg ref="dscIt100Interface" />
+		<!-- <property name="configService" ref="configService" /> -->
 	</bean>
 	
 	<bean name="securityZone1" class="net.gregrapp.jhouse.device.DriverDevice">
@@ -455,6 +456,7 @@
 		<constructor-arg value="101" />
 		<!-- Device driver -->
 		<constructor-arg ref="dscIt100SecurityPanelDriver"/>
+		<property name="name" value="Kitchen Door" />
 	</bean>
 
 	<bean name="securityZone2" class="net.gregrapp.jhouse.device.DriverDevice">
@@ -464,6 +466,7 @@
 		<constructor-arg value="102" />
 		<!-- Device driver -->
 		<constructor-arg ref="dscIt100SecurityPanelDriver"/>
+		<property name="name" value="Front Door" />
 	</bean>
 
 	<bean name="securityZone3" class="net.gregrapp.jhouse.device.DriverDevice">
@@ -473,6 +476,7 @@
 		<constructor-arg value="103" />
 		<!-- Device driver -->
 		<constructor-arg ref="dscIt100SecurityPanelDriver"/>
+		<property name="name" value="Family Room Left Window" />
 	</bean>
 
 	<bean name="securityZone4" class="net.gregrapp.jhouse.device.DriverDevice">
@@ -482,6 +486,7 @@
 		<constructor-arg value="104" />
 		<!-- Device driver -->
 		<constructor-arg ref="dscIt100SecurityPanelDriver"/>
+		<property name="name" value="Family Room Right Window" />
 	</bean>
 
 	<bean name="securityZone5" class="net.gregrapp.jhouse.device.DriverDevice">
@@ -491,6 +496,7 @@
 		<constructor-arg value="105" />
 		<!-- Device driver -->
 		<constructor-arg ref="dscIt100SecurityPanelDriver"/>
+		<property name="name" value="Back Door" />
 	</bean>
 
 	<bean name="securityZone6" class="net.gregrapp.jhouse.device.DriverDevice">
@@ -500,6 +506,127 @@
 		<constructor-arg value="106" />
 		<!-- Device driver -->
 		<constructor-arg ref="dscIt100SecurityPanelDriver"/>
+		<property name="name" value="Kitchen Motion" />
 	</bean>
-	
+
+	<bean name="securityZone7" class="net.gregrapp.jhouse.device.DriverDevice">
+		<!-- Unique device ID -->
+		<constructor-arg value="39" />
+		<!-- Driver value index -->
+		<constructor-arg value="107" />
+		<!-- Device driver -->
+		<constructor-arg ref="dscIt100SecurityPanelDriver"/>
+		<property name="name" value="Basement Motion" />
+	</bean>
+
+	<bean name="securityZone17" class="net.gregrapp.jhouse.device.DriverDevice">
+		<!-- Unique device ID -->
+		<constructor-arg value="40" />
+		<!-- Driver value index -->
+		<constructor-arg value="117" />
+		<!-- Device driver -->
+		<constructor-arg ref="dscIt100SecurityPanelDriver"/>
+		<property name="name" value="Basement Window" />
+	</bean>
+
+	<bean name="securityZone18" class="net.gregrapp.jhouse.device.DriverDevice">
+		<!-- Unique device ID -->
+		<constructor-arg value="41" />
+		<!-- Driver value index -->
+		<constructor-arg value="118" />
+		<!-- Device driver -->
+		<constructor-arg ref="dscIt100SecurityPanelDriver"/>
+		<property name="name" value="Master Bedroom Left Window" />
+	</bean>
+
+	<bean name="securityZone19" class="net.gregrapp.jhouse.device.DriverDevice">
+		<!-- Unique device ID -->
+		<constructor-arg value="42" />
+		<!-- Driver value index -->
+		<constructor-arg value="119" />
+		<!-- Device driver -->
+		<constructor-arg ref="dscIt100SecurityPanelDriver"/>
+		<property name="name" value="Master Bedroom Right Window" />
+	</bean>
+
+	<bean name="securityZone20" class="net.gregrapp.jhouse.device.DriverDevice">
+		<!-- Unique device ID -->
+		<constructor-arg value="43" />
+		<!-- Driver value index -->
+		<constructor-arg value="120" />
+		<!-- Device driver -->
+		<constructor-arg ref="dscIt100SecurityPanelDriver"/>
+		<property name="name" value="Master Bath Window" />
+	</bean>
+
+	<bean name="securityZone21" class="net.gregrapp.jhouse.device.DriverDevice">
+		<!-- Unique device ID -->
+		<constructor-arg value="44" />
+		<!-- Driver value index -->
+		<constructor-arg value="121" />
+		<!-- Device driver -->
+		<constructor-arg ref="dscIt100SecurityPanelDriver"/>
+		<property name="name" value="Office Window" />
+	</bean>
+
+	<bean name="securityZone22" class="net.gregrapp.jhouse.device.DriverDevice">
+		<!-- Unique device ID -->
+		<constructor-arg value="45" />
+		<!-- Driver value index -->
+		<constructor-arg value="122" />
+		<!-- Device driver -->
+		<constructor-arg ref="dscIt100SecurityPanelDriver"/>
+		<property name="name" value="Guest Bed Window" />
+	</bean>
+
+	<bean name="securityZone23" class="net.gregrapp.jhouse.device.DriverDevice">
+		<!-- Unique device ID -->
+		<constructor-arg value="46" />
+		<!-- Driver value index -->
+		<constructor-arg value="123" />
+		<!-- Device driver -->
+		<constructor-arg ref="dscIt100SecurityPanelDriver"/>
+		<property name="name" value="Garage Overhead Door" />
+	</bean>
+
+	<bean name="securityZone24" class="net.gregrapp.jhouse.device.DriverDevice">
+		<!-- Unique device ID -->
+		<constructor-arg value="47" />
+		<!-- Driver value index -->
+		<constructor-arg value="124" />
+		<!-- Device driver -->
+		<constructor-arg ref="dscIt100SecurityPanelDriver"/>
+		<property name="name" value="Top of Stairs Fire" />
+	</bean>
+
+	<bean name="securityZone25" class="net.gregrapp.jhouse.device.DriverDevice">
+		<!-- Unique device ID -->
+		<constructor-arg value="48" />
+		<!-- Driver value index -->
+		<constructor-arg value="125" />
+		<!-- Device driver -->
+		<constructor-arg ref="dscIt100SecurityPanelDriver"/>
+		<property name="name" value="Family Room Fire" />
+	</bean>
+
+	<bean name="securityZone26" class="net.gregrapp.jhouse.device.DriverDevice">
+		<!-- Unique device ID -->
+		<constructor-arg value="49" />
+		<!-- Driver value index -->
+		<constructor-arg value="126" />
+		<!-- Device driver -->
+		<constructor-arg ref="dscIt100SecurityPanelDriver"/>
+		<property name="name" value="Basement Storage Fire" />
+	</bean>
+
+	<bean name="securityZone27" class="net.gregrapp.jhouse.device.DriverDevice">
+		<!-- Unique device ID -->
+		<constructor-arg value="50" />
+		<!-- Driver value index -->
+		<constructor-arg value="127" />
+		<!-- Device driver -->
+		<constructor-arg ref="dscIt100SecurityPanelDriver"/>
+		<property name="name" value="Basement Fire" />
+	</bean>
+
 </beans>

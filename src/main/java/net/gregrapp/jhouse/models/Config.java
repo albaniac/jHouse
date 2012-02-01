@@ -8,38 +8,35 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.Table;
+import javax.persistence.UniqueConstraint;
 
 /**
  * Config data model
  * 
  * @author Greg Rapp
- *
+ * 
  */
 @Entity
-@Table(name = "CONFIG")
+@Table(name = "CONFIG",
+    uniqueConstraints = { @UniqueConstraint(columnNames = { "namespace", "opt" }) })
 public class Config
 {
 
-  @Id
-  @GeneratedValue
   private Long id;
-  
-  @Column(name = "namespace", nullable=false)
   private String namespace;
-  
-  @Column(name = "opt", nullable=false)
   private String opt;
-  
-  @Column(name = "val")
   private String val;
-  
+
   /**
    * Unique ID
    * 
    * @return unique ID
    */
-  public Long getId() {
-      return id;
+  @Id
+  @GeneratedValue
+  public Long getId()
+  {
+    return id;
   }
 
   /**
@@ -47,15 +44,49 @@ public class Config
    * 
    * @return the namespace
    */
+  @Column(nullable = false)
   public String getNamespace()
   {
     return namespace;
   }
 
   /**
+   * The configuration key
+   * 
+   * @return the key
+   */
+  @Column(nullable = false)
+  public String getOpt()
+  {
+    return opt;
+  }
+
+  /**
+   * The configuration value
+   * 
+   * @return the value
+   */
+  @Column
+  public String getVal()
+  {
+    return val;
+  }
+
+  /**
+   * Unique ID
+   * 
+   * @param id
+   */
+  public void setId(Long id)
+  {
+    this.id = id;
+  }
+
+  /**
    * The namespace for the associated key
    * 
-   * @param namespace the namespace to set
+   * @param namespace
+   *          the namespace to set
    */
   public void setNamespace(String namespace)
   {
@@ -65,17 +96,8 @@ public class Config
   /**
    * The configuration key
    * 
-   * @return the key
-   */
-  public String getOpt()
-  {
-    return opt;
-  }
-
-  /**
-   * The configuration key
-   * 
-   * @param key the key to set
+   * @param key
+   *          the key to set
    */
   public void setOpt(String opt)
   {
@@ -85,20 +107,30 @@ public class Config
   /**
    * The configuration value
    * 
-   * @return the value
-   */
-  public String getVal()
-  {
-    return val;
-  }
-
-  /**
-   * The configuration value
-   * 
-   * @param value the value to set
+   * @param value
+   *          the value to set
    */
   public void setVal(String val)
   {
     this.val = val;
+  }
+
+  /* (non-Javadoc)
+   * @see java.lang.Object#toString()
+   */
+  @Override
+  public String toString()
+  {
+    StringBuilder builder = new StringBuilder();
+    builder.append("Config [id=");
+    builder.append(id);
+    builder.append(", namespace=");
+    builder.append(namespace);
+    builder.append(", opt=");
+    builder.append(opt);
+    builder.append(", val=");
+    builder.append(val);
+    builder.append("]");
+    return builder.toString();
   }
 }

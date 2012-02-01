@@ -14,16 +14,20 @@ import org.drools.event.rule.DebugWorkingMemoryEventListener;
 import org.drools.runtime.StatefulKnowledgeSession;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
 /**
  * @author Greg Rapp
  * 
  */
+@Service
 public class EventManagerImpl implements EventManager
 {
   private static final Logger logger = LoggerFactory
       .getLogger(EventManagerImpl.class);
 
+  @Autowired
   private DeviceManager deviceManager;
 
   private StatefulKnowledgeSession session;
@@ -31,6 +35,7 @@ public class EventManagerImpl implements EventManager
   /**
    * 
    */
+  @Autowired
   public EventManagerImpl(StatefulKnowledgeSession session)
   {
     this.session = session;

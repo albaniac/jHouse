@@ -4,6 +4,7 @@
 package net.gregrapp.jhouse.device.drivers.types;
 
 import net.gregrapp.jhouse.interfaces.zwave.ZwaveInterface;
+import net.gregrapp.jhouse.interfaces.zwave.command.CommandClassHail;
 
 /**
  * Abstract Z-Wave device driver class
@@ -11,7 +12,7 @@ import net.gregrapp.jhouse.interfaces.zwave.ZwaveInterface;
  * @author Greg Rapp
  * 
  */
-public abstract class ZwaveDeviceDriver extends AbstractDeviceDriver
+public abstract class ZwaveDeviceDriver extends AbstractDeviceDriver implements CommandClassHail
 {
   protected ZwaveInterface deviceInterface;
   protected int nodeId;

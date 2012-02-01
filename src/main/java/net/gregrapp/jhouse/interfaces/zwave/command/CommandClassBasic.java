@@ -4,7 +4,7 @@
 package net.gregrapp.jhouse.interfaces.zwave.command;
 
 /**
- * ZWave COMMAND_CLASS_BASIC interface
+ * Z-Wave COMMAND_CLASS_BASIC interface
  * 
  * @author Greg Rapp
  */

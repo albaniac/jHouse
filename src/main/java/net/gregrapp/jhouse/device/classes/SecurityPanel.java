@@ -19,4 +19,5 @@ public interface SecurityPanel extends DeviceClass
   public void panic();
   public void panicFire();
   public void panicAmbulance();
+  //public String getZoneLabel(int zone);
 }

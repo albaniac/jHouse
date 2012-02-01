@@ -61,7 +61,9 @@ public abstract class AbstractDeviceDriver implements DeviceDriver
   {
     if (attachedDevices.containsKey(index))
     {
-      long currentVal = attachedDevices.get(index).getValue();
+      Long currentVal = attachedDevices.get(index).getValue();
+      if (currentVal == null) currentVal = 0L;
+      
       if (value == true)
         attachedDevices.get(index).setValue(currentVal | (1 << bit));
       else

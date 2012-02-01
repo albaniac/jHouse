@@ -5,11 +5,13 @@ package net.gregrapp.jhouse.device.drivers.impl;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import net.gregrapp.jhouse.device.classes.SecurityPanel;
 import net.gregrapp.jhouse.device.drivers.types.AbstractDeviceDriver;
 import net.gregrapp.jhouse.interfaces.dscit100.DSCIT100Callback;
 import net.gregrapp.jhouse.interfaces.dscit100.DSCIT100Interface;
+import net.gregrapp.jhouse.services.config.ConfigService;
 
 /**
  * @author Greg Rapp
@@ -59,6 +61,9 @@ public class DSCIT100SecurityPanel extends AbstractDeviceDriver implements
   
   private DSCIT100Interface driverInterface;
   
+  @Autowired
+  private ConfigService configService;
+  
   /*
    * Device value indices
    */
@@ -67,6 +72,12 @@ public class DSCIT100SecurityPanel extends AbstractDeviceDriver implements
   private static final int LAST_ARMED_BY_INDEX = 1;
   private static final int LAST_DISARMED_BY_INDEX = 2;
 
+  /*
+   * Config options
+   */
+  private static final String CODE = "CODE";
+ // private static final String ZONE = "ZONE%d";
+  
   /**
    * 
    */
@@ -77,6 +88,11 @@ public class DSCIT100SecurityPanel extends AbstractDeviceDriver implements
     driverInterface.attachDeviceDriver(this);
   }
 
+  @Autowired
+  public void setConfigService(ConfigService configService)
+  {
+    this.configService = configService;
+  }
   /*
    * (non-Javadoc)
    * 
@@ -85,8 +101,8 @@ public class DSCIT100SecurityPanel extends AbstractDeviceDriver implements
   @Override
   public void arm()
   {
-    // TODO Make partition and code configurable
-    driverInterface.sendCommand("033", "1" + "228000");
+    String code = configService.get(this.getClass().getName(), CODE);
+    driverInterface.sendCommand("033", "1" + code);
   }
 
   /*
@@ -147,8 +163,8 @@ public class DSCIT100SecurityPanel extends AbstractDeviceDriver implements
   @Override
   public void codeRequired(int partition)
   {
-    // TODO Make code configurable
-    driverInterface.sendCommand("200", String.valueOf(partition) + "228000");
+    String code = configService.get(this.getClass().getName(), CODE);
+    driverInterface.sendCommand("200", String.valueOf(partition) + code);
   }
 
   /* (non-Javadoc)
@@ -157,8 +173,8 @@ public class DSCIT100SecurityPanel extends AbstractDeviceDriver implements
   @Override
   public void disarm()
   {
-    // TODO Make partition and code configurable
-    driverInterface.sendCommand("040", "1" + "228000");
+    String code = configService.get(this.getClass().getName(), CODE);
+    driverInterface.sendCommand("040", "1" + code);
   }
 
   /*
@@ -409,4 +425,30 @@ public class DSCIT100SecurityPanel extends AbstractDeviceDriver implements
     updateDeviceValueBitmask(ZONE_INDEX + zone, 0, false);
     updateDeviceText(ZONE_INDEX + zone, "Closed");
   }
+
+  /* (non-Javadoc)
+   * @see net.gregrapp.jhouse.device.classes.SecurityPanel#getZoneLabel(int)
+   */
+/*  @Override
+  public String getZoneLabel(int zone) throws IllegalArgumentException
+  {
+    if (zone < 1 || zone > 64)
+    {
+      throw new IllegalArgumentException("invalid zone");
+    }
+    
+    String defaultName = "Zone " + String.valueOf(zone);
+
+    if (configService == null)
+    {
+      return defaultName;
+    }
+    
+    String name = configService.get(this.getClass().getName(), String.format(ZONE,zone));
+    
+    if (name == null || "".equals(name))
+      return defaultName;
+    else
+      return name;
+  }*/
 }

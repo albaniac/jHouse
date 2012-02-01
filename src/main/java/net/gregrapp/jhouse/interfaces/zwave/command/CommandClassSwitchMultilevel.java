@@ -4,6 +4,8 @@
 package net.gregrapp.jhouse.interfaces.zwave.command;
 
 /**
+ * Z-Wave COMMAND_CLASS_SWITCH_MULTILEVEL interface
+ *  
  * @author Greg Rapp
  * 
  */

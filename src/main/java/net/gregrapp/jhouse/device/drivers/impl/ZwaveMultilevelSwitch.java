@@ -179,6 +179,7 @@ public class ZwaveMultilevelSwitch extends ZwaveDeviceDriver implements
   @Override
   public void poll()
   {
+    logger.info("Polling Z-Wave node [{}]", this.nodeId);
     this.commandClassSwitchMultilevelGet();
   }
 

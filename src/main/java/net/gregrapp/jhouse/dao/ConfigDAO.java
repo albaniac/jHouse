@@ -16,4 +16,5 @@ import org.springframework.data.jpa.repository.JpaRepository;
 public interface ConfigDAO extends JpaRepository<Config, Long>
 {
   public List<Config> findByNamespace(String namespace);
+  public Config findByNamespaceAndOpt(String namespace, String opt);
 }

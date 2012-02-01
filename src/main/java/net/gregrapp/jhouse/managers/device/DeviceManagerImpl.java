@@ -16,15 +16,14 @@ import net.gregrapp.jhouse.device.drivers.types.DeviceDriver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
 /**
  * @author Greg Rapp
  * 
  */
-/**
- * @author Greg Rapp
- * 
- */
+
+@Service
 public class DeviceManagerImpl implements DeviceManager
 {
   private static final Logger logger = LoggerFactory
@@ -156,21 +155,6 @@ public class DeviceManagerImpl implements DeviceManager
       return null;
   }
 
-  public <T extends DeviceClass> T getDriver(int deviceId, Class<T> type)
-  {
-    Device device = get(deviceId);
-    if (device instanceof DriverDevice)
-    {
-      DeviceDriver driver = ((DriverDevice)device).getDriver();
-      if (type.isAssignableFrom(driver.getClass()))
-        return type.cast(driver);
-      else
-        return null;
-    }
-    else
-      return null;
-  }
-  
   public String[] getDeviceClassesForDevice(Device device)
   {
     logger.debug("Getting device classes for device {}", device.getId());
@@ -198,5 +182,20 @@ public class DeviceManagerImpl implements DeviceManager
   public Device[] getDevices()
   {
     return this.devices;
+  }
+
+  public <T extends DeviceClass> T getDriver(int deviceId, Class<T> type)
+  {
+    Device device = get(deviceId);
+    if (device instanceof DriverDevice)
+    {
+      DeviceDriver driver = ((DriverDevice) device).getDriver();
+      if (type.isAssignableFrom(driver.getClass()))
+        return type.cast(driver);
+      else
+        return null;
+    }
+    else
+      return null;
   }
 }

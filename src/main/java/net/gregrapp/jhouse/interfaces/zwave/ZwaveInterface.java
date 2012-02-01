@@ -17,12 +17,16 @@ import net.gregrapp.jhouse.interfaces.zwave.Constants.CommandBasic;
 import net.gregrapp.jhouse.interfaces.zwave.Constants.CommandClass;
 import net.gregrapp.jhouse.interfaces.zwave.Constants.CommandManufacturerSpecific;
 import net.gregrapp.jhouse.interfaces.zwave.Constants.CommandSensorBinary;
+import net.gregrapp.jhouse.interfaces.zwave.Constants.CommandSwitchMultilevel;
+import net.gregrapp.jhouse.interfaces.zwave.Constants.Manufacturer;
 import net.gregrapp.jhouse.interfaces.zwave.Constants.TXOption;
 import net.gregrapp.jhouse.interfaces.zwave.Constants.TXStatus;
 import net.gregrapp.jhouse.interfaces.zwave.DataFrame.CommandType;
 import net.gregrapp.jhouse.interfaces.zwave.command.CommandClassBasic;
+import net.gregrapp.jhouse.interfaces.zwave.command.CommandClassHail;
 import net.gregrapp.jhouse.interfaces.zwave.command.CommandClassManufacturerSpecific;
 import net.gregrapp.jhouse.interfaces.zwave.command.CommandClassSensorBinary;
+import net.gregrapp.jhouse.interfaces.zwave.command.CommandClassSwitchMultilevel;
 import net.gregrapp.jhouse.transports.Transport;
 import net.gregrapp.jhouse.transports.TransportException;
 
@@ -80,8 +84,8 @@ public class ZwaveInterface extends AbstractInterface implements
         devices.put(zwaveDevice.getNodeId(), tmp);
       }
 
-      // if (this.interfaceReady)
-      // device.interfaceReady();
+      if (this.interfaceReady)
+        device.interfaceReady();
     }
   }
 
@@ -91,11 +95,11 @@ public class ZwaveInterface extends AbstractInterface implements
 
     if (payload[3] == CommandClass.COMMAND_CLASS_BASIC.get())
     {
-      logger.info("COMMAND_CLASS_BASIC from node {}", nodeId);
+      logger.debug("Received COMMAND_CLASS_BASIC from node {}", nodeId);
       if (payload[4] == CommandBasic.BASIC_SET.get())
       {
         int value = payload[5];
-        logger.info("Received BASIC_SET from node {} with a value of {}",
+        logger.debug("Received BASIC_SET from node {} with a value of [{}]",
             nodeId, value);
 
         if (devices.containsKey(nodeId))
@@ -108,7 +112,7 @@ public class ZwaveInterface extends AbstractInterface implements
       else if (payload[4] == CommandBasic.BASIC_REPORT.get())
       {
         int value = payload[5];
-        logger.info("Received BASIC_REPORT from node {} with a value of {}",
+        logger.debug("Received BASIC_REPORT from node {} with a value of [{}]",
             nodeId, value);
 
         if (devices.containsKey(nodeId))
@@ -118,12 +122,50 @@ public class ZwaveInterface extends AbstractInterface implements
               ((CommandClassBasic) device).commandClassBasicReport(value);
         }
       }
+    } else if (payload[3] == CommandClass.COMMAND_CLASS_SWITCH_MULTILEVEL.get())
+    {
+      logger.debug("Received COMMAND_CLASS_SWITCH_MULTILEVEL from node {}",
+          nodeId);
+      if (payload[4] == CommandSwitchMultilevel.SWITCH_MULTILEVEL_SET.get())
+      {
+        int value = payload[5];
+        logger.debug(
+            "Received SWITCH_MULTILEVEL_SET from node {} with a value of [{}]",
+            nodeId, value);
+
+        if (devices.containsKey(nodeId))
+        {
+          for (Object device : devices.get(nodeId))
+            if (device instanceof CommandClassSwitchMultilevel)
+              ((CommandClassSwitchMultilevel) device)
+                  .commandClassSwitchMultilevelSet(value);
+        }
+      }
+      else if (payload[4] == CommandSwitchMultilevel.SWITCH_MULTILEVEL_REPORT
+          .get())
+      {
+        int value = payload[5];
+        logger
+            .debug(
+                "Received SWITCH_MULTILEVEL_REPORT from node {} with a value of [{}]",
+                nodeId, value);
+
+        if (devices.containsKey(nodeId))
+        {
+          for (Object device : devices.get(nodeId))
+            if (device instanceof CommandClassSwitchMultilevel)
+              ((CommandClassSwitchMultilevel) device)
+                  .commandClassSwitchMultilevelReport(value);
+        }
+      }
     } else if (payload[3] == CommandClass.COMMAND_CLASS_MANUFACTURER_SPECIFIC
         .get())
     {
       if (payload[4] == CommandManufacturerSpecific.MANUFACTURER_SPECIFIC_REPORT
           .get())
       {
+        logger.debug("Received MANUFACTURER_SPECIFIC_REPORT from node [{}]",
+            nodeId);
         if (devices.containsKey(nodeId))
         {
           int manufacturer = (payload[5] << 8) | payload[6];
@@ -141,13 +183,23 @@ public class ZwaveInterface extends AbstractInterface implements
     {
       if (payload[4] == CommandSensorBinary.SENSOR_BINARY_REPORT.get())
       {
+        logger.debug(
+            "Received SENSOR_BINARY_REPORT from node {} with a value of [{}]",
+            nodeId, payload[5]);
         for (Object device : devices.get(nodeId))
           if (device instanceof CommandClassSensorBinary)
             ((CommandClassSensorBinary) device)
                 .commandClassSensorBinaryReport(payload[5]);
       }
     }
-
+    else if (payload[3] == CommandClass.COMMAND_CLASS_HAIL.get())
+    {
+      logger.debug("Received HAIL from node [{}]", nodeId);
+      for (Object device : devices.get(nodeId))
+        if (device instanceof CommandClassHail)
+          ((CommandClassHail) device)
+              .hail();
+    }
   }
 
   public void dataPacketReceived(CommandType cmd, DataPacket packet)
@@ -211,7 +263,9 @@ public class ZwaveInterface extends AbstractInterface implements
     } catch (TransportException e)
     {
       logger
-          .error("Error opening transport, aborting Z-Wave initialization [{}]", e.getMessage());
+          .error(
+              "Error opening transport, aborting Z-Wave initialization [{}]",
+              e.getMessage());
       return;
     }
 
@@ -326,11 +380,12 @@ public class ZwaveInterface extends AbstractInterface implements
           .zwaveSerialApiGetCapabilities();
       logger
           .info(
-              "Serial API capabilities version: {}, manufacturer ID: {}, manufacturer product type: {}, manufacturer product: {}",
+              "Serial API capabilities version: {}, manufacturer ID: {} ({}), manufacturer product type: {}, manufacturer product: {}",
               new Object[] {
                   serialApiCapabilities.getVersion(),
                   String.format("%#02x",
                       serialApiCapabilities.getManufacturer()),
+                  Manufacturer.getByVal(serialApiCapabilities.getManufacturer()),
                   String.format("%#02x", serialApiCapabilities.getProductType()),
                   String.format("%#02x", serialApiCapabilities.getProductId()) });
       logger.info("Supported serial commands: {}",
