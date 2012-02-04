@@ -7,6 +7,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
+import javax.annotation.PreDestroy;
+
 import net.gregrapp.jhouse.device.drivers.types.DeviceDriver;
 import net.gregrapp.jhouse.device.drivers.types.ZwaveDeviceDriver;
 import net.gregrapp.jhouse.interfaces.AbstractInterface;
@@ -216,10 +218,12 @@ public class ZwaveInterface extends AbstractInterface implements
    * 
    * @see net.gregrapp.jhouse.interfaces.Interface#destroy()
    */
+  @Override
+  @PreDestroy
   public void destroy()
   {
-    // TODO Auto-generated method stub
-
+    logger.info("Destroying interface");
+    appLayer.destroy();
   }
 
   @Override

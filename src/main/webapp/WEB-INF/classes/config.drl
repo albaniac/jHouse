@@ -5,7 +5,9 @@ import net.gregrapp.jhouse.states.*
 import net.gregrapp.jhouse.device.*
 import net.gregrapp.jhouse.device.classes.*
 import net.gregrapp.jhouse.device.drivers.types.*
+
 global net.gregrapp.jhouse.managers.device.DeviceManager dm
+global net.gregrapp.jhouse.services.email.EmailService email
 
 declare DeviceValueEvent
 	@role( event )

@@ -29,38 +29,34 @@ package net.gregrapp.jhouse.interfaces.zwave;
  * @author Greg Rapp
  *
  */
-// <summary>
-// Summary description for FrameLayer.
-// </summary>
 public interface FrameLayer
 {
-  // <summary>
-  // 
-  // </summary>
-  //void open(Transport transport);
-  // <summary>
-  // 
-  // </summary>
-  void close();
 
-  // <summary>
-  // 
-  // </summary>
+  /**
+   * 
+   */
+  void destroy();
+
+  /**
+   * @param frame
+   * @return
+   * @throws FrameLayerException
+   */
   boolean write(DataFrame frame) throws FrameLayerException;
 
-  // <summary>
-  // 
-  // </summary>
+  /**
+   * @param handler
+   */
   void setCallbackHandler(FrameLayerAsyncCallback handler);
 
-  // <summary>
-  // 
-  // </summary>
+  /**
+   * @return
+   */
   FrameStatistics getStatistics();
 
-  // <summary>
-  // Enable tracing
-  // </summary>
+  /**
+   * @param enable
+   */
   void enableTracing(boolean enable);
 }
 

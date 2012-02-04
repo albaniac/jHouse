@@ -4,3 +4,7 @@
 [condition][]Device {id} value set to {value}=$dv : DeviceValueEvent(id == {id}, value == {value}, changed == false)
 [consequence][]Turn on binary switch {id}=dm.getDriver({id},BinarySwitch.class).setOn();
 [consequence][]Turn off binary switch {id}=dm.getDriver({id},BinarySwitch.class).setOff();
+[condition][]Security zone device {id} changed to open=$dve : DeviceValueEvent(id == {id}, (value & 1) == 1, changed == true)
+[condition][]Security zone device {id} changed to closed=$dve : DeviceValueEvent(id == {id}, (value & 1) == 0, changed == true)
+[consequence][]Send email to "{recipient}" with subject "{subject}" and message "{message}"=email.send("{recipient}","{subject}","{message}");
+[consequence][]Send email to "{recipient}" with subject "{subject}"=email.send("{recipient}","{subject}","");

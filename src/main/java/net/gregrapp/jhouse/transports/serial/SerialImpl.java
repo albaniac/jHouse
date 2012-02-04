@@ -28,6 +28,8 @@ public class SerialImpl extends AbstractTransport
   private static final Logger logger = LoggerFactory
       .getLogger(SerialImpl.class);
 
+  private SerialPort serialPort;
+  
   /**
    * Serial baud rate
    */
@@ -35,26 +37,27 @@ public class SerialImpl extends AbstractTransport
   /**
    * Serial port
    */
-  private String serialPort;
+  private String serialPortString;
 
   public SerialImpl(List<String> config)
   {
     super(config);
     logger.info("Instantiating SerialImpl instance");
-    this.serialPort = this.config.get(0);
-    logger.debug("Serial port set to {}", this.serialPort);
+    this.serialPortString = this.config.get(0);
+    logger.debug("Serial port set to {}", this.serialPortString);
     this.serialBaud = Integer.valueOf(this.config.get(1)).intValue();
     logger.debug("Serial baud set to {}", this.serialBaud);
   }
 
-  /*
-   * (non-Javadoc)
-   * 
-   * @see net.gregrapp.jhouse.transports.Transport#destroy()
+  /* (non-Javadoc)
+   * @see net.gregrapp.jhouse.transports.AbstractTransport#destroy()
    */
+  @Override
   public void destroy()
   {
-    // TODO Auto-generated method stub
+    super.destroy();
+    logger.debug("Closing serial port");
+    this.serialPort.close();
   }
 
   /*
@@ -70,7 +73,7 @@ public class SerialImpl extends AbstractTransport
     try
     {
       CommPortIdentifier portIdentifier = CommPortIdentifier
-          .getPortIdentifier(this.serialPort);
+          .getPortIdentifier(this.serialPortString);
       commPort = portIdentifier.open(this.getClass().getName(), 2000);
     } catch (NoSuchPortException e)
     {
@@ -82,7 +85,7 @@ public class SerialImpl extends AbstractTransport
 
     if (commPort instanceof SerialPort)
     {
-      SerialPort serialPort = (SerialPort) commPort;
+      serialPort = (SerialPort) commPort;
       try
       {
         logger.debug("Setting serial port parameters");

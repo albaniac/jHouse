@@ -53,7 +53,7 @@
 	<import resource="devices.xml" />
 	
 	<!-- ========== Drools ========== -->
-	<drools:kbase id="kbase">
+<!--	<drools:kbase id="kbase">
 		<drools:resources>
 			<drools:resource type="DSL" source="classpath:jhouse.dsl" />
 			<drools:resource type="DRL" source="classpath:config.drl" />
@@ -70,7 +70,7 @@
 			<drools:fire-until-halt />
 		</drools:script>
 	</drools:ksession>
-
+-->
 	<!-- ========= Persistence ========== -->
 <!-- 
 	<bean id="sessionFactory"

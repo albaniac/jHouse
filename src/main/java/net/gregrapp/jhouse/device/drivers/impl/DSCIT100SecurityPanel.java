@@ -88,11 +88,6 @@ public class DSCIT100SecurityPanel extends AbstractDeviceDriver implements
     driverInterface.attachDeviceDriver(this);
   }
 
-  @Autowired
-  public void setConfigService(ConfigService configService)
-  {
-    this.configService = configService;
-  }
   /*
    * (non-Javadoc)
    * 

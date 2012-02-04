@@ -43,16 +43,22 @@ public class TCPClientImpl extends AbstractTransport
     logger.debug("TCP port set to {}", this.port);
   }
 
-  /*
-   * (non-Javadoc)
-   * 
-   * @see net.gregrapp.jhouse.transports.Transport#destroy()
+  /* (non-Javadoc)
+   * @see net.gregrapp.jhouse.transports.AbstractTransport#destroy()
    */
   @Override
   public void destroy()
   {
-    // TODO Auto-generated method stub
-
+    super.destroy();
+    
+    try
+    {
+      logger.debug("Closing TCP connection");
+      this.tcp.close();
+    } catch (IOException e)
+    {
+      logger.error("Error closing socket: ", e);
+    }
   }
 
   /*

@@ -3,13 +3,15 @@
  */
 package net.gregrapp.jhouse.interfaces.dscit100;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import javax.annotation.PreDestroy;
 
 import net.gregrapp.jhouse.device.drivers.types.DeviceDriver;
 import net.gregrapp.jhouse.interfaces.AbstractInterface;
 import net.gregrapp.jhouse.transports.Transport;
 import net.gregrapp.jhouse.transports.TransportException;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Interface for the DSC IT100 Security Panel interface
@@ -64,10 +66,11 @@ public class DSCIT100Interface extends AbstractInterface implements
    * @see net.gregrapp.jhouse.interfaces.Interface#destroy()
    */
   @Override
+  @PreDestroy
   public void destroy()
   {
-    // TODO Auto-generated method stub
-
+    logger.info("Destroying interface");
+    frameLayer.destroy();
   }
 
   @Override
@@ -237,5 +240,4 @@ public class DSCIT100Interface extends AbstractInterface implements
       logger.warn("Error sending data to DSC security system IT100 module", e);
     }
   }
-
 }

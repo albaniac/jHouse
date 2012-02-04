@@ -57,10 +57,43 @@ public abstract class AbstractTransport implements Transport
     return bytesAvailable;
   }
 
+  /*
+   * (non-Javadoc)
+   * 
+   * @see net.gregrapp.jhouse.transports.Transport#destroy()
+   */
+  @Override
+  public void destroy()
+  {
+    try
+    {
+      logger.debug("Closing input reader");
+      in.close();
+    } catch (IOException e)
+    {
+      logger.error("Error closing input stream: ", e);
+    }
+
+    try
+    {
+      logger.debug("Closing output stream");
+      out.close();
+    } catch (IOException e)
+    {
+      logger.error("Error closing output stream: ", e);
+    }
+  }
+
   @Override
   public InputStream getInputStream()
   {
     return this.in;
+  }
+
+  @Override
+  public OutputStream getOutputStream()
+  {
+    return this.out;
   }
 
   /*
@@ -81,12 +114,6 @@ public abstract class AbstractTransport implements Transport
   public int getTransmittedBytes()
   {
     return transmittedBytes;
-  }
-
-  @Override
-  public OutputStream getOutputStream()
-  {
-    return this.out;
   }
 
   protected void incrementReceivedBytes()
@@ -130,5 +157,4 @@ public abstract class AbstractTransport implements Transport
 
     return buffer.length;
   }
-
 }

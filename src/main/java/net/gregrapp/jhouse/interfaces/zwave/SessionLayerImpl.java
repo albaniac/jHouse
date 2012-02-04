@@ -76,6 +76,18 @@ public class SessionLayerImpl implements SessionLayer, FrameLayerAsyncCallback
     stats = new SessionStatistics();
   }
 
+  /*
+   * (non-Javadoc)
+   * 
+   * @see net.gregrapp.jhouse.interfaces.zwave.SessionLayer#close()
+   */
+  @Override
+  public void destroy()
+  {
+    logger.debug("Destroying session layer");
+    frameLayer.destroy();
+  }
+
   public void frameReceived(DataFrame frame)
   {
     if (frame == null)

@@ -1,21 +1,21 @@
 package net.gregrapp.jhouse
 expander jhouse.dsl
 
-rule "Master Bath Door Close / Light On"
+rule "Master Bath Door Close / Turn Master Bath Light On"
 when
 	Device 31 value changed to 0
 then
 	Turn on binary switch 15
 end
 
-rule "Master Bath Door Open / Light Off"
+rule "Master Bath Door Open / Turn Master Bath Light Off"
 when
 	Device 31 value changed to 255
 then
 	Turn off binary switch 15
 end
 
-rule "Back Door Open / Deck Light On"
+rule "Back Door Open / Turn On Deck Light"
 	calendars "nighttime"
 when
 	Device 37 value changed to 255
@@ -23,4 +23,53 @@ then
 	Turn on binary switch 9
 end
 
-	
+rule "Kitchen Door Open / Turn On Garage Light"
+	calendars "nighttime"
+when
+	Security zone device 33 changed to open
+then
+	Turn on binary switch 26
+end
+
+rule "Garage Door Open / Turn On Garage Light"
+	calendars "nighttime"
+when
+	Security zone device 46 changed to open
+then
+	Turn on binary switch 26
+end
+
+rule "Kitchen Door Open / Turn Off Garage Light After 2 Minutes"
+	calendars "nighttime"
+	timer ( int: 2m )
+when
+	Security zone device 33 changed to open
+then
+	Turn off binary switch 26
+end
+
+rule "Garage Door Open / Turn Off Garage Light After 2 Minutes"
+	calendars "nighttime"
+	timer ( int: 2m )
+when
+	Security zone device 46 changed to open
+then
+	Turn off binary switch 26
+end
+
+rule "Email When Alarm Armed"
+when
+	Device 51 value changed to 0x02
+then
+	Send email to "gdrapp@gmail.com" with subject "Security System ARMED" and message "The security system has been ARMED"
+end
+
+rule "Email When Alarm Disarmed"
+when
+	Device 51 value changed to 0x04
+then
+	Send email to "gdrapp@gmail.com" with subject "Security System DISARMED" and message "The security system has been DISARMED"
+end
+
+
+

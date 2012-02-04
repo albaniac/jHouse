@@ -203,12 +203,24 @@ public class FrameLayerImpl implements FrameLayer
    * 
    * @see net.gregrapp.jhouse.interfaces.zwave.FrameLayer#close()
    */
-  public void close()
+  public void destroy()
   {
-    logger.info("Closing frame layer");
+    logger.info("Destroying frame layer");
     this.receiveThreadActive = false;
+    
+    if (retransmissionTimeoutExecutorFuture != null)
+    {
+      logger.debug("Canceling retransmission timeout executor future");
+      retransmissionTimeoutExecutorFuture.cancel(true);
+    }
+    
     if (retransmissionTimeoutExecutor != null)
-      retransmissionTimeoutExecutor.shutdown();
+    {
+      logger.debug("Shutting down retransmission timeout executor");
+      retransmissionTimeoutExecutor.shutdownNow();
+    }
+    
+    this.transport.destroy();
   }
 
   /*
@@ -393,7 +405,12 @@ public class FrameLayerImpl implements FrameLayer
       }
     } catch (Exception e)
     {
-      logger.error("Error in receive thread", e);
+      if (receiveThreadActive)
+      {
+        logger.error("Error in receive thread", e);
+        logger.error("Restarting receive thread");
+        this.receiveThread();        
+      }
     } 
   }
 

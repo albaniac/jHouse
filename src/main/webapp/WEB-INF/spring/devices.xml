@@ -629,4 +629,34 @@
 		<property name="name" value="Basement Fire" />
 	</bean>
 
+	<bean name="securityPartition1Status" class="net.gregrapp.jhouse.device.DriverDevice">
+		<!-- Unique device ID -->
+		<constructor-arg value="51" />
+		<!-- Driver value index -->
+		<constructor-arg value="10" />
+		<!-- Device driver -->
+		<constructor-arg ref="dscIt100SecurityPanelDriver"/>
+		<property name="name" value="Partition 1 Status" />
+	</bean>
+
+	<bean name="securityPartition1ArmedBy" class="net.gregrapp.jhouse.device.DriverDevice">
+		<!-- Unique device ID -->
+		<constructor-arg value="52" />
+		<!-- Driver value index -->
+		<constructor-arg value="11" />
+		<!-- Device driver -->
+		<constructor-arg ref="dscIt100SecurityPanelDriver"/>
+		<property name="name" value="Partition 1 Last Armed By" />
+	</bean>
+
+	<bean name="securityPartition1DisarmedBy" class="net.gregrapp.jhouse.device.DriverDevice">
+		<!-- Unique device ID -->
+		<constructor-arg value="53" />
+		<!-- Driver value index -->
+		<constructor-arg value="12" />
+		<!-- Device driver -->
+		<constructor-arg ref="dscIt100SecurityPanelDriver"/>
+		<property name="name" value="Partition 1 Last Disarmed By" />
+	</bean>
+
 </beans>

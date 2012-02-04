@@ -29,128 +29,153 @@ import net.gregrapp.jhouse.interfaces.zwave.Constants.TXStatus;
 
 /**
  * @author Greg Rapp
- *
+ * 
  */
 public interface SessionLayer
-{  
-  // <summary>
-  // 
-  // </summary>
+{
+  /**
+   * @return
+   */
   public boolean isReady();
-    
-  // <summary>
-  // 
-  // </summary>
-  // <param name="handler"></param>
+
+  /**
+   * 
+   */
+  public void destroy();
+  
+  /**
+   * @param handler
+   */
   public void setCallbackHandler(SessionLayerAsyncCallback handler);
-  // <summary>
-  // 
-  // </summary>
-  // <returns></returns>
+
+  /**
+   * @return
+   */
   SessionStatistics getStatistics();
 
-  // <summary>
-  // 
-  // </summary>
-  // <param name="cmd"></param>
-  // <param name="request"></param>
-  // <returns></returns>
-  boolean requestWithNoResponse(DataFrame.CommandType cmd, DataPacket request) throws FrameLayerException;
-  // <summary>
-  // 
-  // </summary>
-  // <param name="cmd"></param>
-  // <param name="request"></param>
-  // <param name="response"></param>
-  // <param name="sequenceCheck"></param>
-  // <param name="timeout"></param>
-  // <returns></returns>
-  TXStatus requestWithResponse(DataFrame.CommandType cmd, DataPacket request, 
-     boolean sequenceCheck, int timeout) throws FrameLayerException;
-  // <summary>
-  // 
-  // </summary>
-  // <param name="cmd"></param>
-  // <param name="request"></param>
-  // <param name="response"></param>
-  // <param name="sequenceCheck"></param>
-  // <returns></returns>
-  TXStatus requestWithResponse(DataFrame.CommandType cmd, DataPacket request, 
-     boolean sequenceCheck) throws FrameLayerException;
-  // <summary>
-  // 
-  // </summary>
-  // <param name="cmd"></param>
-  // <param name="request"></param>
-  // <returns></returns>
-  TXStatus requestWithResponse(DataFrame.CommandType cmd, DataPacket request) throws FrameLayerException;
+  /**
+   * @param cmd
+   * @param request
+   * @return
+   * @throws FrameLayerException
+   */
+  boolean requestWithNoResponse(DataFrame.CommandType cmd, DataPacket request)
+      throws FrameLayerException;
 
-  // <summary>
-  // 
-  // </summary>
-  // <param name="cmd"></param>
-  // <param name="request"></param>
-  // <param name="maxResponses"></param>
-  // <returns></returns>
+  /**
+   * @param cmd
+   * @param request
+   * @param sequenceCheck
+   * @param timeout
+   * @return
+   * @throws FrameLayerException
+   */
+  TXStatus requestWithResponse(DataFrame.CommandType cmd, DataPacket request,
+      boolean sequenceCheck, int timeout) throws FrameLayerException;
+
+  /**
+   * @param cmd
+   * @param request
+   * @param sequenceCheck
+   * @return
+   * @throws FrameLayerException
+   */
+  TXStatus requestWithResponse(DataFrame.CommandType cmd, DataPacket request,
+      boolean sequenceCheck) throws FrameLayerException;
+
+  /**
+   * @param cmd
+   * @param request
+   * @return
+   * @throws FrameLayerException
+   */
+  TXStatus requestWithResponse(DataFrame.CommandType cmd, DataPacket request)
+      throws FrameLayerException;
+
+  /**
+   * @param cmd
+   * @param request
+   * @param maxResponses
+   * @return
+   * @throws FrameLayerException
+   */
   TXStatus requestWithMultipleResponses(DataFrame.CommandType cmd,
-    DataPacket request,
-    int maxResponses) throws FrameLayerException;
-  // <summary>
-  // 
-  // </summary>
-  // <param name="cmd"></param>
-  // <param name="request"></param>
-  // <param name="maxResponses"></param>
-  // <param name="sequenceCheck"></param>
-  // <returns></returns>
+      DataPacket request,
+      int maxResponses) throws FrameLayerException;
+
+  /**
+   * @param cmd
+   * @param request
+   * @param maxResponses
+   * @param sequenceCheck
+   * @return
+   * @throws FrameLayerException
+   */
   TXStatus requestWithMultipleResponses(DataFrame.CommandType cmd,
-    DataPacket request,
-    int maxResponses,
-    boolean sequenceCheck) throws FrameLayerException;
-  // <summary>
-  // 
-  // </summary>
-  // <param name="cmd"></param>
-  // <param name="request"></param>
-  // <param name="maxResponses"></param>
-  // <param name="sequenceCheck"></param>
-  // <param name="timeout"></param>
-  // <returns></returns>
+      DataPacket request,
+      int maxResponses,
+      boolean sequenceCheck) throws FrameLayerException;
+
+  /**
+   * @param cmd
+   * @param request
+   * @param maxResponses
+   * @param sequenceCheck
+   * @param timeout
+   * @return
+   * @throws FrameLayerException
+   */
   TXStatus requestWithMultipleResponses(DataFrame.CommandType cmd,
-    DataPacket request,
-    int maxResponses,
-    boolean sequenceCheck,
-    int timeout) throws FrameLayerException;
-  // <summary>
-  // Requests a command which may give different numbers of callbacks.
-  // Supply with Responses array that have room for worst case number of callbacks
-  // </summary>
-  // <param name="cmd">Zwave Cmd</param>
-  // <param name="request">Parms for command</param>
-  // <param name="maxResponses">Max number of responses</param>
-  // <param name="breakVal">Values to end one</param>
-  // <param name="sequenceCheck">if true use sequence check</param>
-  // <param name="timeout">Timeout in ms</param>
-  // <returns></returns>
+      DataPacket request,
+      int maxResponses,
+      boolean sequenceCheck,
+      int timeout) throws FrameLayerException;
+
+  /**
+   * Requests a command which may give different numbers of callbacks. Supply
+   * with Responses array that has room for worst case number of callbacks
+   * 
+   * @param cmd
+   *          Z-Wave Command
+   * @param request
+   *          Parms for command
+   * @param maxResponses
+   *          Max number of responses
+   * @param breakVal
+   *          Values to end one
+   * @param sequenceCheck
+   *          If true use sequence check
+   * @param timeout
+   *          Timeout in ms
+   * @return
+   * @throws FrameLayerException
+   */
   TXStatus requestWithVariableResponses(DataFrame.CommandType cmd,
       DataPacket request,
       int maxResponses,
       int[] breakVal,
       boolean sequenceCheck,
- int timeout) throws FrameLayerException;
- 
+      int timeout) throws FrameLayerException;
 
-   // <summary>
-  // Requests a command which may give different numbers of callbacks.
-  // Supply with Responses array that have room for worst case number of callbacks
-  // </summary>
-  // <param name="cmd">Zwave Cmd</param>
-  // <param name="request">Parms for command</param>
-  // <param name="maxResponses">Max number of responses</param>
-  // <param name="breakVal">Values to end one</param>
-  // <param name="sequenceCheck">if true use sequence check</param>
-  // <param name="timeout">Timeout in ms</param>
-  // <returns></returns>
+  /**
+   * Requests a command which may give different numbers of callbacks. Supply
+   * with Responses array that has room for worst case number of callbacks
+   * 
+   * @param cmd
+   *          Z-Wave Command
+   * @param request
+   *          Parms for command
+   * @param maxResponses
+   *          Max number of responses
+   * @param breakVal
+   *          Values to end one
+   * @param sequenceCheck
+   *          If true use sequence check
+   * @param timeout
+   *          Timeout in ms
+   * @return
+   * @throws FrameLayerException
+   */
   TXStatus requestWithVariableReturnsAndResponses(DataFrame.CommandType cmd,
       DataPacket request,
       int maxResponses,

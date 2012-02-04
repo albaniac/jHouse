@@ -48,24 +48,29 @@ import net.gregrapp.jhouse.transports.Transport;
  */
 public interface ApplicationLayer
 {
-  // <summary>
-  // Returns a copy of the node list stored in the DLL (does not read from ZWave
-  // module)
-  // </summary>
-  // <returns>Copy of node list</returns>
+  /**
+   * 
+   */
+  public void destroy();
+  
+  /**
+   * Returns a copy of the node list stored in the DLL (does not read from Z-Wave module)
+   * 
+   * @return Copy of node list
+   */
   Node[] getAllNodes();
 
   /**
-   * Returns the ZWave Chip revision
+   * Returns the Z-Wave Chip revision
    * 
-   * @return the ZWave Chip revision
+   * @return the Z-Wave Chip revision
    */
   int getChipRev();
 
   /**
-   * Returns the ZWave chip type
+   * Returns the Z-Wave chip type
    * 
-   * @return the ZWave {@link ChipType}
+   * @return the Z-Wave {@link ChipType}
    */
   ChipType getChipType();
 
@@ -94,22 +99,22 @@ public interface ApplicationLayer
   public MemoryGetId getMemoryGetId();
 
   // <summary>
-  // Gets the node capabilities from the ZWave.dll list (does not read from
-  // ZWave module)
+  // Gets the node capabilities from the Z-Wave.dll list (does not read from
+  // Z-Wave module)
   // </summary>
   // <param name="nodeId">nodeID</param>
   // <returns>null if unkown ZWNode if it exist locally</returns>
   Node getNode(int nodeId);
 
   // <summary>
-  // Returns the numeber of nodes in the ZWave.dll copy of the nodetable.
+  // Returns the numeber of nodes in the Z-Wave.dll copy of the nodetable.
   // </summary>
   // <returns>number of nodes</returns>
   // int GetNodeCount();
   int getNodeCount();
 
   // <summary>
-  // Returns the ZWave SerialAPI version
+  // Returns the Z-Wave SerialAPI version
   // </summary>
   // <returns></returns>
   public int getSerialApiVersion();
@@ -128,7 +133,7 @@ public interface ApplicationLayer
 
   /**
    * Returns a comma separated string which contains a list of commands
-   * supported by embedded ZWave module. Unhandled commands are returned as the
+   * supported by embedded Z-Wave module. Unhandled commands are returned as the
    * command number (base 10)
    * 
    * @return <code>String</code> of command names
@@ -167,7 +172,7 @@ public interface ApplicationLayer
   boolean isNodeIdServerPresent();
 
   // <summary>
-  // Simply check if the node Id is in the ZWave.dll copy of the nodetable
+  // Simply check if the node Id is in the Z-Wave.dll copy of the nodetable
   // </summary>
   // <param name="id">id to look for</param>
   // <returns>true if it exist false if not</returns>
@@ -258,7 +263,7 @@ public interface ApplicationLayer
       throws FrameLayerException;
 
   /**
-   * Update the controller capabilities and return a list of nodes as read from the ZWave module
+   * Update the controller capabilities and return a list of nodes as read from the Z-Wave module
    * 
    * @return array of {@link Node}s
    * @throws FrameLayerException
@@ -277,7 +282,7 @@ public interface ApplicationLayer
       throws ApplicationLayerException, FrameLayerException;
 
   // <summary>
-  // Reads the devicetype from the ZWave module
+  // Reads the devicetype from the Z-Wave module
   // </summary>
   // <param name="nodeId">Node ID to get info for</param>
   // <returns></returns>
@@ -345,7 +350,7 @@ public interface ApplicationLayer
       ApplicationLayerException;
 
   /**
-   * Query the ZWave controller for its home ID and node ID
+   * Query the Z-Wave controller for its home ID and node ID
    * 
    * @return instance of {@link MemoryGetId}
    * @throws FrameLayerException
@@ -381,7 +386,7 @@ public interface ApplicationLayer
       throws FrameLayerException;
 
   // <summary>
-  // Request the ZWave module to remove a failing node from the network
+  // Request the Z-Wave module to remove a failing node from the network
   // </summary>
   // <param name="nodeId">nodeId to remove</param>
   // <returns>status</returns>
@@ -396,7 +401,7 @@ public interface ApplicationLayer
       ApplicationLayerException;
 
   // <summary>
-  // Request teh ZWave module to replace a failing node in the network
+  // Request teh Z-Wave module to replace a failing node in the network
   // </summary>
   // <param name="nodeId">node Id to try and replace</param>
   // <returns></returns>
@@ -582,7 +587,7 @@ public interface ApplicationLayer
       throws FrameLayerException;
 
   // <summary>
-  // Get the Capabilities of the ZWave module serialAPI (supported functions)
+  // Get the Capabilities of the Z-Wave module serialAPI (supported functions)
   // </summary>
   // <returns>bitmask of supported capabilities</returns>
   SerialApiCapabilities zwaveSerialApiGetCapabilities()
@@ -640,7 +645,7 @@ public interface ApplicationLayer
 
   // endregion
   // <summary>
-  // Enable or disable RF on the ZWave module.
+  // Enable or disable RF on the Z-Wave module.
   // </summary>
   // <param name="mode"></param>
   void zwaveSetRFReceiveMode(int mode) throws FrameLayerException,
@@ -699,7 +704,7 @@ public interface ApplicationLayer
   /**
    * Store the HomeId on the Controller in the external EEPROM
    * <p>
-   * Only available on Installer ZWave modules
+   * Only available on Installer Z-Wave modules
    * 
    * @param homeId
    * @param nodeId
@@ -711,10 +716,10 @@ public interface ApplicationLayer
   /**
    * Stores the node information for a specific node in the external EEPROM
    * <p>
-   * Only available on Installer ZWave modules
+   * Only available on Installer Z-Wave modules
    * 
    * @param nodeId
-   *          ZWave node ID
+   *          Z-Wave node ID
    * @param nodeInfo
    *          {@link Node} instance
    * @return an instance of {@link TXStatus}

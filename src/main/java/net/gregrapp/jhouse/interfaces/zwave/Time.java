@@ -29,58 +29,71 @@ import java.util.Calendar;
 
 /**
  * @author Greg Rapp
- *
+ * 
  */
 public class Time
 {
-
-  /// <summary>
-  /// Weekday 1: monday...7: sunday   
-  /// </summary>
+  /**
+   * Weekday 1: monday...7: sunday
+   */
   int weekday;
-  /// <summary>
-  /// Hour 0...23   
-  /// </summary>
+
+  /**
+   * Hour 0...23
+   */
   int hour;
-  /// <summary>
-  ///  Minute 0...59  
-  /// </summary>
+
+  /**
+   * Minute 0...59
+   */
   int minute;
 
-  /// <summary>
-  /// Initialize Time
-  /// </summary>
+  /**
+   * Initialize Time
+   */
   public Time()
   {
     this.minute = this.hour = this.weekday = 0;
   }
 
-  /// <summary>
-  /// Set Time 
-  /// </summary>
-  /// <param name="weekday">mon - sun</param>
-  /// <param name="hour">0 - 23</param>
-  /// <param name="minute">0 - 59</param>
+  /**
+   * Set Time
+   * 
+   * @param weekday
+   *          mon - sun
+   * @param hour
+   *          0 - 23
+   * @param minute
+   *          0 - 59
+   */
   public Time(int weekday, int hour, int minute)
   {
     this.minute = minute;
     this.hour = hour;
     this.weekday = weekday;
   }
-  
-  /// <summary>
-  /// Set Time
-  /// </summary>
-  /// <param name="cal">Calendar with day, hour and minute</param>
+
+  /**
+   * Set Time
+   * 
+   * @param cal
+   *          Calendar with day, hour and minute
+   */
   public Time(Calendar cal)
   {
-    this.minute = (int)cal.get(Calendar.MINUTE);
-    this.hour = (int)cal.get(Calendar.HOUR);
-    this.weekday = (int)cal.get(Calendar.DAY_OF_WEEK);
+    this.minute = (int) cal.get(Calendar.MINUTE);
+    this.hour = (int) cal.get(Calendar.HOUR);
+    this.weekday = (int) cal.get(Calendar.DAY_OF_WEEK);
   }
-  
+
+  /*
+   * (non-Javadoc)
+   * 
+   * @see java.lang.Object#toString()
+   */
   public String toString()
   {
-    return String.format("Weekday: {} Hour: {} Minute: {}", weekday, hour, minute);
+    return String.format("Weekday: {} Hour: {} Minute: {}", weekday, hour,
+        minute);
   }
 }

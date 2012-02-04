@@ -25,7 +25,6 @@ public class DSCIT100FrameLayerImpl implements DSCIT100FrameLayer
   private DSCIT100FrameLayerAsyncCallback handler;
   private BufferedReader reader;
   private boolean receiveThreadActive;
-  @SuppressWarnings("unused")
   private Transport transport;
   private PrintWriter writer;
 
@@ -38,8 +37,8 @@ public class DSCIT100FrameLayerImpl implements DSCIT100FrameLayer
     this.writer = new PrintWriter(transport.getOutputStream(), true);
     this.reader = new BufferedReader(new InputStreamReader(
         transport.getInputStream()));
-    this.receiveThreadActive = true;
 
+    this.receiveThreadActive = true;
     Thread receiveThread = new Thread(new Runnable()
     {
       public void run()
@@ -53,6 +52,32 @@ public class DSCIT100FrameLayerImpl implements DSCIT100FrameLayer
     receiveThread.start();
   }
 
+  /*
+   * (non-Javadoc)
+   * 
+   * @see net.gregrapp.jhouse.interfaces.dscit100.DSCIT100FrameLayer#close()
+   */
+  @Override
+  public void destroy()
+  {
+    logger.info("Destroying frame layer");
+    this.receiveThreadActive = false;
+   /* try
+    {
+      logger.debug("Closing input reader");
+      reader.close();
+    } catch (IOException e)
+    {
+      logger.error("Error closing input reader: ", e);
+    }
+    logger.debug("Closing print writer");
+    writer.close();*/
+    transport.destroy();
+  }
+
+  /**
+   * Data receive thread loop
+   */
   private void receiveThread()
   {
     logger.info("Receive thread started");
@@ -75,7 +100,8 @@ public class DSCIT100FrameLayerImpl implements DSCIT100FrameLayer
         }
       } catch (IOException e)
       {
-        logger.warn("Error reading data: ", e);
+        if (receiveThreadActive)
+          logger.warn("Error reading data: ", e);
       } catch (DSCIT100DataFrameException e)
       {
         logger.warn("Error parsing raw data [{}]", stringRead);

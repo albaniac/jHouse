@@ -25,6 +25,7 @@
 
 package net.gregrapp.jhouse.interfaces.zwave;
 
+import java.util.Arrays;
 import java.util.Hashtable;
 import java.util.List;
 import java.util.concurrent.Executors;
@@ -610,12 +611,14 @@ public class ApplicationLayerImpl implements ApplicationLayer,
 
   private static final int DEFAULT_TIMEOUT = 10000; // How long in ms to wait
 
+  @SuppressWarnings("unused")
   private static final int GET_INIT_DATA_FLAG_IS_SUC = 0x08;
 
   private static final int GET_INIT_DATA_FLAG_SECONDARY_CTRL = 0x04;
 
   private static final int GET_INIT_DATA_FLAG_SLAVE_API = 0x01;
 
+  @SuppressWarnings("unused")
   private static final int GET_INIT_DATA_FLAG_TIMER_SUPPORT = 0x02;
 
   private static final Logger logger = LoggerFactory
@@ -624,21 +627,26 @@ public class ApplicationLayerImpl implements ApplicationLayer,
   // for an response
   private static final int TIMEOUT = 180000; // wait 3 minutes before timing out
 
-  private static final int ZWavePROTECT_TIME = 30000;
+  @SuppressWarnings("unused")
+  private static final int ZWAVE_PROTECT_TIME = 30000;
 
-  private boolean _addNode;
+  //private boolean _addNode;
 
-  private boolean _controllerChange;
+  @SuppressWarnings("unused")
+  private boolean controllerChange;
 
-  private int _controllerHomeId;
+  @SuppressWarnings("unused")
+  private int controllerHomeId;
 
-  private int _controllerNodeId;
+  private int controllerNodeId;
 
-  private boolean _newPrimary;
+  @SuppressWarnings("unused")
+  private boolean newPrimary;
 
-  private boolean _removeNode;
+  @SuppressWarnings("unused")
+  private boolean removeNode;
 
-  private boolean _requestNodeInfo = false;
+  private boolean requestNodeInfo = false;
 
   // out
   private Node addedNode;
@@ -652,7 +660,7 @@ public class ApplicationLayerImpl implements ApplicationLayer,
   // Controller capabilities
   private int[] ctrlCapabilities = null;
 
-  private boolean disposed;
+  //private boolean disposed;
 
   private FrameLayer frameLayer;
 
@@ -660,26 +668,28 @@ public class ApplicationLayerImpl implements ApplicationLayer,
 
   private MemoryGetId memoryGetId;
 
+  @SuppressWarnings("unused")
   private Node[] nodeList;
 
   private NodeTable nodeTable = new NodeTable(100);
 
+  @SuppressWarnings("unused")
   private Node removedNode;
 
-  private SerialApiCapabilities serialApiCapabilities;
+  private boolean secondaryController;
 
-  int serialAPIver = 0;
+  private SerialApiCapabilities serialApiCapabilities;
 
   // <summary>
   // Contains a mask of which SerialAPI commands supported by connected module
   // </summary>
   // NodeBitmask serialCapabilityMask = new NodeBitmask();
 
+  int serialAPIver = 0;
+
   private SessionLayer sessionLayer;
 
   private boolean slaveApi;
-
-  private boolean secondaryController;
 
   private Transport transport;
 
@@ -763,6 +773,18 @@ public class ApplicationLayerImpl implements ApplicationLayer,
   /*
    * (non-Javadoc)
    * 
+   * @see net.gregrapp.jhouse.interfaces.zwave.ApplicationLayer#close()
+   */
+  @Override
+  public void destroy()
+  {
+    logger.debug("Destroying application layer");
+    sessionLayer.destroy();
+  }
+
+  /*
+   * (non-Javadoc)
+   * 
    * @see net.gregrapp.jhouse.interfaces.zwave.SessionLayerAsyncCallback#
    * dataPacketReceived
    * (net.gregrapp.jhouse.interfaces.zwave.DataFrame.CommandType,
@@ -811,6 +833,11 @@ public class ApplicationLayerImpl implements ApplicationLayer,
           node.setProductType(productType);
           node.setProductId(productId);
         }
+      }
+      else
+      {
+        logger.info("Unhandled CmdApplicationCommandHandler packet received [{}], payload [{}]",
+            String.format("%#04x", payload[3]), ArrayUtils.toHexStringArray(Arrays.copyOfRange(payload, 4, payload.length)));
       }
     }
     else if (cmd == DataFrame.CommandType.CmdApplicationSlaveCommandHandler)
@@ -946,12 +973,10 @@ public class ApplicationLayerImpl implements ApplicationLayer,
             node = zwaveGetNodeProtocolInfo(nid, true);
           } catch (FrameLayerException e)
           {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
+            logger.error("Error getting node protocol info: {}", e.getMessage());
           } catch (ApplicationLayerException e)
           {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
+            logger.error("Error getting node protocol info: {}", e.getMessage());
           }
         } else
         {
@@ -960,12 +985,10 @@ public class ApplicationLayerImpl implements ApplicationLayer,
             node = zwaveGetNodeProtocolInfo(nid);
           } catch (FrameLayerException e)
           {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
+            logger.error("Error getting node protocol info: {}", e.getMessage());
           } catch (ApplicationLayerException e)
           {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
+            logger.error("Error getting node protocol info: {}", e.getMessage());
           }
         }
         if (payload.length - 6 > 0)
@@ -1002,7 +1025,7 @@ public class ApplicationLayerImpl implements ApplicationLayer,
 
       else if (appCtrlUpdateStatus == AppCtrlUpdateStatus.NODE_INFO_RECEIVED)
       {
-        if (_requestNodeInfo)
+        if (requestNodeInfo)
         {
           requestNodeInfo(payload, nid);
         }
@@ -1035,20 +1058,18 @@ public class ApplicationLayerImpl implements ApplicationLayer,
           zwaveEnumerateNodes();
         } catch (FrameLayerException e)
         {
-          // TODO Auto-generated catch block
-          e.printStackTrace();
+          logger.error("Error enumerating Z-Wave nodes: {}", e.getMessage());
         } catch (ApplicationLayerException e)
         {
-          // TODO Auto-generated catch block
-          e.printStackTrace();
+          logger.error("Error enumerating Z-Wave nodes: {}", e.getMessage());
         }
       // UpdateEventArgs e = new UpdateEventArgs(payload[1], payload[2]);
       // if (UpdateEvent != null) UpdateEvent(this, e);
-
     }
 
     else if (cmd == DataFrame.CommandType.CmdZWaveSetSlaveLearnMode)
     {
+      @SuppressWarnings("unused")
       int status = payload[1];
       int orgId = payload[2];
       int newId = payload[3];
@@ -1063,12 +1084,10 @@ public class ApplicationLayerImpl implements ApplicationLayer,
           node = zwaveGetNodeProtocolInfo(newId, true);
         } catch (FrameLayerException e)
         {
-          // TODO Auto-generated catch block
-          e.printStackTrace();
+          logger.error("Error getting node protocol info: {}", e.getMessage());
         } catch (ApplicationLayerException e)
         {
-          // TODO Auto-generated catch block
-          e.printStackTrace();
+          logger.error("Error getting node protocol info: {}", e.getMessage());
         }
         /* We know the node is virtual... */
         node.setVirtual(true);
@@ -1090,12 +1109,12 @@ public class ApplicationLayerImpl implements ApplicationLayer,
     else if (cmd == DataFrame.CommandType.CmdZWaveReplaceFailedNode)
       if (payload.length > 1)
       {
-        int st = payload[1]; // Byte 1: funcID, Byte 2: status
+        //int st = payload[1]; // Byte 1: funcID, Byte 2: status
         // NodeFailedEventArgs nodeEvent = new NodeFailedEventArgs(st,false);
         // if (NodeFailedEvent != null) NodeFailedEvent(this, nodeEvent);
       } else
       { // Return value
-        int st = payload[0]; // Byte 1: status
+        //int st = payload[0]; // Byte 1: status
         // NodeFailedEventArgs nodeEvent = new NodeFailedEventArgs(st,true);
         // if (NodeFailedEvent != null) NodeFailedEvent(this, nodeEvent);
       }
@@ -1468,14 +1487,6 @@ public class ApplicationLayerImpl implements ApplicationLayer,
     return slaveApi;
   }
 
-  /**
-   * @return the slaveController
-   */
-  public boolean isSlaveController()
-  {
-    return secondaryController;
-  }
-
   /*
    * (non-Javadoc)
    * 
@@ -1490,6 +1501,14 @@ public class ApplicationLayerImpl implements ApplicationLayer,
    * sessionLayer.setCallbackHandler(this); sessionLayer.open(frameLayer,
    * transport); }
    */
+
+  /**
+   * @return the slaveController
+   */
+  public boolean isSlaveController()
+  {
+    return secondaryController;
+  }
 
   /*
    * (non-Javadoc)
@@ -1543,7 +1562,8 @@ public class ApplicationLayerImpl implements ApplicationLayer,
       int[] supportedCmdClasses = new int[payload.length - 6];
       for (int i = 0; i < supportedCmdClasses.length; i++)
       {
-        logger.debug("Discovered supported command class for node {}: {}", nid, CommandClass.getByVal(payload[i+6]));
+        logger.debug("Discovered supported command class for node {}: {}", nid,
+            CommandClass.getByVal(payload[i + 6]));
         supportedCmdClasses[i] = payload[i + 6];
       }
       node.setSupportedCmdClasses(supportedCmdClasses);
@@ -1552,7 +1572,7 @@ public class ApplicationLayerImpl implements ApplicationLayer,
       node.setSupportedCmdClasses(null);
     }
     nodeTable.add(node);
-    _requestNodeInfo = false;
+    requestNodeInfo = false;
     waitForNodeInfoCallbackHandler();
   }
 
@@ -1570,7 +1590,7 @@ public class ApplicationLayerImpl implements ApplicationLayer,
         DataFrame.CommandType.CmdZWaveSetSucNodeId, req);
     DataPacket res = rc.getResponse();
     if ((rc == TXStatus.CompleteOk)
-        && ((nodeId == _controllerNodeId) || ((res.getLength() >= 1) && (res
+        && ((nodeId == controllerNodeId) || ((res.getLength() >= 1) && (res
             .getPayload()[0] == SetSucReturnValue.SucSetSucceeded.get()))))
     {
       return true;
@@ -1586,7 +1606,7 @@ public class ApplicationLayerImpl implements ApplicationLayer,
     {
       waitForNodeInfoExecutor.shutdownNow();
     }
-    _requestNodeInfo = false;
+    requestNodeInfo = false;
     // RequestNodeInfoEventArgs e = new RequestNodeInfoEventArgs((Node)handler);
     // if (RequestNodeInfoEvent != null) RequestNodeInfoEvent((Node)handler);
     // if (RequestNodeInfoEvent != null) RequestNodeInfoEvent(this, e);
@@ -1811,8 +1831,8 @@ public class ApplicationLayerImpl implements ApplicationLayer,
       nodeTable.clear();
 
       MemoryGetId ret = zwaveMemoryGetId();
-      _controllerHomeId = ret.getHomeId();
-      _controllerNodeId = ret.getNodeId();
+      controllerHomeId = ret.getHomeId();
+      controllerNodeId = ret.getNodeId();
 
       NodeMask virtualNodeMask = zwaveGetVirtualNodes();
       int nodeIdx = 0;
@@ -1832,23 +1852,23 @@ public class ApplicationLayerImpl implements ApplicationLayer,
       }
 
       /*
-      for (Node n : nodeTable.getList())
-      {
-        if (n.isNodeListening())
-        {
-          zwaveRequestNodeInfo(n.getId());
-        }
-      }
+       * for (Node n : nodeTable.getList())
+       * {
+       * if (n.isNodeListening())
+       * {
+       * zwaveRequestNodeInfo(n.getId());
+       * }
+       * }
+       * 
+       * for (Node n : nodeTable.getList())
+       * {
+       * if (n.isNodeListening())
+       * {
+       * zwaveNodeManufacturerSpecific(n.getId());
+       * }
+       * }
+       */
 
-      for (Node n : nodeTable.getList())
-      {
-        if (n.isNodeListening())
-        {
-          zwaveNodeManufacturerSpecific(n.getId());
-        }
-      }
-      */
-      
       return nodeTable.getList();
     }
   }
@@ -1916,18 +1936,6 @@ public class ApplicationLayerImpl implements ApplicationLayer,
     // type specific : payload[5];
     return new Node(nodeId, payload[0], payload[1], payload[2], payload[3],
         payload[4], payload[5], null, isVirtual);
-  }
-
-  public void zwaveNodeManufacturerSpecific(int nodeId)
-      throws FrameLayerException, ApplicationLayerException
-  {
-    logger.debug("Requesting manufacturer specific report from node {}", nodeId);
-    int[] data = new int[] {
-        CommandClass.COMMAND_CLASS_MANUFACTURER_SPECIFIC.get(),
-        CommandManufacturerSpecific.MANUFACTURER_SPECIFIC_GET.get() };
-    TXStatus rc = zwaveSendData(nodeId, data,
-        new TXOption[] { TXOption.TransmitOptionAcknowledge,
-            TXOption.TransmitOptionAutoRoute });
   }
 
   /*
@@ -2170,6 +2178,19 @@ public class ApplicationLayerImpl implements ApplicationLayer,
     return rc;
   }
 
+  public void zwaveNodeManufacturerSpecific(int nodeId)
+      throws FrameLayerException, ApplicationLayerException
+  {
+    logger
+        .debug("Requesting manufacturer specific report from node {}", nodeId);
+    int[] data = new int[] {
+        CommandClass.COMMAND_CLASS_MANUFACTURER_SPECIFIC.get(),
+        CommandManufacturerSpecific.MANUFACTURER_SPECIFIC_GET.get() };
+    zwaveSendData(nodeId, data,
+        new TXOption[] { TXOption.TransmitOptionAcknowledge,
+            TXOption.TransmitOptionAutoRoute });
+  }
+
   /*
    * (non-Javadoc)
    * 
@@ -2384,7 +2405,7 @@ public class ApplicationLayerImpl implements ApplicationLayer,
         DataFrame.CommandType.CmdZWaveRequestNodeInfo, req, false);
     if (rc == TXStatus.CompleteOk)
     {
-      _requestNodeInfo = true;
+      requestNodeInfo = true;
       waitForNodeInfoExecutor = Executors.newSingleThreadScheduledExecutor();
       waitForNodeInfoExecutor.schedule(new Runnable() {
         public void run()
@@ -2958,16 +2979,16 @@ public class ApplicationLayerImpl implements ApplicationLayer,
       return -1;
 
     MemoryGetId ret = zwaveMemoryGetId();
-    _controllerHomeId = ret.getHomeId();
-    _controllerNodeId = ret.getNodeId();
+    controllerHomeId = ret.getHomeId();
+    controllerNodeId = ret.getNodeId();
 
-    if (_controllerNodeId == 0)
+    if (controllerNodeId == 0)
       return -1;
 
-    if (zwaveSetSucNodeId(_controllerNodeId, sucState,
+    if (zwaveSetSucNodeId(controllerNodeId, sucState,
         new TXOption[] { TXOption.TransmitOptionNone }, capabilities))
     {
-      suc = _controllerNodeId;
+      suc = controllerNodeId;
       return suc;
     }
     return -1;
@@ -3042,7 +3063,7 @@ public class ApplicationLayerImpl implements ApplicationLayer,
   public boolean zwaveSetSucNodeId(int nodeId, boolean sucState,
       TXOption[] txOptions, int capabilities) throws FrameLayerException
   {
-    if (nodeId == _controllerNodeId)
+    if (nodeId == controllerNodeId)
     {
       return thisSUCNodeId(nodeId, sucState, txOptions, capabilities);
     } else
