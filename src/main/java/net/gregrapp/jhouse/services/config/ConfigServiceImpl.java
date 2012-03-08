@@ -3,8 +3,8 @@
  */
 package net.gregrapp.jhouse.services.config;
 
-import net.gregrapp.jhouse.dao.ConfigDAO;
 import net.gregrapp.jhouse.models.Config;
+import net.gregrapp.jhouse.repositories.ConfigRepository;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,7 +23,7 @@ public class ConfigServiceImpl implements ConfigService
       .getLogger(ConfigServiceImpl.class);
 
   @Autowired
-  private ConfigDAO configDao;
+  private ConfigRepository configRepository;
 
   /*
    * (non-Javadoc)
@@ -33,22 +33,22 @@ public class ConfigServiceImpl implements ConfigService
    * java.lang.String)
    */
   @Override
-  public String get(String namespace, String opt)
+  public String get(String namespace, String key)
   {
-    logger.debug("Getting config value [{}.{}]", namespace, opt);
-    if (configDao != null)
+    logger.debug("Getting config value [{}.{}]", namespace, key);
+    if (configRepository != null)
     {
-      Config config = configDao.findByNamespaceAndOpt(namespace, opt);
+      Config config = configRepository.findByNamespaceAndKey(namespace, key);
 
       if (config != null)
       {
         logger.debug("Got config object - {}", config.toString());
-        return config.getVal();
+        return config.getValue();
       }
     }
     else
     {
-      logger.warn("Unable to retrieve config value [{}.{}]", namespace, opt);
+      logger.warn("Unable to retrieve config value [{}.{}]", namespace, key);
     }
     return null;
   }
@@ -61,36 +61,36 @@ public class ConfigServiceImpl implements ConfigService
    * java.lang.String, java.lang.String)
    */
   @Override
-  public void set(String namespace, String opt, String val)
+  public void set(String namespace, String key, String value)
   {
     logger.debug("Setting config value [{}.{}] to [{}]", new Object[] {
-        namespace, opt, val });
-    if (configDao != null)
+        namespace, key, value });
+    if (configRepository != null)
     {
-      Config config = configDao.findByNamespaceAndOpt(namespace, opt);
+      Config config = configRepository.findByNamespaceAndKey(namespace, key);
 
       if (config != null)
       {
         logger.debug("Config value already exists, updating entry");
-        config.setVal(val);
-        if (configDao != null)
-          configDao.save(config);
+        config.setValue(value);
+        if (configRepository != null)
+          configRepository.save(config);
       }
       else
       {
         logger.debug("Config value doesn't exist, creating new entry");
         Config newConfig = new Config();
         newConfig.setNamespace(namespace);
-        newConfig.setOpt(opt);
-        newConfig.setVal(val);
-        if (configDao != null)
-          configDao.save(newConfig);
+        newConfig.setKey(key);
+        newConfig.setValue(value);
+        if (configRepository != null)
+          configRepository.save(newConfig);
       }
     }
     else
     {
       logger.warn("Unable to set config value [{}.{}] to [{}]", new Object[] {
-          namespace, opt, val });
+          namespace, key, value });
     }
 
   }

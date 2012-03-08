@@ -8,3 +8,6 @@
 [condition][]Security zone device {id} changed to closed=$dve : DeviceValueEvent(id == {id}, (value & 1) == 0, changed == true)
 [consequence][]Send email to "{recipient}" with subject "{subject}" and message "{message}"=email.send("{recipient}","{subject}","{message}");
 [consequence][]Send email to "{recipient}" with subject "{subject}"=email.send("{recipient}","{subject}","");
+[condition][]Is Sunset=TimeEvent(eventType == TimeEventType.SUNSET)
+[condition][]Is Sunrise=TimeEvent(eventType == TimeEventType.SUNRISE)
+[condition][]Is Noon=TimeEvent(eventType == TimeEventType.NOON)

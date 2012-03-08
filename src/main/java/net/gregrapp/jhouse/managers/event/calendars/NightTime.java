@@ -16,16 +16,27 @@ import org.drools.time.Calendar;
  */
 public class NightTime implements Calendar
 {
+  private double latitude;
+  private double longitude;
 
+  /**
+   * @param latitude
+   * @param longitude
+   */
+  public NightTime(double latitude, double longitude)
+  {
+    this.latitude = latitude;
+    this.longitude = longitude;
+  }
+  
   /* (non-Javadoc)
    * @see org.drools.time.Calendar#isTimeIncluded(long)
    */
   @Override
   public boolean isTimeIncluded(long timestamp)
   {
-    // TODO Make LAT/LON in sunset/sunrise calculations configurable
-    long sunset = SunriseSunset.getSunset(40.05758, -82.87792, new Date(timestamp)).getTime();
-    long sunrise = SunriseSunset.getSunrise(40.05758, -82.87792, new Date(timestamp)).getTime();
+    long sunset = SunriseSunset.getSunset(latitude, longitude, new Date(timestamp)).getTimeInMillis();
+    long sunrise = SunriseSunset.getSunrise(latitude, longitude, new Date(timestamp)).getTimeInMillis();
 
     if (timestamp > sunset
         || timestamp < sunrise)

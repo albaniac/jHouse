@@ -40,14 +40,14 @@ public class ZwaveMultilevelSwitch extends ZwaveDeviceDriver implements
   private int switchLevel = -1;
 
   /**
-   * @param deviceInterface
+   * @param driverInterface
    *          interface instance for this device driver
    * @param zwaveNodeId
    *          Z-Wave node id
    */
-  public ZwaveMultilevelSwitch(ZwaveInterface deviceInterface, int zwaveNodeId)
+  public ZwaveMultilevelSwitch(ZwaveInterface driverInterface)
   {
-    super(deviceInterface, zwaveNodeId);
+    super(driverInterface);
   }
 
   /*
@@ -63,7 +63,7 @@ public class ZwaveMultilevelSwitch extends ZwaveDeviceDriver implements
     logger
         .debug("Requesting manufacturer specific report from node {}", nodeId);
 
-    deviceInterface.zwaveSendData(nodeId,
+    driverInterface.zwaveSendData(nodeId,
         CommandClass.COMMAND_CLASS_MANUFACTURER_SPECIFIC.get(),
         CommandManufacturerSpecific.MANUFACTURER_SPECIFIC_GET.get());
   }
@@ -92,7 +92,7 @@ public class ZwaveMultilevelSwitch extends ZwaveDeviceDriver implements
    */
   public void commandClassSwitchMultilevelGet()
   {
-    deviceInterface.zwaveSendData(this.nodeId,
+    driverInterface.zwaveSendData(this.nodeId,
         CommandClass.COMMAND_CLASS_SWITCH_MULTILEVEL.get(),
         CommandSwitchMultilevel.SWITCH_MULTILEVEL_GET.get());
   }
@@ -124,7 +124,7 @@ public class ZwaveMultilevelSwitch extends ZwaveDeviceDriver implements
 
     updateSwitchLevel(value);
 
-    deviceInterface.zwaveSendData(this.nodeId,
+    driverInterface.zwaveSendData(this.nodeId,
         CommandClass.COMMAND_CLASS_SWITCH_MULTILEVEL.get(),
         CommandSwitchMultilevel.SWITCH_MULTILEVEL_SET.get(), value);
   }
@@ -138,7 +138,7 @@ public class ZwaveMultilevelSwitch extends ZwaveDeviceDriver implements
    */
   public void commandClassSwitchMultilevelStartLevelChange(int direction)
   {
-    deviceInterface.zwaveSendData(this.nodeId,
+    driverInterface.zwaveSendData(this.nodeId,
         CommandClass.COMMAND_CLASS_SWITCH_MULTILEVEL.get(),
         CommandSwitchMultilevel.SWITCH_MULTILEVEL_START_LEVEL_CHANGE.get(),
         direction);
@@ -153,7 +153,7 @@ public class ZwaveMultilevelSwitch extends ZwaveDeviceDriver implements
    */
   public void commandClassSwitchMultilevelStopLevelChange()
   {
-    deviceInterface.zwaveSendData(this.nodeId,
+    driverInterface.zwaveSendData(this.nodeId,
         CommandClass.COMMAND_CLASS_SWITCH_MULTILEVEL.get(),
         CommandSwitchMultilevel.SWITCH_MULTILEVEL_STOP_LEVEL_CHANGE.get());
     this.poll();
@@ -228,8 +228,8 @@ public class ZwaveMultilevelSwitch extends ZwaveDeviceDriver implements
     this.switchLevel = value;
 
     this.updateDeviceValue(SWITCH_LEVEL_VALUE_IDX, value);
-    this.updateDeviceText(SWITCH_LEVEL_VALUE_IDX,
-        String.valueOf("Level " + value));
+    this.updateDeviceText(SWITCH_LEVEL_VALUE_IDX, "Level " +
+        String.valueOf(value));
   }
 
   /* (non-Javadoc)

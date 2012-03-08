@@ -2,8 +2,7 @@
 
 <beans xmlns="http://www.springframework.org/schema/beans"
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:context="http://www.springframework.org/schema/context"
-	xmlns:tx="http://www.springframework.org/schema/tx"
-	xmlns:jee="http://www.springframework.org/schema/jee"
+	xmlns:tx="http://www.springframework.org/schema/tx" xmlns:jee="http://www.springframework.org/schema/jee"
 	xmlns:jpa="http://www.springframework.org/schema/data/jpa"
 	xmlns:drools="http://drools.org/schema/drools-spring"
 	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.1.xsd
@@ -15,18 +14,19 @@
 
 	<!-- Root Context: defines shared resources visible to all other web components -->
 
-	<!-- <context:annotation-config />-->
-	<context:component-scan base-package="net.gregrapp.jhouse"/>
-	
+	<context:component-scan base-package="net.gregrapp.jhouse" />
+
 	<!-- <bean name="zwaveTransport" class="net.gregrapp.jhouse.transports.serial.SerialImpl"> 
 		<constructor-arg> <list> <value>/dev/tty.SLAB_USBtoUART</value> <value>115200</value> 
 		</list> </constructor-arg> </bean> -->
+
+<!-- 
 	<bean name="zwaveTransport"
 		class="net.gregrapp.jhouse.transports.tcpclient.TCPClientImpl">
 		<constructor-arg>
 			<list>
-				<value>192.168.0.3</value>
-				<value>5000</value>
+				<value>ztroller.crazynoodle.net</value>
+				<value>4999</value>
 			</list>
 		</constructor-arg>
 	</bean>
@@ -34,7 +34,9 @@
 	<bean name="zwaveInterface" class="net.gregrapp.jhouse.interfaces.zwave.ZwaveInterface">
 		<constructor-arg ref="zwaveTransport" />
 	</bean>
-
+	 -->
+	
+<!-- 
 	<bean name="dscIt100Transport"
 		class="net.gregrapp.jhouse.transports.tcpclient.TCPClientImpl">
 		<constructor-arg>
@@ -49,72 +51,32 @@
 		class="net.gregrapp.jhouse.interfaces.dscit100.DSCIT100Interface">
 		<constructor-arg ref="dscIt100Transport" />
 	</bean>
+ -->
+ 
+ 
+<!-- 	<import resource="devices.xml" /> -->
 
-	<import resource="devices.xml" />
-	
-	<!-- ========== Drools ========== -->
-<!--	<drools:kbase id="kbase">
-		<drools:resources>
-			<drools:resource type="DSL" source="classpath:jhouse.dsl" />
-			<drools:resource type="DRL" source="classpath:config.drl" />
-			<drools:resource type="DSLR" source="classpath:rules.dslr" />
-		</drools:resources>
-		<drools:configuration>
-			<drools:event-processing-mode mode="STREAM" />
-		</drools:configuration>
-	</drools:kbase>
-
-	<drools:ksession id="ksession" type="stateful" name="ksession"
-		kbase="kbase">
-		<drools:script>
-			<drools:fire-until-halt />
-		</drools:script>
-	</drools:ksession>
--->
 	<!-- ========= Persistence ========== -->
-<!-- 
-	<bean id="sessionFactory"
-		class="org.springframework.orm.hibernate4.LocalSessionFactoryBean">
+	<jee:jndi-lookup id="dataSource" jndi-name="jdbc/jHouse" />
+
+	<bean id="entityManagerFactory"
+		class="org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean">
 		<property name="dataSource" ref="dataSource" />
 		<property name="packagesToScan" value="net.gregrapp.jhouse.models" />
-		<property name="hibernateProperties">
-			<props>
-				<prop key="hibernate.dialect">org.hibernate.dialect.MySQL5Dialect</prop>
-				<prop key="hibernate.hbm2ddl.auto">update</prop>
-				<prop key="hibernate.show_sql">true</prop>
-			</props>
+		<property name="jpaVendorAdapter">
+			<bean class="org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter">
+				<property name="showSql" value="true" />
+				<property name="generateDdl" value="true" />
+				<property name="databasePlatform" value="org.hibernate.dialect.MySQL5Dialect" />
+			</bean>
 		</property>
 	</bean>
 
-	<jee:jndi-lookup id="dataSource" jndi-name="jdbc/jHouse"/>
-
-	<bean id="transactionManager"
-		class="org.springframework.orm.hibernate4.HibernateTransactionManager">
-		<property name="sessionFactory" ref="sessionFactory" />
+	<bean id="transactionManager" class="org.springframework.orm.jpa.JpaTransactionManager">
+		<property name="entityManagerFactory" ref="entityManagerFactory" />
 	</bean>
-	<tx:annotation-driven transaction-manager="transactionManager" />
--->
+	<tx:annotation-driven transaction-manager="transactionManager" mode="proxy" />
 
-<bean id="entityManagerFactory" 
- class="org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean">
-   <property name="dataSource" ref="dataSource" />
-   <property name="packagesToScan" value="net.gregrapp.jhouse.models" />
-   <property name="jpaVendorAdapter">
-      <bean class="org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter">
-         <property name="showSql" value="true" />
-         <property name="generateDdl" value="true" />
-         <property name="databasePlatform" value="org.hibernate.dialect.MySQL5Dialect" />
-      </bean>
-   </property>
-</bean>
-
-<jee:jndi-lookup id="dataSource" jndi-name="jdbc/jHouse"/>
-
-<bean id="transactionManager" class="org.springframework.orm.jpa.JpaTransactionManager">
-   <property name="entityManagerFactory" ref="entityManagerFactory" />
-</bean>
-<tx:annotation-driven transaction-manager="transactionManager" />
-
-	<jpa:repositories base-package="net.gregrapp.jhouse.dao" />
+	<jpa:repositories base-package="net.gregrapp.jhouse.repositories" entity-manager-factory-ref="entityManagerFactory" transaction-manager-ref="transactionManager"/>
 
 </beans>

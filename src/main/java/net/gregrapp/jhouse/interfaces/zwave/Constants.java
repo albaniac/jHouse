@@ -530,6 +530,40 @@ public class Constants
     }
   }
 
+  /**
+   * COMMAND_CLASS_THERMOSTAT_MODE
+   * 
+   * @author Greg Rapp
+   *
+   */
+  public enum CommandThermostatMode
+  {
+    /**
+     * THERMOSTAT_MODE_GET - 0x02
+     */
+    THERMOSTAT_MODE_GET(0x02),
+    /**
+     * THERMOSTAT_MODE_REPORT - 0x03
+     */
+    THERMOSTAT_MODE_REPORT(0x03),
+    /**
+     * THERMOSTAT_MODE_SET - 0x01
+     */
+    THERMOSTAT_MODE_SET(0x01);
+
+    private int value;
+
+    CommandThermostatMode(int value)
+    {
+      this.value = value;
+    }
+
+    public int get()
+    {
+      return this.value;
+    }
+  }
+
   // <summary>
   // Modes available for Controller change
   // </summary>
@@ -721,6 +755,151 @@ public class Constants
     public int get()
     {
       return this.value;
+    }
+  }
+
+  public enum Manufacturer
+  {
+    _2B_Electronics(0x28),
+    _3e_Technologies(0x2a),
+    A1_Components(0x22),
+    ACT(0x01),
+    Aeon_Labs(0x86),
+    Alarm_DotCom(0x94),
+    Asia_Heading(0x29),
+    Aspalis(0x5d),
+    Atech(0x2b),
+    Balboa_Instruments(0x18),
+    BeSafer(0x2c),
+    Boca_Devices(0x23),
+    Broadband_Energy(0x2d),
+    BuLogics(0x26),
+    Carrier(0x2e),
+    CasaWorks(11),
+    Color_Kinetics(0x2f),
+    ControlThink(0x19),
+    ConvergeX(0x0F),
+    Cooper_Wiring(0x1a),
+    Coventive_Tech(0x9d),
+    Cyberhouse(0x14),
+    Cytech_Tech(0x30),
+    Danfoss(0x02),
+    Destiny_Networks(0x31),
+    Digital_5(0x32),
+    Eka_Systems(0x87),
+    El_Gev_Electronics(0x34),
+    Electronic_Solutions(0x33),
+    ELK_Products(0x1b),
+    Embedit_A_S(0x35),
+    Everspring(0x60),
+    Exceptional_Innovations(0x36),
+    Exhausto(0x04),
+    Exigent_Sensors(0x9f),
+    Express_Controls(0x1e),
+    Fakro(0x85),
+    Foard_Systems(0x37),
+    FortrezZ(0x84),
+    GEJasco(0x63),
+    GreenWave_Reality(0x99),
+    HAI(0x5b),
+    HiTech_Automation(0x17),
+    Home_Automation_Europe(0x9a),
+    Home_Director(0x38),
+    HomeMangeables(0x6f),
+    Homepro(0x50),
+    HomeSeer(0x0c),
+    Honeywell(0x39),
+    Horstmann_Controls(0x59),
+    iCOM_Technology(0x11),
+    Inlon_Srl(0x3a),
+    INNOVUS(0x77),
+    Intel(0x06),
+    IntelliCon(0x1c),
+    Intermatic(0x05),
+    Internet_Dom(0x13),
+    Kamstrup_AS(0x91),
+    Kwikset(0x90),
+    Lagotek_Corp(0x51),
+    Leviton(0x1d),
+    Lifestyle_Networks(0x3c),
+    Logitech(0x7f),
+    Loudwater_Technologies(0x25),
+    LS_Control(0x71),
+    Marmitek_BV(0x3d),
+    Martec_Access(0x3e),
+    MB_Turnkey_Design(0x8f),
+    Merten(0x7a),
+    Monster_Cable(0x7e),
+    Motorola(0x3f),
+    MTC_Maintronic(0x83),
+    Novar_EDS(0x40),
+    OpenPeak(0x41),
+    PowerLynx(0x16),
+    Pragmatic_Consulting(0x42),
+    Qees(0x95),
+    Raritan(0x8e),
+    RCS(0x10),
+    Reitz_Group(0x64),
+    Remotec(0x5254),
+    RS_Scene_Automation(0x65),
+    Schlage(0x3b),
+    Scientia_Technologies(0x1f),
+    Seluxit(0x69),
+    Senmatic_A_S(0x43),
+    Sequoia_Technology(0x44),
+    Sine_Wireless(0x45),
+    Smart_Products(0x46),
+    Somfy(0x47),
+    Sylvania(0x09),
+    Techniku(0x0a),
+    Tell_It_Online(0x12),
+    Telsey(0x48),
+    Trane_Corp(0x8b),
+    Tricklestar(0x6b),
+    Twisthink(0x49),
+    TwoGig_Technologies(0x98),
+    UEI(0x20),
+    Unknown(-1),
+    Vero_Duco(0x80),
+    ViewSonic(0x5e),
+    Vimar_CRS(0x07),
+    Visualize(0x4a),
+    Watt_Stopper(0x4b),
+    Wayne_Dalton(0x08),
+    Woodward_Labs(0x4c),
+    Wrap(0x03),
+    Xanboo(0x4d),
+    Yale(0x109),
+    Z_Wave_Technologia(0x4f),
+    Zdata_LLC(0x4e),
+    Zensys(0x00);
+    
+    public static Manufacturer getByVal(int value)
+    {
+      for (Manufacturer v : Manufacturer.class
+          .getEnumConstants())
+        if (v.get() == value)
+          return v;
+      return Manufacturer.Unknown;
+    }
+
+    private int value;
+
+    Manufacturer(int value)
+    {
+      this.value = value;
+    }
+
+    public int get()
+    {
+      return this.value;
+    }
+    
+    @Override
+    public String toString()
+    {
+      // Replace underscores in the name with a space
+      return this.name().replaceAll("_", " ");
     }
   }
 
@@ -1305,7 +1484,7 @@ public class Constants
       this.responses = responses;
     }
   }
-
+  
   public enum ZWaveRediscoveryNeededReturnValue
   {
     Abort(0x01), Done(0x00), LostAccepted(0x05), LostFailed(0x04);
@@ -1329,151 +1508,6 @@ public class Constants
     public int get()
     {
       return this.value;
-    }
-  }
-  
-  public enum Manufacturer
-  {
-    _2B_Electronics(0x28),
-    _3e_Technologies(0x2a),
-    A1_Components(0x22),
-    ACT(0x01),
-    Aeon_Labs(0x86),
-    Alarm_DotCom(0x94),
-    Asia_Heading(0x29),
-    Aspalis(0x5d),
-    Atech(0x2b),
-    Balboa_Instruments(0x18),
-    BeSafer(0x2c),
-    Boca_Devices(0x23),
-    Broadband_Energy(0x2d),
-    BuLogics(0x26),
-    Carrier(0x2e),
-    CasaWorks(11),
-    Color_Kinetics(0x2f),
-    ControlThink(0x19),
-    ConvergeX(0x0F),
-    Cooper_Wiring(0x1a),
-    Coventive_Tech(0x9d),
-    Cyberhouse(0x14),
-    Cytech_Tech(0x30),
-    Danfoss(0x02),
-    Destiny_Networks(0x31),
-    Digital_5(0x32),
-    Eka_Systems(0x87),
-    El_Gev_Electronics(0x34),
-    Electronic_Solutions(0x33),
-    ELK_Products(0x1b),
-    Embedit_A_S(0x35),
-    Everspring(0x60),
-    Exceptional_Innovations(0x36),
-    Exhausto(0x04),
-    Exigent_Sensors(0x9f),
-    Express_Controls(0x1e),
-    Fakro(0x85),
-    Foard_Systems(0x37),
-    FortrezZ(0x84),
-    GEJasco(0x63),
-    GreenWave_Reality(0x99),
-    HAI(0x5b),
-    HiTech_Automation(0x17),
-    Home_Automation_Europe(0x9a),
-    Home_Director(0x38),
-    HomeMangeables(0x6f),
-    Homepro(0x50),
-    HomeSeer(0x0c),
-    Honeywell(0x39),
-    Horstmann_Controls(0x59),
-    iCOM_Technology(0x11),
-    Inlon_Srl(0x3a),
-    INNOVUS(0x77),
-    Intel(0x06),
-    IntelliCon(0x1c),
-    Intermatic(0x05),
-    Internet_Dom(0x13),
-    Kamstrup_AS(0x91),
-    Kwikset(0x90),
-    Lagotek_Corp(0x51),
-    Leviton(0x1d),
-    Lifestyle_Networks(0x3c),
-    Logitech(0x7f),
-    Loudwater_Technologies(0x25),
-    LS_Control(0x71),
-    Marmitek_BV(0x3d),
-    Martec_Access(0x3e),
-    MB_Turnkey_Design(0x8f),
-    Merten(0x7a),
-    Monster_Cable(0x7e),
-    Motorola(0x3f),
-    MTC_Maintronic(0x83),
-    Novar_EDS(0x40),
-    OpenPeak(0x41),
-    PowerLynx(0x16),
-    Pragmatic_Consulting(0x42),
-    Qees(0x95),
-    Raritan(0x8e),
-    RCS(0x10),
-    Reitz_Group(0x64),
-    Remotec(0x5254),
-    RS_Scene_Automation(0x65),
-    Schlage(0x3b),
-    Scientia_Technologies(0x1f),
-    Seluxit(0x69),
-    Senmatic_A_S(0x43),
-    Sequoia_Technology(0x44),
-    Sine_Wireless(0x45),
-    Smart_Products(0x46),
-    Somfy(0x47),
-    Sylvania(0x09),
-    Techniku(0x0a),
-    Tell_It_Online(0x12),
-    Telsey(0x48),
-    Trane_Corp(0x8b),
-    Tricklestar(0x6b),
-    Twisthink(0x49),
-    TwoGig_Technologies(0x98),
-    UEI(0x20),
-    Vero_Duco(0x80),
-    ViewSonic(0x5e),
-    Vimar_CRS(0x07),
-    Visualize(0x4a),
-    Watt_Stopper(0x4b),
-    Wayne_Dalton(0x08),
-    Woodward_Labs(0x4c),
-    Wrap(0x03),
-    Xanboo(0x4d),
-    Yale(0x109),
-    Z_Wave_Technologia(0x4f),
-    Zdata_LLC(0x4e),
-    Zensys(0x00),
-    Unknown(-1);
-    
-    public static Manufacturer getByVal(int value)
-    {
-      for (Manufacturer v : Manufacturer.class
-          .getEnumConstants())
-        if (v.get() == value)
-          return v;
-      return Manufacturer.Unknown;
-    }
-
-    private int value;
-
-    Manufacturer(int value)
-    {
-      this.value = value;
-    }
-
-    public int get()
-    {
-      return this.value;
-    }
-    
-    @Override
-    public String toString()
-    {
-      // Replace underscores in the name with a space
-      return this.name().replaceAll("_", " ");
     }
   }
 }

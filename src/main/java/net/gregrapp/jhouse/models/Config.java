@@ -18,14 +18,14 @@ import javax.persistence.UniqueConstraint;
  */
 @Entity
 @Table(name = "CONFIG",
-    uniqueConstraints = { @UniqueConstraint(columnNames = { "namespace", "opt" }) })
+    uniqueConstraints = { @UniqueConstraint(columnNames = { "namespace", "key" }) })
 public class Config
 {
 
   private Long id;
   private String namespace;
-  private String opt;
-  private String val;
+  private String key;
+  private String value;
 
   /**
    * Unique ID
@@ -56,9 +56,9 @@ public class Config
    * @return the key
    */
   @Column(nullable = false)
-  public String getOpt()
+  public String getKey()
   {
-    return opt;
+    return key;
   }
 
   /**
@@ -67,9 +67,9 @@ public class Config
    * @return the value
    */
   @Column
-  public String getVal()
+  public String getValue()
   {
-    return val;
+    return value;
   }
 
   /**
@@ -99,9 +99,9 @@ public class Config
    * @param key
    *          the key to set
    */
-  public void setOpt(String opt)
+  public void setKey(String key)
   {
-    this.opt = opt;
+    this.key = key;
   }
 
   /**
@@ -110,9 +110,9 @@ public class Config
    * @param value
    *          the value to set
    */
-  public void setVal(String val)
+  public void setValue(String value)
   {
-    this.val = val;
+    this.value = value;
   }
 
   /* (non-Javadoc)
@@ -126,10 +126,10 @@ public class Config
     builder.append(id);
     builder.append(", namespace=");
     builder.append(namespace);
-    builder.append(", opt=");
-    builder.append(opt);
-    builder.append(", val=");
-    builder.append(val);
+    builder.append(", key=");
+    builder.append(key);
+    builder.append(", value=");
+    builder.append(value);
     builder.append("]");
     return builder.toString();
   }

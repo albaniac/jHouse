@@ -188,19 +188,25 @@ public class ZwaveInterface extends AbstractInterface implements
         logger.debug(
             "Received SENSOR_BINARY_REPORT from node {} with a value of [{}]",
             nodeId, payload[5]);
-        for (Object device : devices.get(nodeId))
-          if (device instanceof CommandClassSensorBinary)
-            ((CommandClassSensorBinary) device)
-                .commandClassSensorBinaryReport(payload[5]);
+        if (devices.get(nodeId) != null)
+        {
+          for (Object device : devices.get(nodeId))
+            if (device instanceof CommandClassSensorBinary)
+              ((CommandClassSensorBinary) device)
+                  .commandClassSensorBinaryReport(payload[5]);
+        }
       }
     }
     else if (payload[3] == CommandClass.COMMAND_CLASS_HAIL.get())
     {
       logger.debug("Received HAIL from node [{}]", nodeId);
-      for (Object device : devices.get(nodeId))
-        if (device instanceof CommandClassHail)
-          ((CommandClassHail) device)
-              .hail();
+      if (devices.get(nodeId) != null)
+      {
+        for (Object device : devices.get(nodeId))
+          if (device instanceof CommandClassHail)
+            ((CommandClassHail) device)
+                .hail();
+      }
     }
   }
 
@@ -222,7 +228,7 @@ public class ZwaveInterface extends AbstractInterface implements
   @PreDestroy
   public void destroy()
   {
-    logger.info("Destroying interface");
+    logger.info("Destroying Z-Wave interface");
     appLayer.destroy();
   }
 

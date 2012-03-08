@@ -7,6 +7,8 @@ import java.io.Serializable;
 import java.util.Calendar;
 
 /**
+ * An application event
+ * 
  * @author Greg Rapp
  *
  */

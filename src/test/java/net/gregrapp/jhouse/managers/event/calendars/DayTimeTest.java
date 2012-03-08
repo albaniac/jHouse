@@ -16,7 +16,7 @@ public class DayTimeTest
   @Test
   public void testIsTimeIncluded()
   {
-    DayTime dayTime = new DayTime();
+    DayTime dayTime = new DayTime(40.05758, -82.87792);
     
     // Check that 12:00 noon returns true (is day time)
     assertTrue(dayTime.isTimeIncluded(1327683600000L));

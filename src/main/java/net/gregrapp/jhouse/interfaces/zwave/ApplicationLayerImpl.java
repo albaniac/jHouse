@@ -836,7 +836,7 @@ public class ApplicationLayerImpl implements ApplicationLayer,
       }
       else
       {
-        logger.info("Unhandled CmdApplicationCommandHandler packet received [{}], payload [{}]",
+        logger.info("Unhandled CmdApplicationCommandHandler packet received [{}], payload {}",
             String.format("%#04x", payload[3]), ArrayUtils.toHexStringArray(Arrays.copyOfRange(payload, 4, payload.length)));
       }
     }
@@ -1910,6 +1910,9 @@ public class ApplicationLayerImpl implements ApplicationLayer,
     return zwaveGetNodeProtocolInfo(nodeId, false);
   }
 
+  /* (non-Javadoc)
+   * @see net.gregrapp.jhouse.interfaces.zwave.ApplicationLayer#zwaveGetNodeProtocolInfo(int, boolean)
+   */
   public Node zwaveGetNodeProtocolInfo(int nodeId, boolean checkIfVirtual)
       throws FrameLayerException, ApplicationLayerException
   {

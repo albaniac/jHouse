@@ -5,6 +5,10 @@ package net.gregrapp.jhouse.web.controllers;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
 
 import net.gregrapp.jhouse.device.Device;
 import net.gregrapp.jhouse.device.DriverDevice;
@@ -15,6 +19,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
+import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -34,10 +39,10 @@ public class DeviceController
   private static final Logger logger = LoggerFactory.getLogger(DeviceController.class);
   
   @Autowired
-  ApplicationContext ctx;
+  private ApplicationContext ctx;
   
   @Autowired
-  DeviceManager deviceManager;
+  private DeviceManager deviceManager;
   
   @RequestMapping(value = "/{id}/{method}", method = RequestMethod.GET)
   public @ResponseBody
@@ -89,20 +94,56 @@ public class DeviceController
   }
   
   @RequestMapping(value = "/{id}", method = RequestMethod.GET)
-  public @ResponseBody String deviceDetails(@PathVariable("id") int id, Model model)
+  public @ResponseBody HashMap<String, Object> deviceDetails(@PathVariable("id") int id, Model model)
   {
     Device device = deviceManager.get(id);
-    String[] devclass = null;
-    if (device != null && device instanceof DriverDevice)
+   // String[] devclass = null;
+    HashMap<String, Object> ret = new HashMap<String,Object>();
+    if (device == null)
     {
-      devclass = deviceManager.getDeviceClassesForDevice(device);      
+      ret.put("error", "device not found");
+      return ret;
+    } 
+    else {
+      ret.put("name", device.getName());
+      ret.put("value", device.getValue());
+      ret.put("text", device.getText());
+      SimpleDateFormat dateFormat = new SimpleDateFormat("MM/dd/yyyy HH:mm:ss");
+      ret.put("lastChange", dateFormat.format(device.getLastChange()));
+      return ret;
     }
-    String strDevClasses = "";
+    
+    /*String strDevClasses = "";
     for (String s : devclass)
       strDevClasses += s + ",";
     strDevClasses.substring(0, strDevClasses.length()-1);
     model.addAttribute("stuff", strDevClasses); 
     
-   return "home"; 
+   return "home"; */
   }
+  
+  @RequestMapping(value = "/all", method = RequestMethod.GET)
+  public @ResponseBody
+  HashMap<String, Object> allDeviceDetails(Model model)
+  {
+    HashMap<String, Object> ret = new HashMap<String, Object>();
+    
+    List<HashMap<String,Object>> devices = new ArrayList<HashMap<String,Object>>();
+    for (Device device : deviceManager.getDevices())
+    {
+      HashMap<String,Object> val = new HashMap<String,Object>();
+      val.put("id", device.getId());
+      val.put("name", device.getName());
+      val.put("value", device.getValue());
+      val.put("text", device.getText());
+      SimpleDateFormat dateFormat = new SimpleDateFormat("MM/dd/yyyy HH:mm:ss");
+      val.put("lastChange", dateFormat.format(device.getLastChange().getTime()));
+      
+      devices.add(val);
+    }
+    ret.put("success", true);
+    ret.put("devices", devices);
+    return ret;
+  }
+
 }

@@ -1,6 +1,7 @@
 package net.gregrapp.jhouse
 
 import net.gregrapp.jhouse.events.*
+import net.gregrapp.jhouse.events.TimeEvent.TimeEventType
 import net.gregrapp.jhouse.states.*
 import net.gregrapp.jhouse.device.*
 import net.gregrapp.jhouse.device.classes.*
@@ -11,12 +12,17 @@ global net.gregrapp.jhouse.services.email.EmailService email
 
 declare DeviceValueEvent
 	@role( event )
-	@timestamp ( time )
+	@timestamp( time )
 end
 
 declare DeviceTextEvent
 	@role( event )
-	@timestamp ( time )
+	@timestamp( time )
+end
+
+declare TimeEvent
+	@role( event )
+	@timestamp( time )
 end
 
 declare Device

@@ -6,7 +6,7 @@
 </head>
 <body>
 <h1>
-There was an error processing your request!
+There was an error processing your request:
 </h1>
 <br>
 <P>Details: {$errorDetail} </P>

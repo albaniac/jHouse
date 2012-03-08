@@ -33,14 +33,14 @@ public class ZwaveBinarySensor extends ZwaveDeviceDriver implements
   private static final int SENSOR_VALUE_IDX = 0;
 
   /**
-   * @param deviceInterface
+   * @param driverInterface
    *          interface instance for this device driver
    * @param zwaveNodeId
    *          Z-Wave node id
    */
-  public ZwaveBinarySensor(ZwaveInterface deviceInterface, int zwaveNodeId)
+  public ZwaveBinarySensor(ZwaveInterface driverInterface)
   {
-    super(deviceInterface, zwaveNodeId);
+    super(driverInterface);
   }
 
   /*
@@ -54,7 +54,7 @@ public class ZwaveBinarySensor extends ZwaveDeviceDriver implements
   {
     logger.debug("Sending COMMAND_CLASS_BASIC_GET to Z-Wave node {}",
         this.nodeId);
-    deviceInterface.zwaveSendData(this.nodeId,
+    driverInterface.zwaveSendData(this.nodeId,
         CommandClass.COMMAND_CLASS_BASIC.get(), CommandBasic.BASIC_GET.get());
   }
 
@@ -100,7 +100,7 @@ public class ZwaveBinarySensor extends ZwaveDeviceDriver implements
   {
     logger.debug("Sending COMMAND_CLASS_SENSOR_BINARY_GET to Z-Wave node {}",
         this.nodeId);
-    deviceInterface.zwaveSendData(this.nodeId,
+    driverInterface.zwaveSendData(this.nodeId,
         CommandClass.COMMAND_CLASS_SENSOR_BINARY.get(),
         CommandSensorBinary.SENSOR_BINARY_GET.get());
   }
@@ -157,6 +157,6 @@ public class ZwaveBinarySensor extends ZwaveDeviceDriver implements
   {
     this.updateDeviceValue(SENSOR_VALUE_IDX, value);
     this.updateDeviceText(SENSOR_VALUE_IDX,
-        String.valueOf(value == 255 ? "OPEN" : "CLOSED"));
+        String.valueOf(value == 255 ? "Open" : "Closed"));
   }
 }

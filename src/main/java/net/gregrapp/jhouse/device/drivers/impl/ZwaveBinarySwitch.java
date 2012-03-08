@@ -32,22 +32,21 @@ public class ZwaveBinarySwitch extends ZwaveDeviceDriver implements
    * Internal switch state
    */
   private int switchState = -1;
-  
+
   /**
-   * Value indexes 
+   * Value indexes
    */
   private static final int SWITCH_VALUE_IDX = 0;
-  
+
   /**
-   * @param deviceInterface
+   * @param driverInterface
    *          interface instance for this device driver
    * @param zwaveNodeId
    *          Z-Wave node id
    */
-  public ZwaveBinarySwitch(ZwaveInterface deviceInterface,
-      int zwaveNodeId)
+  public ZwaveBinarySwitch(ZwaveInterface driverInterface)
   {
-    super(deviceInterface, zwaveNodeId);
+    super(driverInterface);
     init();
   }
 
@@ -60,7 +59,7 @@ public class ZwaveBinarySwitch extends ZwaveDeviceDriver implements
   public void commandClassBasicGet()
   {
     logger.debug("Sending COMMAND_CLASS_BASIC_GET");
-    deviceInterface.zwaveSendData(this.nodeId,
+    driverInterface.zwaveSendData(this.nodeId,
         CommandClass.COMMAND_CLASS_BASIC.get(), CommandBasic.BASIC_GET.get());
   }
 
@@ -73,13 +72,13 @@ public class ZwaveBinarySwitch extends ZwaveDeviceDriver implements
   public void commandClassBasicReport(int value)
   {
     logger.info(
-        "Received COMMAND_CLASS_BASIC_REPORT from Z-Wave node {}: {}",
+        "Received COMMAND_CLASS_BASIC_REPORT from Z-Wave node {}: [{}]",
         this.nodeId, value == 255 ? "ON"
             : "OFF");
 
     this.switchState = value;
     this.updateDeviceValue(SWITCH_VALUE_IDX, value);
-    this.updateDeviceText(SWITCH_VALUE_IDX, value == 255 ? "ON" : "OFF");
+    this.updateDeviceText(SWITCH_VALUE_IDX, value == 255 ? "On" : "Off");
   }
 
   /*
@@ -90,14 +89,14 @@ public class ZwaveBinarySwitch extends ZwaveDeviceDriver implements
    */
   public void commandClassBasicSet(int value)
   {
-    logger.info("Setting Z-Wave node {} to {}", this.nodeId,
+    logger.info("Setting Z-Wave node [{}] to [{}]", this.nodeId,
         value == 0xFF ? "ON" : "OFF");
 
     this.switchState = value;
     this.updateDeviceValue(SWITCH_VALUE_IDX, value);
-    this.updateDeviceText(SWITCH_VALUE_IDX, value == 255 ? "ON" : "OFF");
+    this.updateDeviceText(SWITCH_VALUE_IDX, value == 255 ? "On" : "Off");
 
-    deviceInterface.zwaveSendData(this.nodeId,
+    driverInterface.zwaveSendData(this.nodeId,
         CommandClass.COMMAND_CLASS_BASIC.get(), CommandBasic.BASIC_SET.get(),
         value);
   }
@@ -116,7 +115,7 @@ public class ZwaveBinarySwitch extends ZwaveDeviceDriver implements
         .debug("Requesting manufacturer specific report from Z-Wave node {}",
             nodeId);
 
-    deviceInterface.zwaveSendData(nodeId,
+    driverInterface.zwaveSendData(nodeId,
         CommandClass.COMMAND_CLASS_MANUFACTURER_SPECIFIC.get(),
         CommandManufacturerSpecific.MANUFACTURER_SPECIFIC_GET.get());
   }
@@ -192,7 +191,7 @@ public class ZwaveBinarySwitch extends ZwaveDeviceDriver implements
    */
   public void toggleOnOff()
   {
-    logger.debug("Toggling Z-Wave node {}", this.nodeId);
+    logger.debug("Toggling Z-Wave node [{}]", this.nodeId);
     if (this.switchState == -1)
     {
       logger.info("Switch state is unknown, polling switch");

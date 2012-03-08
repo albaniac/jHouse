@@ -69,7 +69,7 @@ public class DSCIT100Interface extends AbstractInterface implements
   @PreDestroy
   public void destroy()
   {
-    logger.info("Destroying interface");
+    logger.info("Destroying DSCIT100 interface");
     frameLayer.destroy();
   }
 
