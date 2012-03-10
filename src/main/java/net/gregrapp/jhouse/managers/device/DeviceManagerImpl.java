@@ -144,11 +144,7 @@ public class DeviceManagerImpl implements DeviceManager
     }
     else
     {
-<<<<<<< HEAD
       logger.warn("Device [{}] not found", deviceId);
-=======
-      logger.warn("Device {} not found", deviceId);
->>>>>>> 2fb0361146cd4b842103a0256e60496f4e687c68
       return null;
     }
   }
