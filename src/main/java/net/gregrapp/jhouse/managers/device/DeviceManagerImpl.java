@@ -12,13 +12,17 @@ import net.gregrapp.jhouse.device.Device;
 import net.gregrapp.jhouse.device.DriverDevice;
 import net.gregrapp.jhouse.device.classes.DeviceClass;
 import net.gregrapp.jhouse.device.drivers.types.DeviceDriver;
+import net.gregrapp.jhouse.services.lifecycle.BeanLifecycleService;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Service;
 
 /**
+ * Device manager class
+ * 
  * @author Greg Rapp
  * 
  */
@@ -29,9 +33,12 @@ public class DeviceManagerImpl implements DeviceManager
   private static final Logger logger = LoggerFactory
       .getLogger(DeviceManager.class);
 
-  @Autowired
-  Device[] devices;
+  //@Autowired(required = false)
+  //Device[] devices;
 
+  @Autowired
+  ApplicationContext appContext;
+  
   /*
    * (non-Javadoc)
    * 
@@ -128,18 +135,21 @@ public class DeviceManagerImpl implements DeviceManager
    */
   public Device get(int deviceId)
   {
-    logger.debug("Getting device {}", deviceId);
-    for (Device device : devices)
+    logger.debug("Getting device [{}]", deviceId);
+ 
+    if (appContext.containsBean(BeanLifecycleService.DEVICE_BEAN_NAME_PREFIX+deviceId))
     {
-      if (device.getId() == deviceId)
-      {
-        return device;
-      }
+      Device device = (Device)appContext.getBean(BeanLifecycleService.DEVICE_BEAN_NAME_PREFIX+deviceId);
+      return device;
     }
-    logger.warn("Device {} not found", deviceId);
-    return null;
+    else
+    {
+      logger.warn("Device [{}] not found", deviceId);
+      return null;
+    }
   }
 
+  
   /*
    * (non-Javadoc)
    * 
@@ -155,6 +165,9 @@ public class DeviceManagerImpl implements DeviceManager
       return null;
   }
 
+  /* (non-Javadoc)
+   * @see net.gregrapp.jhouse.managers.device.DeviceManager#getDeviceClassesForDevice(net.gregrapp.jhouse.device.Device)
+   */
   public String[] getDeviceClassesForDevice(Device device)
   {
     logger.debug("Getting device classes for device {}", device.getId());
@@ -178,12 +191,19 @@ public class DeviceManagerImpl implements DeviceManager
     return strKlasses;
   }
 
+  /* (non-Javadoc)
+   * @see net.gregrapp.jhouse.managers.device.DeviceManager#getDevices()
+   */
   @Override
   public Device[] getDevices()
   {
-    return this.devices;
+    Device[] devices = appContext.getBeansOfType(Device.class).values().toArray(new Device[0]);
+    return devices;
   }
 
+  /* (non-Javadoc)
+   * @see net.gregrapp.jhouse.managers.device.DeviceManager#getDriver(int, java.lang.Class)
+   */
   public <T extends DeviceClass> T getDriver(int deviceId, Class<T> type)
   {
     Device device = get(deviceId);

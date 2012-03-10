@@ -8,21 +8,21 @@ public interface ConfigService
    * 
    * @param namespace
    *          option namespace
-   * @param opt
-   *          option name
+   * @param key
+   *          option key
    * @return
    */
-  public String get(String namespace, String opt);
+  public String get(String namespace, String key);
 
   /**
    * Set configuration option
    * 
    * @param namespace
    *          option namespace
-   * @param opt
-   *          option name
-   * @param val
+   * @param key
+   *          option key
+   * @param value
    *          option value
    */
-  public void set(String namespace, String opt, String val);
+  public void set(String namespace, String key, String value);
 }

@@ -16,7 +16,7 @@ public class NightTimeTest
   @Test
   public void testIsTimeIncluded()
   {
-    NightTime nightTime = new NightTime();
+    NightTime nightTime = new NightTime(40.05758, -82.87792);
     
     // Check that 12:00 noon returns false (not night time)
     assertFalse(nightTime.isTimeIncluded(1327683600000L));

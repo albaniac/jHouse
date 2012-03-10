@@ -205,7 +205,7 @@ public class FrameLayerImpl implements FrameLayer
    */
   public void destroy()
   {
-    logger.info("Destroying frame layer");
+    logger.debug("Destroying frame layer");
     this.receiveThreadActive = false;
     
     if (retransmissionTimeoutExecutorFuture != null)

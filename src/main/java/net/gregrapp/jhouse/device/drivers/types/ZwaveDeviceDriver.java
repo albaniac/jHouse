@@ -14,7 +14,7 @@ import net.gregrapp.jhouse.interfaces.zwave.command.CommandClassHail;
  */
 public abstract class ZwaveDeviceDriver extends AbstractDeviceDriver implements CommandClassHail
 {
-  protected ZwaveInterface deviceInterface;
+  protected ZwaveInterface driverInterface;
   protected int nodeId;
 
   /**
@@ -23,11 +23,9 @@ public abstract class ZwaveDeviceDriver extends AbstractDeviceDriver implements 
    * @param nodeId
    *          Z-Wave node ID
    */
-  public ZwaveDeviceDriver(ZwaveInterface driverInterface, int nodeId)
+  public ZwaveDeviceDriver(ZwaveInterface driverInterface)
   {
-    this.deviceInterface = driverInterface;
-    this.nodeId = nodeId;
-    driverInterface.attachDeviceDriver(this);
+    this.driverInterface = driverInterface;
   }
 
   /**
@@ -38,6 +36,15 @@ public abstract class ZwaveDeviceDriver extends AbstractDeviceDriver implements 
     return nodeId;
   }
 
+  /**
+   * Set this driver's ZWave node ID 
+   */
+  public void setNodeId(int nodeId)
+  {
+    this.nodeId = nodeId;
+    driverInterface.attachDeviceDriver(this);
+  }
+  
   /**
    * Poll the device when we receive a HAIL from the device
    */
@@ -56,6 +63,6 @@ public abstract class ZwaveDeviceDriver extends AbstractDeviceDriver implements 
    */
   public void requestNodeInfo()
   {
-    deviceInterface.requestNodeInfo(this.nodeId);
+    driverInterface.requestNodeInfo(this.nodeId);
   }
 }

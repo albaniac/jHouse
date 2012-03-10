@@ -102,8 +102,8 @@ public class SunriseSunset
   public static long getSunlight(double latitude, double longitude, Date date,
       double zenith, TimeZone tz)
   {
-    Date sunrise = getSunrise(latitude, longitude, date, tz);
-    Date sunset = getSunset(latitude, longitude, date, tz);
+    Date sunrise = getSunrise(latitude, longitude, date, tz).getTime();
+    Date sunset = getSunset(latitude, longitude, date, tz).getTime();
 
     long sunlight = 0;
     if (sunrise == null)
@@ -182,7 +182,7 @@ public class SunriseSunset
    * @param longitude
    * @return
    */
-  public static Date getSunset(double latitude, double longitude)
+  public static Calendar getSunset(double latitude, double longitude)
   {
     return getSunset(latitude, longitude, new Date(),
         SunriseSunset.OFFICIAL_ZENITH, TimeZone.getDefault());
@@ -196,7 +196,7 @@ public class SunriseSunset
    * @param zenith
    * @return GMT date of the rise. If the sun does not rise, returns null
    */
-  public static Date getSunset(double latitude, double longitude, Date date)
+  public static Calendar getSunset(double latitude, double longitude, Date date)
   {
     return getSunset(latitude, longitude, date, SunriseSunset.OFFICIAL_ZENITH,
         TimeZone.getDefault());
@@ -210,7 +210,7 @@ public class SunriseSunset
    * @param zenith
    * @return GMT date of the rise. If the sun does not rise, returns null
    */
-  public static Date getSunset(double latitude, double longitude, Date date,
+  public static Calendar getSunset(double latitude, double longitude, Date date,
       TimeZone tz)
   {
     return getSunset(latitude, longitude, date, SunriseSunset.OFFICIAL_ZENITH,
@@ -228,7 +228,7 @@ public class SunriseSunset
    *          date of sunset
    * @return GMT date of the sunset. If the sun does not set, returns null
    */
-  public static Date getSunset(double latitude, double longitude, Date date,
+  public static Calendar getSunset(double latitude, double longitude, Date date,
       double zenith, TimeZone tz)
   {
     double PiOver180 = Math.PI / 180;
@@ -313,7 +313,7 @@ public class SunriseSunset
     calendar.set(Calendar.DAY_OF_YEAR, dayOfYear);
     calendar.set(Calendar.YEAR, year);
 
-    return calendar.getTime();
+    return calendar;
   }
 
   /**
@@ -323,7 +323,7 @@ public class SunriseSunset
    * @param longitude
    * @return
    */
-  public static Date getSunrise(double latitude, double longitude)
+  public static Calendar getSunrise(double latitude, double longitude)
   {
     return getSunrise(latitude, longitude, new Date(),
         SunriseSunset.OFFICIAL_ZENITH, TimeZone.getDefault());
@@ -338,18 +338,18 @@ public class SunriseSunset
    * @param zenith
    * @return GMT date of the rise. If the sun does not rise, returns null
    */
-  public static Date getSunrise(double latitude, double longitude, Date date)
+  public static Calendar getSunrise(double latitude, double longitude, Date date)
   {
     return getSunrise(latitude, longitude, date, SunriseSunset.OFFICIAL_ZENITH,
         TimeZone.getDefault());
   }
 
-  public static Date getSunrise(double latitude, double longitude, Date date,
+  public static Calendar getSunrise(double latitude, double longitude, Date date,
       TimeZone tz)
   {
-    Date gmtDate = getSunrise(latitude, longitude, date,
+    Calendar gmtDate = getSunrise(latitude, longitude, date,
         SunriseSunset.OFFICIAL_ZENITH, tz);
-    return new Date(gmtDate.getTime());
+    return gmtDate; //new Date(gmtDate.getTime());
   }
 
   /**
@@ -361,7 +361,7 @@ public class SunriseSunset
    * @param zenith
    * @return GMT date of the rise. If the sun does not rise, returns null
    */
-  public static Date getSunrise(double latitude, double longitude, Date date,
+  public static Calendar getSunrise(double latitude, double longitude, Date date,
       double zenith, TimeZone tz)
   {
     double PiOver180 = Math.PI / 180;
@@ -451,7 +451,7 @@ public class SunriseSunset
     calendar.set(Calendar.DAY_OF_YEAR, dayOfYear);
     calendar.set(Calendar.YEAR, year);
 
-    return calendar.getTime();
+    return calendar;
   }
 
 }

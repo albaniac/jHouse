@@ -3,12 +3,18 @@
  */
 package net.gregrapp.jhouse.managers.event;
 
+import java.util.Calendar;
+import java.util.Timer;
+import java.util.TimerTask;
+
 import javax.annotation.PreDestroy;
 
 import net.gregrapp.jhouse.events.Event;
+import net.gregrapp.jhouse.events.TimeEvent;
 import net.gregrapp.jhouse.managers.device.DeviceManager;
 import net.gregrapp.jhouse.managers.event.calendars.DayTime;
 import net.gregrapp.jhouse.managers.event.calendars.NightTime;
+import net.gregrapp.jhouse.managers.event.calendars.SunriseSunset;
 import net.gregrapp.jhouse.services.config.ConfigService;
 import net.gregrapp.jhouse.services.email.EmailService;
 
@@ -44,6 +50,8 @@ public class EventManagerImpl implements EventManager
 
   private StatefulKnowledgeSession ksession;
 
+  private Timer timeEventTimer;
+
   /**
    * @param configService
    */
@@ -51,8 +59,9 @@ public class EventManagerImpl implements EventManager
   public EventManagerImpl(ConfigService configService)
   {
     this.configService = configService;
-    this.initDrools();
-    this.setCalendars();
+    initDrools();
+    setCalendars();
+    initTimeEventTimer();
   }
 
   /*
@@ -64,10 +73,12 @@ public class EventManagerImpl implements EventManager
   @PreDestroy
   public void destroy()
   {
-    logger.info("Halting KnowledgeSession");
+    logger.debug("Halting KnowledgeSession");
     ksession.halt();
-    logger.info("Stopping resource change scanner service");
+    logger.debug("Stopping resource change scanner service");
     ResourceFactory.getResourceChangeScannerService().stop();
+    logger.debug("Canceling TimeEvent timer");
+    timeEventTimer.cancel();
   }
 
   /*
@@ -154,9 +165,26 @@ public class EventManagerImpl implements EventManager
    */
   private void setCalendars()
   {
-    logger.debug("Setting calendars in rules rules engine");
-    ksession.getCalendars().set("nighttime", new NightTime());
-    ksession.getCalendars().set("daytime", new DayTime());
+    String latitudeString = configService
+        .get("net.gregrapp.jhouse", "LATITUDE");
+    String longitudeString = configService.get("net.gregrapp.jhouse",
+        "LONGITUDE");
+
+    if (latitudeString != null && longitudeString != null)
+    {
+      try
+      {
+        double latitude = Double.valueOf(latitudeString);
+        double longitude = Double.valueOf(longitudeString);
+        logger.debug("Setting calendars in rules rules engine");
+        ksession.getCalendars().set("nighttime", new NightTime(latitude, longitude));
+        ksession.getCalendars().set("daytime", new DayTime(latitude, longitude));
+      } catch (NumberFormatException e)
+      {
+        logger
+            .warn("Invalid net.gregrapp.jhouse.LATITUDE or net.gregrapp.jhouse.LONGITUDE values in CONFIG table");
+      }
+    }
   }
 
   /**
@@ -177,5 +205,83 @@ public class EventManagerImpl implements EventManager
   {
     logger.debug("EmailService class injected");
     ksession.setGlobal("email", emailService);
+  }
+
+  /**
+   * Initialize the Timer responsible for firing TimeEvents
+   */
+  public void initTimeEventTimer()
+  {
+    timeEventTimer = new Timer(true);
+    Calendar now = Calendar.getInstance();
+
+    if (now.get(Calendar.SECOND) != 0)
+    {
+      now.add(Calendar.MINUTE, 1);
+      now.set(Calendar.SECOND, 0);
+    }
+    
+    String latitudeString = configService
+        .get("net.gregrapp.jhouse", "LATITUDE");
+    String longitudeString = configService.get("net.gregrapp.jhouse",
+        "LONGITUDE");
+
+    if (latitudeString != null && longitudeString != null)
+    {
+      try
+      {
+        final double latitude = Double.valueOf(latitudeString);
+        final double longitude = Double.valueOf(longitudeString);
+        
+        timeEventTimer.scheduleAtFixedRate(new TimerTask() {
+          @Override
+          public void run()
+          {
+            logger.trace("Getting sunset time");
+            Calendar sunset = SunriseSunset.getSunset(latitude, longitude);
+            sunset.set(Calendar.SECOND, 0);
+            sunset.set(Calendar.MILLISECOND, 0);
+
+            logger.trace("Getting sunrise time");
+            Calendar sunrise = SunriseSunset.getSunrise(latitude, longitude);
+            sunrise.set(Calendar.SECOND, 0);
+            sunrise.set(Calendar.MILLISECOND, 0);
+
+            logger.trace("Getting noon time");
+            Calendar noon = Calendar.getInstance();
+            noon.set(Calendar.HOUR_OF_DAY, 12);
+            noon.set(Calendar.MINUTE, 0);
+            noon.set(Calendar.SECOND, 0);
+            noon.set(Calendar.MILLISECOND, 0);
+            
+            logger.trace("Getting curent time");
+            Calendar now = Calendar.getInstance();
+            now.set(Calendar.SECOND, 0);
+            now.set(Calendar.MILLISECOND, 0);
+            
+            logger.debug("Comparing time event times to current time");
+            if (sunset.compareTo(now) == 0)
+            {
+              logger.debug("Firing sunset time event");
+              eventCallback(new TimeEvent(TimeEvent.TimeEventType.SUNSET));
+            } else if (sunrise.compareTo(now) == 0)
+            {
+              logger.debug("Firing sunrise time event");
+              eventCallback(new TimeEvent(TimeEvent.TimeEventType.SUNRISE));              
+            } else if (noon.compareTo(now) == 0)
+            {
+              logger.debug("Firing noon time event");
+              eventCallback(new TimeEvent(TimeEvent.TimeEventType.NOON));                            
+            }
+          }
+        }, now.getTime(), 60 * 1000);
+
+      } catch (NumberFormatException e)
+      {
+        logger
+            .warn("Invalid net.gregrapp.jhouse.LATITUDE or net.gregrapp.jhouse.LONGITUDE values in CONFIG table");
+      }
+    }
+
   }
 }

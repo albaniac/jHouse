@@ -60,18 +60,8 @@ public class DSCIT100FrameLayerImpl implements DSCIT100FrameLayer
   @Override
   public void destroy()
   {
-    logger.info("Destroying frame layer");
+    logger.debug("Destroying frame layer");
     this.receiveThreadActive = false;
-   /* try
-    {
-      logger.debug("Closing input reader");
-      reader.close();
-    } catch (IOException e)
-    {
-      logger.error("Error closing input reader: ", e);
-    }
-    logger.debug("Closing print writer");
-    writer.close();*/
     transport.destroy();
   }
 

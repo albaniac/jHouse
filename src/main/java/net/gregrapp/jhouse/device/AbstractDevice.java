@@ -26,18 +26,24 @@ public class AbstractDevice implements Device
 
   private final PropertyChangeSupport changes = new PropertyChangeSupport(this);
 
+  // Fields
   private int deviceId;
   private String deviceName;
   private String deviceText;
   private Long deviceValue;
+  private Calendar lastChange;
+
   @Autowired
   EventManager eventManager;
 
-  private Calendar lastChange;
 
   public AbstractDevice(int deviceId)
   {
     this.deviceId = deviceId;
+    this.deviceName = "";
+    this.deviceText = "";
+    this.deviceValue = 0L;
+    this.lastChange = Calendar.getInstance();
   }
 
   /*
@@ -163,7 +169,7 @@ public class AbstractDevice implements Device
   @Override
   public void setValue(Long deviceValue)
   {
-    logger.debug("Setting device {} value to: {}", this.deviceId, deviceValue);
+    logger.debug("Setting device [{}] value to [{}]", this.deviceId, deviceValue);
     
     Long oldValue = this.deviceValue;
 
