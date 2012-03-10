@@ -32,12 +32,12 @@ public class ZwaveBinarySwitch extends ZwaveDeviceDriver implements
    * Internal switch state
    */
   private int switchState = -1;
-  
+
   /**
-   * Value indexes 
+   * Value indexes
    */
   private static final int SWITCH_VALUE_IDX = 0;
-  
+
   /**
    * @param driverInterface
    *          interface instance for this device driver
