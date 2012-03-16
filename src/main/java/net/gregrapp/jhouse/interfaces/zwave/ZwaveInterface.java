@@ -11,7 +11,8 @@ import javax.annotation.PreDestroy;
 
 import net.gregrapp.jhouse.device.drivers.types.DeviceDriver;
 import net.gregrapp.jhouse.device.drivers.types.ZwaveDeviceDriver;
-import net.gregrapp.jhouse.interfaces.AbstractInterface;
+import net.gregrapp.jhouse.interfaces.InterfaceCallback;
+import net.gregrapp.jhouse.interfaces.TransportInterface;
 import net.gregrapp.jhouse.interfaces.NodeInterface;
 import net.gregrapp.jhouse.interfaces.zwave.ApplicationLayerImpl.MemoryGetId;
 import net.gregrapp.jhouse.interfaces.zwave.ApplicationLayerImpl.SerialApiCapabilities;
@@ -41,7 +42,7 @@ import org.slf4j.LoggerFactory;
  * @author Greg Rapp
  * 
  */
-public class ZwaveInterface extends AbstractInterface implements
+public class ZwaveInterface extends TransportInterface implements
     ApplicationLayerAsyncCallback, NodeInterface
 {
   private static final Logger logger = LoggerFactory
@@ -49,45 +50,46 @@ public class ZwaveInterface extends AbstractInterface implements
 
   private ApplicationLayer appLayer;
 
-  private Map<Integer, ArrayList<ZwaveDeviceDriver>> devices = new HashMap<Integer, ArrayList<ZwaveDeviceDriver>>();
+  private Map<Integer, ArrayList<ZwaveDeviceDriver>> drivers = new HashMap<Integer, ArrayList<ZwaveDeviceDriver>>();
 
   public ZwaveInterface(Transport transport)
   {
     super(transport);
   }
 
-  public void attachDeviceDriver(DeviceDriver device)
+  public void attachDeviceDriver(DeviceDriver driver)
   {
-    if (!(device instanceof ZwaveDeviceDriver))
+    if (!(driver instanceof ZwaveDeviceDriver))
     {
       throw new ClassCastException(
           "Cannot attach non ZWave device to this interface");
-    }
-    else
+    } else
     {
-      logger.info("Attaching device driver: {}", device.getClass().getName());
-      ZwaveDeviceDriver zwaveDevice = (ZwaveDeviceDriver) device;
+      logger.info("Attaching device driver: {}", driver.getClass().getName());
+      ZwaveDeviceDriver zwaveDevice = (ZwaveDeviceDriver) driver;
 
-      if (devices.containsKey(zwaveDevice.getNodeId()))
+      if (drivers.containsKey(zwaveDevice.getNodeId()))
       {
-        if (devices.get(zwaveDevice.getNodeId()) instanceof ArrayList)
+        if (drivers.get(zwaveDevice.getNodeId()) instanceof ArrayList)
         {
-          devices.get(zwaveDevice.getNodeId()).add(zwaveDevice);
+          drivers.get(zwaveDevice.getNodeId()).add(zwaveDevice);
         } else
         {
           ArrayList<ZwaveDeviceDriver> tmp = new ArrayList<ZwaveDeviceDriver>();
           tmp.add(zwaveDevice);
-          devices.put(zwaveDevice.getNodeId(), tmp);
+          drivers.put(zwaveDevice.getNodeId(), tmp);
         }
       } else
       {
         ArrayList<ZwaveDeviceDriver> tmp = new ArrayList<ZwaveDeviceDriver>();
         tmp.add(zwaveDevice);
-        devices.put(zwaveDevice.getNodeId(), tmp);
+        drivers.put(zwaveDevice.getNodeId(), tmp);
       }
 
-      if (this.interfaceReady)
-        device.interfaceReady();
+      if (this.interfaceReady && (driver instanceof InterfaceCallback))
+      {
+        ((InterfaceCallback) driver).interfaceReady();
+      }
     }
   }
 
@@ -104,22 +106,21 @@ public class ZwaveInterface extends AbstractInterface implements
         logger.debug("Received BASIC_SET from node {} with a value of [{}]",
             nodeId, value);
 
-        if (devices.containsKey(nodeId))
+        if (drivers.containsKey(nodeId))
         {
-          for (Object device : devices.get(nodeId))
+          for (Object device : drivers.get(nodeId))
             if (device instanceof CommandClassBasic)
               ((CommandClassBasic) device).commandClassBasicSet(value);
         }
-      }
-      else if (payload[4] == CommandBasic.BASIC_REPORT.get())
+      } else if (payload[4] == CommandBasic.BASIC_REPORT.get())
       {
         int value = payload[5];
         logger.debug("Received BASIC_REPORT from node {} with a value of [{}]",
             nodeId, value);
 
-        if (devices.containsKey(nodeId))
+        if (drivers.containsKey(nodeId))
         {
-          for (Object device : devices.get(nodeId))
+          for (Object device : drivers.get(nodeId))
             if (device instanceof CommandClassBasic)
               ((CommandClassBasic) device).commandClassBasicReport(value);
         }
@@ -135,15 +136,14 @@ public class ZwaveInterface extends AbstractInterface implements
             "Received SWITCH_MULTILEVEL_SET from node {} with a value of [{}]",
             nodeId, value);
 
-        if (devices.containsKey(nodeId))
+        if (drivers.containsKey(nodeId))
         {
-          for (Object device : devices.get(nodeId))
+          for (Object device : drivers.get(nodeId))
             if (device instanceof CommandClassSwitchMultilevel)
               ((CommandClassSwitchMultilevel) device)
                   .commandClassSwitchMultilevelSet(value);
         }
-      }
-      else if (payload[4] == CommandSwitchMultilevel.SWITCH_MULTILEVEL_REPORT
+      } else if (payload[4] == CommandSwitchMultilevel.SWITCH_MULTILEVEL_REPORT
           .get())
       {
         int value = payload[5];
@@ -152,9 +152,9 @@ public class ZwaveInterface extends AbstractInterface implements
                 "Received SWITCH_MULTILEVEL_REPORT from node {} with a value of [{}]",
                 nodeId, value);
 
-        if (devices.containsKey(nodeId))
+        if (drivers.containsKey(nodeId))
         {
-          for (Object device : devices.get(nodeId))
+          for (Object device : drivers.get(nodeId))
             if (device instanceof CommandClassSwitchMultilevel)
               ((CommandClassSwitchMultilevel) device)
                   .commandClassSwitchMultilevelReport(value);
@@ -168,44 +168,41 @@ public class ZwaveInterface extends AbstractInterface implements
       {
         logger.debug("Received MANUFACTURER_SPECIFIC_REPORT from node [{}]",
             nodeId);
-        if (devices.containsKey(nodeId))
+        if (drivers.containsKey(nodeId))
         {
           int manufacturer = (payload[5] << 8) | payload[6];
           int productType = (payload[7] << 8) | payload[8];
           int productId = (payload[9] << 8) | payload[10];
-          for (Object device : devices.get(nodeId))
+          for (Object device : drivers.get(nodeId))
             if (device instanceof CommandClassManufacturerSpecific)
               ((CommandClassManufacturerSpecific) device)
                   .commandClassManufacturerSpecificReport(manufacturer,
                       productType, productId);
         }
       }
-    }
-    else if (payload[3] == CommandClass.COMMAND_CLASS_SENSOR_BINARY.get())
+    } else if (payload[3] == CommandClass.COMMAND_CLASS_SENSOR_BINARY.get())
     {
       if (payload[4] == CommandSensorBinary.SENSOR_BINARY_REPORT.get())
       {
         logger.debug(
             "Received SENSOR_BINARY_REPORT from node {} with a value of [{}]",
             nodeId, payload[5]);
-        if (devices.get(nodeId) != null)
+        if (drivers.get(nodeId) != null)
         {
-          for (Object device : devices.get(nodeId))
+          for (Object device : drivers.get(nodeId))
             if (device instanceof CommandClassSensorBinary)
               ((CommandClassSensorBinary) device)
                   .commandClassSensorBinaryReport(payload[5]);
         }
       }
-    }
-    else if (payload[3] == CommandClass.COMMAND_CLASS_HAIL.get())
+    } else if (payload[3] == CommandClass.COMMAND_CLASS_HAIL.get())
     {
       logger.debug("Received HAIL from node [{}]", nodeId);
-      if (devices.get(nodeId) != null)
+      if (drivers.get(nodeId) != null)
       {
-        for (Object device : devices.get(nodeId))
+        for (Object device : drivers.get(nodeId))
           if (device instanceof CommandClassHail)
-            ((CommandClassHail) device)
-                .hail();
+            ((CommandClassHail) device).hail();
       }
     }
   }
@@ -272,10 +269,9 @@ public class ZwaveInterface extends AbstractInterface implements
       this.transport.init();
     } catch (TransportException e)
     {
-      logger
-          .error(
-              "Error opening transport, aborting Z-Wave initialization [{}]",
-              e.getMessage());
+      logger.error(
+          "Error opening transport, aborting Z-Wave initialization [{}]",
+          e.getMessage());
       return;
     }
 
@@ -305,19 +301,22 @@ public class ZwaveInterface extends AbstractInterface implements
   }
 
   /**
-   * Tells attached devices that this interface is ready for traffic
+   * Tells attached drivers that this interface is ready for traffic
    */
   private void setInterfaceReady(boolean ready)
   {
     this.interfaceReady = ready;
 
-    if (ready && this.devices != null)
+    if (ready && this.drivers != null)
     {
-      for (ArrayList<ZwaveDeviceDriver> zwaveDevices : this.devices.values())
+      for (ArrayList<ZwaveDeviceDriver> zwaveDrivers : this.drivers.values())
       {
-        for (ZwaveDeviceDriver dev : zwaveDevices)
+        for (ZwaveDeviceDriver driver : zwaveDrivers)
         {
-          dev.interfaceReady();
+          if (driver instanceof InterfaceCallback)
+          {
+            ((InterfaceCallback) driver).interfaceReady();
+          }
         }
       }
     }

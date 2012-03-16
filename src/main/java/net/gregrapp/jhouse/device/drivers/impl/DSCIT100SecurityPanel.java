@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import net.gregrapp.jhouse.device.classes.SecurityPanel;
 import net.gregrapp.jhouse.device.drivers.types.AbstractDeviceDriver;
+import net.gregrapp.jhouse.interfaces.InterfaceCallback;
 import net.gregrapp.jhouse.interfaces.dscit100.DSCIT100Callback;
 import net.gregrapp.jhouse.interfaces.dscit100.DSCIT100Interface;
 import net.gregrapp.jhouse.services.config.ConfigService;
@@ -54,7 +55,7 @@ import net.gregrapp.jhouse.services.config.ConfigService;
  */
 
 public class DSCIT100SecurityPanel extends AbstractDeviceDriver implements
-    DSCIT100Callback, SecurityPanel
+    DSCIT100Callback, SecurityPanel, InterfaceCallback
 {
   private static final Logger logger = LoggerFactory
       .getLogger(DSCIT100SecurityPanel.class);
@@ -172,10 +173,9 @@ public class DSCIT100SecurityPanel extends AbstractDeviceDriver implements
     driverInterface.sendCommand("040", "1" + code);
   }
 
-  /*
-   * (non-Javadoc)
-   * 
-   * @see net.gregrapp.jhouse.device.drivers.types.DeviceDriver#interfaceReady()
+  
+  /* (non-Javadoc)
+   * @see net.gregrapp.jhouse.interfaces.InterfaceCallback#interfaceReady()
    */
   @Override
   public void interfaceReady()

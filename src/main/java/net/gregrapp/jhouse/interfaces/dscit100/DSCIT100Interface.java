@@ -6,7 +6,8 @@ package net.gregrapp.jhouse.interfaces.dscit100;
 import javax.annotation.PreDestroy;
 
 import net.gregrapp.jhouse.device.drivers.types.DeviceDriver;
-import net.gregrapp.jhouse.interfaces.AbstractInterface;
+import net.gregrapp.jhouse.interfaces.InterfaceCallback;
+import net.gregrapp.jhouse.interfaces.TransportInterface;
 import net.gregrapp.jhouse.transports.Transport;
 import net.gregrapp.jhouse.transports.TransportException;
 
@@ -19,7 +20,7 @@ import org.slf4j.LoggerFactory;
  * @author Greg Rapp
  * 
  */
-public class DSCIT100Interface extends AbstractInterface implements
+public class DSCIT100Interface extends TransportInterface implements
     DSCIT100FrameLayerAsyncCallback
 {
   private static final Logger logger = LoggerFactory
@@ -43,20 +44,21 @@ public class DSCIT100Interface extends AbstractInterface implements
    * .jhouse.device.drivers.impl.types.DeviceDriver)
    */
   @Override
-  public void attachDeviceDriver(DeviceDriver device)
+  public void attachDeviceDriver(DeviceDriver driver)
   {
-    if (!(device instanceof DSCIT100Callback))
+    if (!(driver instanceof DSCIT100Callback))
     {
       throw new ClassCastException(
           "Device driver must implement DSCIT100Callback");
-    }
-    else
+    } else
     {
-      logger.info("Attaching device driver: {}", device.getClass().getName());
-      this.panel = device;
+      logger.info("Attaching device driver: {}", driver.getClass().getName());
+      this.panel = driver;
 
-      if (this.interfaceReady)
-        device.interfaceReady();
+      if (this.interfaceReady && (driver instanceof InterfaceCallback))
+      {
+        ((InterfaceCallback) driver).interfaceReady();
+      }
     }
   }
 
@@ -220,8 +222,10 @@ public class DSCIT100Interface extends AbstractInterface implements
 
     this.interfaceReady = true;
 
-    if (panel != null)
-      panel.interfaceReady();
+    if ((panel != null) && (panel instanceof InterfaceCallback))
+    {
+      ((InterfaceCallback)panel).interfaceReady();
+    }
   }
 
   /* Replaces multiple whitespace between words with single whitespace */

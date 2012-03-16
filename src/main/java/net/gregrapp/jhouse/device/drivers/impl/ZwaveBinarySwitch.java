@@ -5,6 +5,7 @@ package net.gregrapp.jhouse.device.drivers.impl;
 
 import net.gregrapp.jhouse.device.classes.BinarySwitch;
 import net.gregrapp.jhouse.device.drivers.types.ZwaveDeviceDriver;
+import net.gregrapp.jhouse.interfaces.InterfaceCallback;
 import net.gregrapp.jhouse.interfaces.zwave.Constants.CommandBasic;
 import net.gregrapp.jhouse.interfaces.zwave.Constants.CommandClass;
 import net.gregrapp.jhouse.interfaces.zwave.Constants.CommandManufacturerSpecific;
@@ -23,7 +24,7 @@ import org.slf4j.LoggerFactory;
  */
 public class ZwaveBinarySwitch extends ZwaveDeviceDriver implements
     BinarySwitch,
-    CommandClassBasic, CommandClassManufacturerSpecific
+    CommandClassBasic, CommandClassManufacturerSpecific, InterfaceCallback
 {
   private static final Logger logger = LoggerFactory
       .getLogger(ZwaveBinarySwitch.class);
@@ -139,12 +140,10 @@ public class ZwaveBinarySwitch extends ZwaveDeviceDriver implements
   {
   }
 
-  /*
-   * (non-Javadoc)
-   * 
-   * @see
-   * net.gregrapp.jhouse.device.drivers.impl.types.DeviceDriver#interfaceReady()
+  /* (non-Javadoc)
+   * @see net.gregrapp.jhouse.interfaces.InterfaceCallback#interfaceReady()
    */
+  @Override
   public void interfaceReady()
   {
     logger.debug("Interface ready callback received");

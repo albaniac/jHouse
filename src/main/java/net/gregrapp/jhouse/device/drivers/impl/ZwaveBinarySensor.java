@@ -124,19 +124,6 @@ public class ZwaveBinarySensor extends ZwaveDeviceDriver implements
   /*
    * (non-Javadoc)
    * 
-   * @see
-   * net.gregrapp.jhouse.device.drivers.impl.types.DeviceDriver#interfaceReady()
-   */
-  @Override
-  public void interfaceReady()
-  {
-    // TODO Auto-generated method stub
-
-  }
-
-  /*
-   * (non-Javadoc)
-   * 
    * @see net.gregrapp.jhouse.device.drivers.impl.types.ZwaveDeviceDriver#poll()
    */
   @Override

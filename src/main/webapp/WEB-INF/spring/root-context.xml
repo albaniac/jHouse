@@ -16,46 +16,6 @@
 
 	<context:component-scan base-package="net.gregrapp.jhouse" />
 
-	<!-- <bean name="zwaveTransport" class="net.gregrapp.jhouse.transports.serial.SerialImpl"> 
-		<constructor-arg> <list> <value>/dev/tty.SLAB_USBtoUART</value> <value>115200</value> 
-		</list> </constructor-arg> </bean> -->
-
-<!-- 
-	<bean name="zwaveTransport"
-		class="net.gregrapp.jhouse.transports.tcpclient.TCPClientImpl">
-		<constructor-arg>
-			<list>
-				<value>ztroller.crazynoodle.net</value>
-				<value>4999</value>
-			</list>
-		</constructor-arg>
-	</bean>
-
-	<bean name="zwaveInterface" class="net.gregrapp.jhouse.interfaces.zwave.ZwaveInterface">
-		<constructor-arg ref="zwaveTransport" />
-	</bean>
-	 -->
-	
-<!-- 
-	<bean name="dscIt100Transport"
-		class="net.gregrapp.jhouse.transports.tcpclient.TCPClientImpl">
-		<constructor-arg>
-			<list>
-				<value>tristar.crazynoodle.net</value>
-				<value>5000</value>
-			</list>
-		</constructor-arg>
-	</bean>
-
-	<bean name="dscIt100Interface"
-		class="net.gregrapp.jhouse.interfaces.dscit100.DSCIT100Interface">
-		<constructor-arg ref="dscIt100Transport" />
-	</bean>
- -->
- 
- 
-<!-- 	<import resource="devices.xml" /> -->
-
 	<!-- ========= Persistence ========== -->
 	<jee:jndi-lookup id="dataSource" jndi-name="jdbc/jHouse" />
 
@@ -75,8 +35,10 @@
 	<bean id="transactionManager" class="org.springframework.orm.jpa.JpaTransactionManager">
 		<property name="entityManagerFactory" ref="entityManagerFactory" />
 	</bean>
-	<tx:annotation-driven transaction-manager="transactionManager" mode="proxy" />
+	<tx:annotation-driven transaction-manager="transactionManager"
+		mode="proxy" />
 
-	<jpa:repositories base-package="net.gregrapp.jhouse.repositories" entity-manager-factory-ref="entityManagerFactory" transaction-manager-ref="transactionManager"/>
-
+	<jpa:repositories base-package="net.gregrapp.jhouse.repositories"
+		entity-manager-factory-ref="entityManagerFactory"
+		transaction-manager-ref="transactionManager" />
 </beans>

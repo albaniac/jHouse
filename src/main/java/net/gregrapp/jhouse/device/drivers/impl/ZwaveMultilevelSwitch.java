@@ -6,6 +6,7 @@ package net.gregrapp.jhouse.device.drivers.impl;
 import net.gregrapp.jhouse.device.classes.BinarySwitch;
 import net.gregrapp.jhouse.device.classes.MultilevelSwitch;
 import net.gregrapp.jhouse.device.drivers.types.ZwaveDeviceDriver;
+import net.gregrapp.jhouse.interfaces.InterfaceCallback;
 import net.gregrapp.jhouse.interfaces.zwave.Constants.CommandClass;
 import net.gregrapp.jhouse.interfaces.zwave.Constants.CommandManufacturerSpecific;
 import net.gregrapp.jhouse.interfaces.zwave.Constants.CommandSwitchMultilevel;
@@ -23,7 +24,7 @@ import org.slf4j.LoggerFactory;
 public class ZwaveMultilevelSwitch extends ZwaveDeviceDriver implements
     BinarySwitch,
     MultilevelSwitch, CommandClassSwitchMultilevel,
-    CommandClassManufacturerSpecific
+    CommandClassManufacturerSpecific, InterfaceCallback
 
 {
   private static final Logger logger = LoggerFactory
@@ -159,12 +160,10 @@ public class ZwaveMultilevelSwitch extends ZwaveDeviceDriver implements
     this.poll();
   }
 
-  /*
-   * (non-Javadoc)
-   * 
-   * @see
-   * net.gregrapp.jhouse.device.drivers.impl.types.DeviceDriver#interfaceReady()
+  /* (non-Javadoc)
+   * @see net.gregrapp.jhouse.interfaces.InterfaceCallback#interfaceReady()
    */
+  @Override
   public void interfaceReady()
   {
     logger.debug("Interface ready callback received");

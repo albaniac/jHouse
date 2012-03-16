@@ -54,14 +54,12 @@ public class HttpProxy
     BufferedOutputStream proxyToClientBuf = null;
     int oneByte;
 
-    logger.debug("Creating connection");
+    logger.debug("Creating connection to [{}]", site);
     HttpURLConnection urlConn = null;
     try
     {
       logger.debug("Opening connection");
-      urlConn = (HttpURLConnection) (new URL(
-          "http://" + site))
-          .openConnection();
+      urlConn = (HttpURLConnection) (new URL(site)).openConnection();
       String methodName = request.getMethod();
       urlConn.setRequestMethod(methodName);
 
@@ -74,6 +72,7 @@ public class HttpProxy
       if (user != null && !"".equals(user))
       {
         Base64 base64 = new Base64();
+        if (pass == null) pass = "";
         String auth = base64.encodeAsString((user + ":" + pass).getBytes());
         urlConn.setRequestProperty("Authorization", "Basic " + auth);
       }
@@ -116,15 +115,19 @@ public class HttpProxy
       proxyToClientBuf.flush();
       proxyToClientBuf.close();
       webToProxyBuf.close();
-      urlConn.disconnect();
     } catch (MalformedURLException e)
     {
       logger.warn("Invalid URL specified [{}]", site);
     } catch (SocketException e)
     {
+      logger.warn("Socket exception: ", e);
     } catch (IOException e)
     {
       logger.warn("Connection error: ", e);
+    }
+    finally
+    {
+      urlConn.disconnect();      
     }
   }
 }
