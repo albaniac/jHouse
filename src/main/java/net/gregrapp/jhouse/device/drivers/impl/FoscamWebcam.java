@@ -19,6 +19,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
+ * Foscam Webcam Driver
+ * 
  * @author Greg Rapp
  * 
  */
@@ -65,7 +67,9 @@ public class FoscamWebcam extends AbstractDeviceDriver implements PtzWebcam
   @Override
   public String getSnapshotUrl()
   {
-    return String.format("%s/%s", url, SNAPSHOT_URI);
+    String tmp = String.format("%s/%s", url, SNAPSHOT_URI);
+    logger.debug("Getting snapshot URL [{}]", tmp);
+    return tmp;
   }
 
   /*
@@ -87,7 +91,9 @@ public class FoscamWebcam extends AbstractDeviceDriver implements PtzWebcam
   @Override
   public String getVideoUrl()
   {
-    return String.format("%s/%s", url, MJPEG_URI);
+    String tmp = String.format("%s/%s", url, MJPEG_URI);
+    logger.debug("Getting video URL [{}]", tmp);
+    return tmp;
   }
 
   /**
@@ -234,6 +240,7 @@ public class FoscamWebcam extends AbstractDeviceDriver implements PtzWebcam
   @Override
   public void setUrl(String url)
   {
+    logger.debug("Setting URL [{}]", url);
     this.url = url;
   }
 
@@ -243,6 +250,7 @@ public class FoscamWebcam extends AbstractDeviceDriver implements PtzWebcam
   @Override
   public void setUsername(String username)
   {
+    logger.debug("Setting username [{}]", username);
     this.username = username;
   }
 
