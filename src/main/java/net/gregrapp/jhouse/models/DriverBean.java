@@ -22,7 +22,7 @@ import javax.persistence.Table;
  * 
  */
 @Entity
-@Table(name = "DRIVER_BEANS")
+@Table(name = "driver_beans")
 public class DriverBean
 {
 

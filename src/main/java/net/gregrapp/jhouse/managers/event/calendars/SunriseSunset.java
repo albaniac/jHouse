@@ -4,7 +4,7 @@
 package net.gregrapp.jhouse.managers.event.calendars;
 
 /**
- * Class to calculate the sun rise and sun set at any location on the Earth.
+ * Class to calculate the sunrise and sunset times at any location on the Earth.
  * 
  * Based on algorithm at
  * http://williams.best.vwh.net/sunrise_sunset_algorithm.htm
@@ -309,7 +309,7 @@ public class SunriseSunset
     calendar.clear();
     calendar.setTimeZone(tz);
     calendar.add(Calendar.MILLISECOND, returnTime);
-    calendar.add(Calendar.MILLISECOND, tz.getRawOffset());
+    calendar.add(Calendar.MILLISECOND, tz.getOffset(date.getTime()));
     calendar.set(Calendar.DAY_OF_YEAR, dayOfYear);
     calendar.set(Calendar.YEAR, year);
 
@@ -447,7 +447,7 @@ public class SunriseSunset
     calendar.clear();
     calendar.setTimeZone(tz);
     calendar.add(Calendar.MILLISECOND, returnTime);
-    calendar.add(Calendar.MILLISECOND, tz.getRawOffset());
+    calendar.add(Calendar.MILLISECOND, tz.getOffset(date.getTime()));
     calendar.set(Calendar.DAY_OF_YEAR, dayOfYear);
     calendar.set(Calendar.YEAR, year);
 

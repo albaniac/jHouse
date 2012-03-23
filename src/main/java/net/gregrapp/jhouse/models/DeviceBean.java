@@ -18,7 +18,7 @@ import javax.persistence.UniqueConstraint;
  * 
  */
 @Entity
-@Table(name = "DEVICE_BEANS", 
+@Table(name = "device_beans", 
        uniqueConstraints = { @UniqueConstraint(columnNames = { "driver_id", "valueIndex" }) })
 public class DeviceBean
 {

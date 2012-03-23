@@ -17,7 +17,7 @@ import javax.persistence.Table;
  * 
  */
 @Entity
-@Table(name = "INTERFACE_BEANS")
+@Table(name = "interface_beans")
 public class InterfaceBean
 {
 

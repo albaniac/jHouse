@@ -69,6 +69,12 @@ public class EmailServiceImpl implements EmailService
   @Override
   public void send(String[] recipients, String subject, String message)
   {
+    if (mailTransport == null)
+    {
+      logger.warn("Unable to send email message, EmailService has not been initialized");
+      return;
+    }
+    
     logger.trace("Building email message to [{}]", recipients);
     MimeMessage mimeMessage = null;
     mimeMessage = new MimeMessage(mailSession);
@@ -119,6 +125,12 @@ public class EmailServiceImpl implements EmailService
     this.configService = configService;
 
     String host = this.configService.get(CONFIG_NAMESPACE, HOST);
+    if (host == null)
+    {
+      logger.error("Unable to initialize EmailService, SMTP HOST not set");
+      return;
+    }
+    
     smtpProps.setProperty("mail.smtp.host", host);
 
     String port = this.configService.get(CONFIG_NAMESPACE, PORT);

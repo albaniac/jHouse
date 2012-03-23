@@ -21,7 +21,7 @@ import javax.persistence.Table;
  * 
  */
 @Entity
-@Table(name = "TRANSPORT_BEANS")
+@Table(name = "transport_beans")
 public class TransportBean
 {
 

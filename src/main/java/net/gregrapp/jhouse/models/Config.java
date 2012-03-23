@@ -17,7 +17,7 @@ import javax.persistence.UniqueConstraint;
  * 
  */
 @Entity
-@Table(name = "CONFIG",
+@Table(name = "config",
     uniqueConstraints = { @UniqueConstraint(columnNames = { "namespace", "key" }) })
 public class Config
 {
