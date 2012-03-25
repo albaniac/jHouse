@@ -26,23 +26,26 @@ import org.slf4j.LoggerFactory;
  */
 public class FoscamWebcam extends AbstractDeviceDriver implements PtzWebcam
 {
+  private static final String NORMALRES_MJPEG_URI = "videostream.cgi?resolution=32&rate=0";
+
   private static final Logger logger = LoggerFactory
       .getLogger(FoscamWebcam.class);
-
-  private static final String MJPEG_URI = "videostream.cgi?resolution=32&rate=0";
-  // URI constants
+  
+  private static final String LOWRES_MJPEG_URI = "videostream.cgi?resolution=8&rate=11";
   private static final String PTZ_CONTROL_URI = "decoder_control.cgi?command=%d";
-  private static final int PTZ_DOWN = 2;
 
-  private static final int PTZ_LEFT = 4;
-  private static final int PTZ_RIGHT = 6;
+  private static final int PTZ_DOWN = 2;
+  private static final int PTZ_LEFT = 6;
+  private static final int PTZ_RIGHT = 4;
   private static final int PTZ_STOP_INCREMENT = 1;
   private static final int PTZ_UP = 0;
   private static final String SNAPSHOT_URI = "snapshot.cgi";
 
   private static final String USER_AGENT_SAFARI = "Mozilla/5.0 (Windows; U; Windows NT 6.0; en-US) AppleWebKit/525.28 (KHTML, like Gecko) Version/3.2.2 Safari/525.28.1";
+
   // Local variables
   private int direction;
+
   // Properties
   private String password;
   private String url;
@@ -67,9 +70,9 @@ public class FoscamWebcam extends AbstractDeviceDriver implements PtzWebcam
   @Override
   public String getSnapshotUrl()
   {
-    String tmp = String.format("%s/%s", url, SNAPSHOT_URI);
-    logger.debug("Getting snapshot URL [{}]", tmp);
-    return tmp;
+    String snapshotUrl = String.format("%s/%s", url, SNAPSHOT_URI);
+    logger.debug("Getting snapshot URL [{}]", snapshotUrl);
+    return snapshotUrl;
   }
 
   /*
@@ -91,9 +94,29 @@ public class FoscamWebcam extends AbstractDeviceDriver implements PtzWebcam
   @Override
   public String getVideoUrl()
   {
-    String tmp = String.format("%s/%s", url, MJPEG_URI);
-    logger.debug("Getting video URL [{}]", tmp);
-    return tmp;
+    return getVideoUrl(Resolution.NORMAL);
+  }
+
+  /* (non-Javadoc)
+   * @see net.gregrapp.jhouse.device.classes.Webcam#getVideoUrl(net.gregrapp.jhouse.device.classes.Webcam.Resolution)
+   */
+  @Override
+  public String getVideoUrl(Resolution resolution)
+  {
+    String videoUrl = null;
+    
+    switch (resolution)
+    {
+    case LOW:
+      videoUrl = String.format("%s/%s", url, LOWRES_MJPEG_URI);
+      break;
+    default:
+      videoUrl = String.format("%s/%s", url, NORMALRES_MJPEG_URI);
+      break;
+    }      
+    
+    logger.debug("Getting video URL [{}]", videoUrl);
+    return videoUrl;
   }
 
   /**
@@ -198,7 +221,9 @@ public class FoscamWebcam extends AbstractDeviceDriver implements PtzWebcam
     httpGet(panUrl);
   }
 
-  /* (non-Javadoc)
+  /*
+   * (non-Javadoc)
+   * 
    * @see net.gregrapp.jhouse.device.classes.PtzWebcam#panStop()
    */
   @Override
@@ -225,8 +250,11 @@ public class FoscamWebcam extends AbstractDeviceDriver implements PtzWebcam
     httpGet(panUrl);
   }
 
-  /* (non-Javadoc)
-   * @see net.gregrapp.jhouse.device.classes.Webcam#setPassword(java.lang.String)
+  /*
+   * (non-Javadoc)
+   * 
+   * @see
+   * net.gregrapp.jhouse.device.classes.Webcam#setPassword(java.lang.String)
    */
   @Override
   public void setPassword(String password)
@@ -234,7 +262,9 @@ public class FoscamWebcam extends AbstractDeviceDriver implements PtzWebcam
     this.password = password;
   }
 
-  /* (non-Javadoc)
+  /*
+   * (non-Javadoc)
+   * 
    * @see net.gregrapp.jhouse.device.classes.Webcam#setUrl(java.lang.String)
    */
   @Override
@@ -244,8 +274,11 @@ public class FoscamWebcam extends AbstractDeviceDriver implements PtzWebcam
     this.url = url;
   }
 
-  /* (non-Javadoc)
-   * @see net.gregrapp.jhouse.device.classes.Webcam#setUsername(java.lang.String)
+  /*
+   * (non-Javadoc)
+   * 
+   * @see
+   * net.gregrapp.jhouse.device.classes.Webcam#setUsername(java.lang.String)
    */
   @Override
   public void setUsername(String username)

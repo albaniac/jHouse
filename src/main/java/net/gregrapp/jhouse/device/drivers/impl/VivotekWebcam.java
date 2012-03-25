@@ -20,7 +20,8 @@ public class VivotekWebcam extends AbstractDeviceDriver implements Webcam
   private static final Logger logger = LoggerFactory
       .getLogger(VivotekWebcam.class);
 
-  private static final String MJPEG_URI = "video3.mjpg";
+  private static final String LOWRES_MJPEG_URI = "video3.mjpg";
+  private static final String NORMALRES_MJPEG_URI = "video4.mjpg";
   private static final String SNAPSHOT_URI = "cgi-bin/viewer/video.jpg";
 
   // Properties
@@ -71,9 +72,29 @@ public class VivotekWebcam extends AbstractDeviceDriver implements Webcam
   @Override
   public String getVideoUrl()
   {
-    String tmp = String.format("%s/%s", url, MJPEG_URI);
-    logger.debug("Getting video URL [{}]", tmp);
-    return tmp;
+    return getVideoUrl(Resolution.NORMAL);
+  }
+
+  /* (non-Javadoc)
+   * @see net.gregrapp.jhouse.device.classes.Webcam#getVideoUrl(net.gregrapp.jhouse.device.classes.Webcam.Resolution)
+   */
+  @Override
+  public String getVideoUrl(Resolution resolution)
+  {
+    String videoUrl = null;
+    
+    switch (resolution)
+    {
+    case LOW:
+      videoUrl = String.format("%s/%s", url, LOWRES_MJPEG_URI);
+      break;
+    default:
+      videoUrl = String.format("%s/%s", url, NORMALRES_MJPEG_URI);
+      break;
+    }
+    
+    logger.debug("Getting video URL [{}]", videoUrl);
+    return videoUrl;
   }
 
   /*

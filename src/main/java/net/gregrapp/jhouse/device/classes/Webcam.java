@@ -9,6 +9,13 @@ package net.gregrapp.jhouse.device.classes;
  */
 public interface Webcam extends DeviceClass
 {
+  public enum Resolution
+  {
+    LOW,
+    NORMAL,
+    HIGH
+  };
+  
   /**
    * @return the password to authenticate to the webcam
    */
@@ -28,6 +35,12 @@ public interface Webcam extends DeviceClass
    * @return the video stream URL for this webcam
    */
   public String getVideoUrl();
+
+  /**
+   * @param resolution video stream resolution
+   * @return the video stream URL for this webcam
+   */
+  public String getVideoUrl(Resolution resolution);
 
   /**
    * Set the password to authenticate to the webcam

@@ -118,12 +118,15 @@ public class HttpProxy
     } catch (MalformedURLException e)
     {
       logger.warn("Invalid URL specified [{}]", site);
+      logger.trace("{}", e);
     } catch (SocketException e)
     {
-      logger.warn("Socket exception: ", e);
+      logger.warn("Socket exception");
+      logger.trace("{}", e);
     } catch (IOException e)
     {
-      logger.warn("Connection error: ", e);
+      logger.info("IO error");
+      logger.trace("{}", e);
     }
     finally
     {

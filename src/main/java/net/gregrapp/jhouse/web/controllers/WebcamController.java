@@ -14,6 +14,7 @@ import javax.servlet.http.HttpServletResponse;
 import net.gregrapp.jhouse.device.DriverDevice;
 import net.gregrapp.jhouse.device.classes.PtzWebcam;
 import net.gregrapp.jhouse.device.classes.Webcam;
+import net.gregrapp.jhouse.device.classes.Webcam.Resolution;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -65,7 +66,7 @@ public class WebcamController
         "jhouse/controllers/webcam/");
 
     Model model = new ExtendedModelMap();
-    
+
     model.addAttribute("baseUrl", baseUrl);
     model.addAttribute("videoUri", "video/");
     model.addAttribute("panUpUri", "panUp/");
@@ -85,36 +86,12 @@ public class WebcamController
       if (device.getDriver() instanceof Webcam)
       {
         HashMap<String, Object> webcam = new HashMap<String, Object>();
-        
+
         webcam.put("id", device.getId());
         webcam.put("name", device.getName());
         webcam.put("classes", device.getDriver().getClass().getInterfaces());
         webcam.put("beanName", beanName);
-        
-        // webcam.put("videoUrl", String.format("%s://%s:%s/%s/%s",
-        // request.getScheme(), request.getServerName(),
-        // request.getServerPort(), "jhouse/controllers/webcam/video",
-        // beanName));
-        // webcam.put("videoUri", String.format("%s/%s/%s", baseUrl, "video",
-        // beanName));
-        // webcam.put("panUpUri", String.format("%s/%s/%s", baseUrl, "panUp",
-        // beanName));
-        // webcam.put("panDownUri", String.format("%s/%s/%s", baseUrl,
-        // "panDown", beanName));
-        // webcam.put("panLeftUri", String.format("%s/%s/%s", baseUrl,
-        // "panLeft", beanName));
-        // webcam.put("panRightUri", String.format("%s/%s/%s", baseUrl,
-        // "panRight", beanName));
-        // webcam.put("panStopUri", String.format("%s/%s/%s", baseUrl,
-        // "panStop", beanName));
 
-        //webcam.put("videoUrl",
-        //    String.format("%s/%s/%s", baseUrl, "video", beanName));
-        
-       // if (device.getDriver() instanceof PtzWebcam)
-       // {
-       // }
-        
         webcams.add(webcam);
       }
     }
@@ -254,6 +231,36 @@ public class WebcamController
   /**
    * Video stream from webcam
    * 
+   * @param resolution
+   *          Video resolution
+   * @param beanName
+   *          DriverDevice bean name
+   * @param response
+   * @throws Exception
+   */
+  @RequestMapping(value = "/video/{resolution}/{beanName}", method = RequestMethod.GET)
+  public void video(@PathVariable Resolution resolution,
+      @PathVariable String beanName, HttpServletResponse response)
+      throws Exception
+  {
+    logger.debug("Getting {} resolution video stream for bean [{}]", resolution.toString().toLowerCase(), beanName);
+
+    if (appContext.containsBean(beanName)
+        && ((DriverDevice) appContext.getBean(beanName)).getDriver() instanceof Webcam)
+    {
+      Webcam webcam = (Webcam) ((DriverDevice) appContext.getBean(beanName))
+          .getDriver();
+      httpProxy.http(webcam.getVideoUrl(resolution), webcam.getUsername(),
+          webcam.getPassword(), response);
+    } else
+    {
+      throw new Exception("Invalid bean");
+    }
+  }
+
+  /**
+   * Normal resolution video stream from webcam
+   * 
    * @param beanName
    *          DriverDevice bean name
    * @param response
@@ -263,18 +270,7 @@ public class WebcamController
   public void video(@PathVariable String beanName, HttpServletResponse response)
       throws Exception
   {
-    logger.debug("Getting video stream for bean [{}]", beanName);
-
-    if (appContext.containsBean(beanName)
-        && ((DriverDevice) appContext.getBean(beanName)).getDriver() instanceof Webcam)
-    {
-      Webcam webcam = (Webcam) ((DriverDevice) appContext.getBean(beanName))
-          .getDriver();
-      httpProxy.http(webcam.getVideoUrl(), webcam.getUsername(),
-          webcam.getPassword(), response);
-    } else
-    {
-      throw new Exception("Invalid bean");
-    }
+    this.video(Resolution.NORMAL, beanName, response);
   }
+
 }
