@@ -4,6 +4,7 @@
 package net.gregrapp.jhouse.web.controllers;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -89,9 +90,9 @@ public class WebcamController
 
         webcam.put("id", device.getId());
         webcam.put("name", device.getName());
-        webcam.put("classes", device.getDriver().getClass().getInterfaces());
+        //webcam.put("classes", device.getDriver().getClass().getInterfaces());
         webcam.put("beanName", beanName);
-
+        webcam.put("ptz", Arrays.asList(device.getDriver().getClass().getInterfaces()).contains(PtzWebcam.class));
         webcams.add(webcam);
       }
     }
