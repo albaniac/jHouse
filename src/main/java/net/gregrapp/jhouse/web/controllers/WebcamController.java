@@ -69,7 +69,7 @@ public class WebcamController
     Model model = new ExtendedModelMap();
 
     model.addAttribute("baseUrl", baseUrl);
-    model.addAttribute("videoUri", "video/");
+    model.addAttribute("videoUri", "video/LOW/");
     model.addAttribute("panUpUri", "panUp/");
     model.addAttribute("panDownUri", "panDown/");
     model.addAttribute("panLeftUri", "panLeft/");
