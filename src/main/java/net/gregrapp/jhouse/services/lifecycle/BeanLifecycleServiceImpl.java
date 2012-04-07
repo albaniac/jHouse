@@ -28,14 +28,14 @@ import org.springframework.beans.factory.config.ConstructorArgumentValues;
 import org.springframework.beans.factory.support.DefaultListableBeanFactory;
 import org.springframework.beans.factory.support.GenericBeanDefinition;
 import org.springframework.context.ApplicationContext;
-import org.springframework.stereotype.Repository;
+import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
  * @author Greg Rapp
  * 
  */
-@Repository
+@Service
 @Transactional
 public class BeanLifecycleServiceImpl implements BeanLifecycleService
 {

@@ -9,7 +9,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import net.gregrapp.jhouse.device.DriverDevice;
@@ -49,8 +48,26 @@ public class WebcamController
   @Autowired
   private HttpProxy httpProxy;
 
-  @Autowired
-  private HttpServletRequest request;
+  /**
+   * Return methods available from this controller
+   * 
+   * @return dictionary of methods
+   */
+  @RequestMapping(value = "/config", method = RequestMethod.GET)
+  public Model config()
+  {
+    Model model = new ExtendedModelMap();
+
+    model.addAttribute("listPath", "controllers/webcam/list/");
+    model.addAttribute("videoPath", "controllers/webcam/video/");
+    model.addAttribute("panUpPath", "controllers/webcam/panUp/");
+    model.addAttribute("panDownPath", "controllers/webcam/panDown/");
+    model.addAttribute("panLeftPath", "controllers/webcam/panLeft/");
+    model.addAttribute("panRightPath", "controllers/webcam/panRight/");
+    model.addAttribute("panStopPath", "controllers/webcam/panStop/");
+
+    return model;
+  }
 
   /**
    * List webcams
@@ -62,19 +79,7 @@ public class WebcamController
   {
     logger.debug("Listing webcam beans");
 
-    String baseUrl = String.format("%s://%s:%s/%s", request.getScheme(),
-        request.getServerName(), request.getServerPort(),
-        "jhouse/controllers/webcam/");
-
     Model model = new ExtendedModelMap();
-
-    model.addAttribute("baseUrl", baseUrl);
-    model.addAttribute("videoUri", "video/LOW/");
-    model.addAttribute("panUpUri", "panUp/");
-    model.addAttribute("panDownUri", "panDown/");
-    model.addAttribute("panLeftUri", "panLeft/");
-    model.addAttribute("panRightUri", "panRight/");
-    model.addAttribute("panStopUri", "panStop/");
 
     List<HashMap<String, Object>> webcams = new ArrayList<HashMap<String, Object>>();
 
@@ -90,9 +95,10 @@ public class WebcamController
 
         webcam.put("id", device.getId());
         webcam.put("name", device.getName());
-        //webcam.put("classes", device.getDriver().getClass().getInterfaces());
         webcam.put("beanName", beanName);
-        webcam.put("ptz", Arrays.asList(device.getDriver().getClass().getInterfaces()).contains(PtzWebcam.class));
+        webcam.put("ptz",
+            Arrays.asList(device.getDriver().getClass().getInterfaces())
+                .contains(PtzWebcam.class));
         webcams.add(webcam);
       }
     }
@@ -179,6 +185,31 @@ public class WebcamController
   }
 
   /**
+   * Stop the last pan request
+   * 
+   * @param beanName
+   *          name of bean
+   * @param response
+   * @throws Exception
+   */
+  @RequestMapping(value = "/panStop/{beanName}", method = RequestMethod.GET)
+  public void panStop(@PathVariable String beanName,
+      HttpServletResponse response) throws Exception
+  {
+    logger.debug("Executing pan stop on bean [{}]", beanName);
+    if (appContext.containsBean(beanName)
+        && ((DriverDevice) appContext.getBean(beanName)).getDriver() instanceof PtzWebcam)
+    {
+      PtzWebcam webcam = (PtzWebcam) ((DriverDevice) appContext
+          .getBean(beanName)).getDriver();
+      webcam.panStop();
+    } else
+    {
+      throw new Exception("Invalid bean");
+    }
+  }
+
+  /**
    * Pan the webcam up
    * 
    * @param beanName
@@ -205,28 +236,18 @@ public class WebcamController
   }
 
   /**
-   * Stop the last pan request
+   * Normal resolution video stream from webcam
    * 
    * @param beanName
-   *          name of bean
+   *          DriverDevice bean name
    * @param response
    * @throws Exception
    */
-  @RequestMapping(value = "/panStop/{beanName}", method = RequestMethod.GET)
-  public void panStop(@PathVariable String beanName,
-      HttpServletResponse response) throws Exception
+  @RequestMapping(value = "/video/{beanName}", method = RequestMethod.GET)
+  public void video(@PathVariable String beanName, HttpServletResponse response)
+      throws Exception
   {
-    logger.debug("Executing pan stop on bean [{}]", beanName);
-    if (appContext.containsBean(beanName)
-        && ((DriverDevice) appContext.getBean(beanName)).getDriver() instanceof PtzWebcam)
-    {
-      PtzWebcam webcam = (PtzWebcam) ((DriverDevice) appContext
-          .getBean(beanName)).getDriver();
-      webcam.panStop();
-    } else
-    {
-      throw new Exception("Invalid bean");
-    }
+    this.video(beanName, Resolution.NORMAL, response);
   }
 
   /**
@@ -239,12 +260,13 @@ public class WebcamController
    * @param response
    * @throws Exception
    */
-  @RequestMapping(value = "/video/{resolution}/{beanName}", method = RequestMethod.GET)
-  public void video(@PathVariable Resolution resolution,
-      @PathVariable String beanName, HttpServletResponse response)
+  @RequestMapping(value = "/video/{beanName}/{resolution}", method = RequestMethod.GET)
+  public void video(@PathVariable String beanName,
+      @PathVariable Resolution resolution, HttpServletResponse response)
       throws Exception
   {
-    logger.debug("Getting {} resolution video stream for bean [{}]", resolution.toString().toLowerCase(), beanName);
+    logger.debug("Getting {} resolution video stream for bean [{}]", resolution
+        .toString().toLowerCase(), beanName);
 
     if (appContext.containsBean(beanName)
         && ((DriverDevice) appContext.getBean(beanName)).getDriver() instanceof Webcam)
@@ -258,20 +280,4 @@ public class WebcamController
       throw new Exception("Invalid bean");
     }
   }
-
-  /**
-   * Normal resolution video stream from webcam
-   * 
-   * @param beanName
-   *          DriverDevice bean name
-   * @param response
-   * @throws Exception
-   */
-  @RequestMapping(value = "/video/{beanName}", method = RequestMethod.GET)
-  public void video(@PathVariable String beanName, HttpServletResponse response)
-      throws Exception
-  {
-    this.video(Resolution.NORMAL, beanName, response);
-  }
-
 }

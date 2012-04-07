@@ -24,5 +24,5 @@ public interface ConfigService
    * @param value
    *          option value
    */
-  public void set(String namespace, String key, String value);
+  public void set(String namespace, String key, String value);  
 }
