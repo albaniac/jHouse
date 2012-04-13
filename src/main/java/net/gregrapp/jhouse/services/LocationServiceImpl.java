@@ -4,6 +4,7 @@
 package net.gregrapp.jhouse.services;
 
 import java.util.Calendar;
+import java.util.List;
 
 import net.gregrapp.jhouse.models.User;
 import net.gregrapp.jhouse.models.UserLocation;
@@ -59,4 +60,13 @@ public class LocationServiceImpl implements LocationService
     }
   }
 
+  /* (non-Javadoc)
+   * @see net.gregrapp.jhouse.services.LocationService#getNewestLocationForEachUser()
+   */
+  @Transactional(readOnly = true)
+  @Override
+  public List<UserLocation> getNewestLocationForEachUser()
+  {
+    return userLocationRepository.getNewestLocationForEachUser();
+  }  
 }

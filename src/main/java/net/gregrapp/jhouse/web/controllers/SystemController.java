@@ -11,6 +11,7 @@ import net.gregrapp.jhouse.services.config.ConfigService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.ExtendedModelMap;
 import org.springframework.ui.Model;
@@ -23,6 +24,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
  */
 
 @Controller
+@PreAuthorize("hasAnyRole('ROLE_ADMIN')")
 public class SystemController
 {
   private static final Logger logger = LoggerFactory
@@ -32,6 +34,7 @@ public class SystemController
   private ConfigService configService;
   
   @RequestMapping(value = "/", method = RequestMethod.GET)
+  @PreAuthorize("isAuthenticated()")
   public Model config()
   {
     logger.debug("Getting system config");

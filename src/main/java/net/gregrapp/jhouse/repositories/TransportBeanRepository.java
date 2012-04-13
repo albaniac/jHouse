@@ -17,5 +17,5 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional
 public interface TransportBeanRepository extends JpaRepository<TransportBean, Long>
 {
-  public List<TransportBean> findByEnabled(boolean enabled);
+  List<TransportBean> findByEnabled(boolean enabled);
 }

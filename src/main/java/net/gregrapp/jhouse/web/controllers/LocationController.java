@@ -3,6 +3,10 @@
  */
 package net.gregrapp.jhouse.web.controllers;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+
 import net.gregrapp.jhouse.models.UserLocation;
 import net.gregrapp.jhouse.services.LocationService;
 
@@ -10,11 +14,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.ExtendedModelMap;
 import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -27,6 +33,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 @Controller
 @Scope("request")
 @RequestMapping("/controllers/location")
+@PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_LOCATION_USER')")
 public class LocationController
 {
   private static final Logger logger = LoggerFactory
@@ -46,6 +53,7 @@ public class LocationController
     Model model = new ExtendedModelMap();
 
     model.addAttribute("userUpdate", "controllers/location/userUpdate/");
+    model.addAttribute("getAllNewestLocation", "controllers/location/newest");
 
     return model;
   }
@@ -55,7 +63,7 @@ public class LocationController
    * 
    * @return the logged in user's principal
    */
-  private String getPrincipal()
+  private String getCurrentUsername()
   {
     String username = null;
     Object principal = SecurityContextHolder.getContext().getAuthentication()
@@ -80,7 +88,7 @@ public class LocationController
   @RequestMapping(value = "/userUpdate", method = RequestMethod.POST)
   public void userUpdate(@RequestBody UserLocation userLocation)
   {
-    String username = this.getPrincipal();
+    String username = this.getCurrentUsername();
 
     if (username != null && !"".equals(username))
     {
@@ -96,5 +104,30 @@ public class LocationController
     {
       logger.warn("Unable to retrieve username from SecurityContext");
     }
+  }
+  
+  /**
+   * Get latest location for user
+   */
+  @RequestMapping(value = "/newest", method = RequestMethod.GET)
+  public Model getAllNewestLocation()
+  {
+    Model model = new ExtendedModelMap();
+    List<HashMap<String,Object>> locations = new ArrayList<HashMap<String,Object>>();
+    
+    for (UserLocation location : locationService.getNewestLocationForEachUser())
+    {
+      HashMap<String,Object> locationMap = new HashMap<String,Object>();
+      locationMap.put("firstname", location.getUser().getFirstName());
+      locationMap.put("lastname", location.getUser().getLastName());
+      locationMap.put("latitude", location.getLatitude());
+      locationMap.put("longitude", location.getLongitude());
+      locationMap.put("timestamp", location.getTimestamp());
+      locations.add(locationMap);
+    }
+    
+    model.addAttribute("newestLocations", locations);
+    
+    return model;
   }
 }

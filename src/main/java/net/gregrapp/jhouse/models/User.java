@@ -33,14 +33,62 @@ import javax.persistence.Transient;
 public class User
 {
 
+  private Set<ApnsDeviceToken> apnsDeviceTokens;
+  private String emailAddress;
   private boolean enabled;
+  private String firstName;
   private Long id;
   private Calendar lastLogin;
+  private String lastName;
   private List<UserLocation> locations;
   private boolean locked;
   private String password;
   private Set<UserRole> roles;
   private String username;
+
+  /**
+   * Add an Apple APNs device token
+   * 
+   * @param token
+   */
+  @Transient
+  public void addApnsDeviceToken(ApnsDeviceToken token)
+  {
+    this.apnsDeviceTokens.add(token);
+  }
+
+  /**
+   * Apple APNs device tokens associated with this user
+   * 
+   * @return the apnsDeviceTokens
+   */
+  @OneToMany(mappedBy = "user", targetEntity = ApnsDeviceToken.class, cascade = CascadeType.ALL)
+  public Set<ApnsDeviceToken> getApnsDeviceTokens()
+  {
+    return apnsDeviceTokens;
+  }
+
+  /**
+   * Email address
+   * 
+   * @return the emailAddress
+   */
+  @Column
+  public String getEmailAddress()
+  {
+    return emailAddress;
+  }
+
+  /**
+   * First name
+   * 
+   * @return the firstName
+   */
+  @Column
+  public String getFirstName()
+  {
+    return firstName;
+  }
 
   /**
    * Unique ID
@@ -55,6 +103,8 @@ public class User
   }
 
   /**
+   * Last login time
+   * 
    * @return the lastLogin
    */
   @Temporal(value = TemporalType.TIMESTAMP)
@@ -64,6 +114,19 @@ public class User
   }
 
   /**
+   * Last name
+   * 
+   * @return the lastName
+   */
+  @Column
+  public String getLastName()
+  {
+    return lastName;
+  }
+
+  /**
+   * Location records associated with user
+   * 
    * @return the locations
    */
   @OneToMany(cascade = CascadeType.ALL, mappedBy = "user")
@@ -84,7 +147,7 @@ public class User
   }
 
   /**
-   * Get role names
+   * User role names
    * 
    * @return {@link List} of {@link String} containing role names
    */
@@ -116,6 +179,8 @@ public class User
   }
 
   /**
+   * Username
+   * 
    * @return the username
    */
   @Column(nullable = false, unique = true)
@@ -147,6 +212,26 @@ public class User
   }
 
   /**
+   * Apple APNs device tokens associated with this user
+   * 
+   * @param apnsDeviceTokens
+   *          the APNs tokens to set
+   */
+  public void setApnsDeviceTokens(Set<ApnsDeviceToken> apnsDeviceTokens)
+  {
+    this.apnsDeviceTokens = apnsDeviceTokens;
+  }
+
+  /**
+   * @param emailAddress
+   *          the emailAddress to set
+   */
+  public void setEmailAddress(String emailAddress)
+  {
+    this.emailAddress = emailAddress;
+  }
+
+  /**
    * User enabled status
    * 
    * @param enabled
@@ -154,6 +239,15 @@ public class User
   public void setEnabled(boolean enabled)
   {
     this.enabled = enabled;
+  }
+
+  /**
+   * @param firstName
+   *          the firstName to set
+   */
+  public void setFirstName(String firstName)
+  {
+    this.firstName = firstName;
   }
 
   /**
@@ -171,6 +265,15 @@ public class User
   public void setLastLogin(Calendar lastLogin)
   {
     this.lastLogin = lastLogin;
+  }
+
+  /**
+   * @param lastName
+   *          the lastName to set
+   */
+  public void setLastName(String lastName)
+  {
+    this.lastName = lastName;
   }
 
   /**
@@ -224,4 +327,5 @@ public class User
   {
     this.username = username;
   }
+
 }

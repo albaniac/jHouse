@@ -24,6 +24,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -36,11 +37,12 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 @Controller
 @Scope("request")
-@RequestMapping("/proxy")
-public class HttpProxy
+@RequestMapping("/controllers/proxy")
+@PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_PROXY_USER','ROLE_WEBCAM_USER')")
+public class ProxyController
 {
   private static final Logger logger = LoggerFactory
-      .getLogger(HttpProxy.class);
+      .getLogger(ProxyController.class);
 
   @Autowired
   private HttpServletRequest request;

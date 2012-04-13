@@ -15,6 +15,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
  */
 public interface ConfigRepository extends JpaRepository<Config, Long>
 {
-  public List<Config> findByNamespace(String namespace);
-  public Config findByNamespaceAndKey(String namespace, String key);
+  List<Config> findByNamespace(String namespace);
+  Config findByNamespaceAndKey(String namespace, String key);
 }

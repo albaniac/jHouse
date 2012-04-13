@@ -20,11 +20,11 @@
 
 	<!-- <http entry-point-ref="restAuthenticationEntryPoint"> -->
 	<http use-expressions="true" entry-point-ref="basicAuthenticationEntryPoint">
-		<intercept-url pattern="/config" access="hasRole('ROLE_USER')" />
-		<intercept-url pattern="/controllers/webcam/**" access="hasRole('ROLE_WEBCAM_USER')" />
-		<intercept-url pattern="/controllers/location/**"
-			access="hasRole('ROLE_LOCATION_USER')" />
-		<intercept-url pattern="/**" access="hasRole('ROLE_ADMIN')" />
+<!-- 		<intercept-url pattern="/config" access="hasRole('ROLE_USER')" /> -->
+<!-- 		<intercept-url pattern="/controllers/webcam/**" access="hasRole('ROLE_WEBCAM_USER')" /> -->
+<!-- 		<intercept-url pattern="/controllers/location/**" -->
+<!-- 			access="hasRole('ROLE_LOCATION_USER')" /> -->
+<!-- 		<intercept-url pattern="/**" access="hasRole('ROLE_ADMIN')" /> -->
 		<custom-filter ref="basicLoginFilter" position="FORM_LOGIN_FILTER" />
 		<logout />
 	</http>

@@ -22,6 +22,7 @@ import org.springframework.beans.factory.BeanFactoryUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Scope;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.ExtendedModelMap;
 import org.springframework.ui.Model;
@@ -37,6 +38,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 @Controller
 @Scope("request")
 @RequestMapping("/controllers/webcam")
+@PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_WEBCAM_USER')")
 public class WebcamController
 {
   private static final Logger logger = LoggerFactory
@@ -46,7 +48,7 @@ public class WebcamController
   private ApplicationContext appContext;
 
   @Autowired
-  private HttpProxy httpProxy;
+  private ProxyController httpProxy;
 
   /**
    * Return methods available from this controller
