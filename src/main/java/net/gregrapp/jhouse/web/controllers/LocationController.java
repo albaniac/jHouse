@@ -46,7 +46,7 @@ public class LocationController
    * 
    * @return dictionary of methods
    */
-  @RequestMapping(value = "/config", method = RequestMethod.GET)
+  @RequestMapping(method = RequestMethod.GET)
   public Model config()
   {
     Model model = new ExtendedModelMap();
