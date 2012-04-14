@@ -20,7 +20,6 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.ExtendedModelMap;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -53,7 +52,7 @@ public class LocationController
     Model model = new ExtendedModelMap();
 
     model.addAttribute("userUpdate", "controllers/location/userUpdate/");
-    model.addAttribute("getAllNewestLocation", "controllers/location/newest");
+    model.addAttribute("newestAll", "controllers/location/newest");
 
     return model;
   }
@@ -122,6 +121,7 @@ public class LocationController
       locationMap.put("lastname", location.getUser().getLastName());
       locationMap.put("latitude", location.getLatitude());
       locationMap.put("longitude", location.getLongitude());
+      locationMap.put("horizontalAccuracy", location.getHorizontalAccuracy());
       locationMap.put("timestamp", location.getTimestamp());
       locations.add(locationMap);
     }
