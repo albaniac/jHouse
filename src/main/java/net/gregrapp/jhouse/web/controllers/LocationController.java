@@ -51,7 +51,7 @@ public class LocationController
   {
     Model model = new ExtendedModelMap();
 
-    model.addAttribute("userUpdate", "controllers/location/userUpdate/");
+    model.addAttribute("userUpdate", "controllers/location/userUpdate");
     model.addAttribute("newestAll", "controllers/location/newest");
 
     return model;
