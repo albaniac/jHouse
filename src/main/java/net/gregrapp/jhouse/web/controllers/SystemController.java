@@ -24,6 +24,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
  */
 
 @Controller
+@RequestMapping("/")
 @PreAuthorize("hasAnyRole('ROLE_ADMIN')")
 public class SystemController
 {
@@ -33,7 +34,7 @@ public class SystemController
   @Autowired
   private ConfigService configService;
   
-  @RequestMapping(value = "/", method = RequestMethod.GET)
+  @RequestMapping(method = RequestMethod.GET)
   @PreAuthorize("isAuthenticated()")
   public Model config()
   {

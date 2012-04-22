@@ -46,13 +46,13 @@ public class LocationController
    * 
    * @return dictionary of methods
    */
-  @RequestMapping(value = "/config", method = RequestMethod.GET)
+  @RequestMapping(method = RequestMethod.GET)
   public Model config()
   {
     Model model = new ExtendedModelMap();
 
-    model.addAttribute("userUpdate", "controllers/location/userUpdate/");
-    model.addAttribute("getAllNewestLocation", "controllers/location/newest");
+    model.addAttribute("userUpdate", "controllers/location/userUpdate");
+    model.addAttribute("newestAll", "controllers/location/newest");
 
     return model;
   }
@@ -121,6 +121,7 @@ public class LocationController
       locationMap.put("lastname", location.getUser().getLastName());
       locationMap.put("latitude", location.getLatitude());
       locationMap.put("longitude", location.getLongitude());
+      locationMap.put("horizontalAccuracy", location.getHorizontalAccuracy());
       locationMap.put("timestamp", location.getTimestamp());
       locations.add(locationMap);
     }

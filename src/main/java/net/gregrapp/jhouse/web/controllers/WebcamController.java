@@ -55,18 +55,18 @@ public class WebcamController
    * 
    * @return dictionary of methods
    */
-  @RequestMapping(value = "/config", method = RequestMethod.GET)
+  @RequestMapping(method = RequestMethod.GET)
   public Model config()
   {
     Model model = new ExtendedModelMap();
 
-    model.addAttribute("listPath", "controllers/webcam/list/");
-    model.addAttribute("videoPath", "controllers/webcam/video/");
-    model.addAttribute("panUpPath", "controllers/webcam/panUp/");
-    model.addAttribute("panDownPath", "controllers/webcam/panDown/");
-    model.addAttribute("panLeftPath", "controllers/webcam/panLeft/");
-    model.addAttribute("panRightPath", "controllers/webcam/panRight/");
-    model.addAttribute("panStopPath", "controllers/webcam/panStop/");
+    model.addAttribute("listPath", "controllers/webcam/list");
+    model.addAttribute("videoPath", "controllers/webcam/video");
+    model.addAttribute("panUpPath", "controllers/webcam/panUp");
+    model.addAttribute("panDownPath", "controllers/webcam/panDown");
+    model.addAttribute("panLeftPath", "controllers/webcam/panLeft");
+    model.addAttribute("panRightPath", "controllers/webcam/panRight");
+    model.addAttribute("panStopPath", "controllers/webcam/panStop");
 
     return model;
   }
