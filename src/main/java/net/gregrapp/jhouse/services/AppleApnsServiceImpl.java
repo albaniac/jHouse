@@ -8,6 +8,9 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 
+import net.gregrapp.jhouse.models.ApnsDevice;
+import net.gregrapp.jhouse.models.User;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -41,6 +44,9 @@ public class AppleApnsServiceImpl implements AppleApnsService
   @Autowired
   private ApnsDeviceTokenRepository apnsDeviceRepository;
 
+  @Autowired
+  private UserRepository userRepository;
+  
   private int DEFAULT_POLL_MINUTES = 60;
 
   /**
@@ -96,9 +102,40 @@ public class AppleApnsServiceImpl implements AppleApnsService
   @Override
   public void send(String token, String alertBody, int badge)
   {
+    logger.debug("Building APNs payload [alertBody=%s, badge=%d]", alertBody, badge);
     String payload = APNS.newPayload().alertBody(alertBody).shrinkBody("...")
         .badge(badge).build();
+
+    logger.debug("Sending APNs alert to device [token=%s]", token);
     apnsService.push(token, payload);
+  }
+
+  @Override
+  public void send(long userId, String alertBody, int badge)
+  {
+    if (userRepository != null)
+    {
+      User user = userRepository.get(userId);
+      
+      if (user == null)
+      {
+        logger.warn("Unable to send APNs notification, user ID [%d} not found", userId);
+        return;
+      }
+      else
+      {
+        for (ApnsDevice device : user.getApnsDevices())
+        {
+          this.send(device.getToken(), alertBody, badge);
+        }
+      }
+    }
+  }
+
+  @Override
+  public void send(long userId, String alertBody)
+  {
+    this.send(userId, alertBody, 0);
   }
 
   /**
@@ -126,6 +163,7 @@ public class AppleApnsServiceImpl implements AppleApnsService
     apnsService = APNS.newService().withCert(certPath, certPassword)
         .withSandboxDestination().build();
 
+    // Start polling Apple for inactive devices
     this.monitorInactiveDevices();
   }
 }
