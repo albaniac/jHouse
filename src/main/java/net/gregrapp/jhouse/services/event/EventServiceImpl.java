@@ -11,8 +11,8 @@ import javax.annotation.PreDestroy;
 
 import net.gregrapp.jhouse.events.Event;
 import net.gregrapp.jhouse.events.TimeEvent;
-import net.gregrapp.jhouse.managers.device.DeviceManager;
 import net.gregrapp.jhouse.services.ConfigService;
+import net.gregrapp.jhouse.services.DeviceService;
 import net.gregrapp.jhouse.services.EmailService;
 import net.gregrapp.jhouse.services.event.calendars.DayTime;
 import net.gregrapp.jhouse.services.event.calendars.NightTime;
@@ -188,13 +188,13 @@ public class EventServiceImpl implements EventService
   }
 
   /**
-   * @param deviceManager
+   * @param deviceService
    */
   @Autowired
-  public void setDeviceManager(DeviceManager deviceManager)
+  public void setDeviceService(DeviceService deviceService)
   {
-    logger.debug("DeviceManager class injected");
-    ksession.setGlobal("dm", deviceManager);
+    logger.debug("DeviceService class injected");
+    ksession.setGlobal("ds", deviceService);
   }
 
   /**

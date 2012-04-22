@@ -1,7 +1,7 @@
 /**
  * 
  */
-package net.gregrapp.jhouse.managers.device;
+package net.gregrapp.jhouse.services;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -12,7 +12,6 @@ import net.gregrapp.jhouse.device.Device;
 import net.gregrapp.jhouse.device.DriverDevice;
 import net.gregrapp.jhouse.device.classes.DeviceClass;
 import net.gregrapp.jhouse.device.drivers.types.DeviceDriver;
-import net.gregrapp.jhouse.services.BeanLifecycleService;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,10 +27,10 @@ import org.springframework.stereotype.Service;
  */
 
 @Service
-public class DeviceManagerImpl implements DeviceManager
+public class DeviceServiceImpl implements DeviceService
 {
   private static final Logger logger = LoggerFactory
-      .getLogger(DeviceManager.class);
+      .getLogger(DeviceService.class);
 
   //@Autowired(required = false)
   //Device[] devices;
@@ -42,7 +41,7 @@ public class DeviceManagerImpl implements DeviceManager
   /*
    * (non-Javadoc)
    * 
-   * @see net.gregrapp.jhouse.managers.device.DeviceManager#execute(int,
+   * @see net.gregrapp.jhouse.managers.device.DeviceService#execute(int,
    * java.lang.String)
    */
   @Override
@@ -83,7 +82,7 @@ public class DeviceManagerImpl implements DeviceManager
   /*
    * (non-Javadoc)
    * 
-   * @see net.gregrapp.jhouse.managers.device.DeviceManager#execute(int,
+   * @see net.gregrapp.jhouse.managers.device.DeviceService#execute(int,
    * java.lang.String, java.lang.Object[])
    */
   @Override
@@ -131,7 +130,7 @@ public class DeviceManagerImpl implements DeviceManager
   /*
    * (non-Javadoc)
    * 
-   * @see net.gregrapp.jhouse.managers.device.DeviceManager#get(int)
+   * @see net.gregrapp.jhouse.managers.device.DeviceService#get(int)
    */
   public Device get(int deviceId)
   {
@@ -153,7 +152,7 @@ public class DeviceManagerImpl implements DeviceManager
   /*
    * (non-Javadoc)
    * 
-   * @see net.gregrapp.jhouse.managers.device.DeviceManager#get(int,
+   * @see net.gregrapp.jhouse.managers.device.DeviceService#get(int,
    * java.lang.Class)
    */
   public <T extends Device> T get(int deviceId, Class<T> type)
@@ -166,7 +165,7 @@ public class DeviceManagerImpl implements DeviceManager
   }
 
   /* (non-Javadoc)
-   * @see net.gregrapp.jhouse.managers.device.DeviceManager#getDeviceClassesForDevice(net.gregrapp.jhouse.device.Device)
+   * @see net.gregrapp.jhouse.managers.device.DeviceService#getDeviceClassesForDevice(net.gregrapp.jhouse.device.Device)
    */
   public String[] getDeviceClassesForDevice(Device device)
   {
@@ -192,7 +191,7 @@ public class DeviceManagerImpl implements DeviceManager
   }
 
   /* (non-Javadoc)
-   * @see net.gregrapp.jhouse.managers.device.DeviceManager#getDevices()
+   * @see net.gregrapp.jhouse.managers.device.DeviceService#getDevices()
    */
   @Override
   public Device[] getDevices()
@@ -202,7 +201,7 @@ public class DeviceManagerImpl implements DeviceManager
   }
 
   /* (non-Javadoc)
-   * @see net.gregrapp.jhouse.managers.device.DeviceManager#getDriver(int, java.lang.Class)
+   * @see net.gregrapp.jhouse.managers.device.DeviceService#getDriver(int, java.lang.Class)
    */
   public <T extends DeviceClass> T getDriver(int deviceId, Class<T> type)
   {

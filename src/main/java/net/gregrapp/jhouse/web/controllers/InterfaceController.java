@@ -9,7 +9,7 @@ import java.util.HashMap;
 
 import net.gregrapp.jhouse.device.drivers.types.DeviceDriver;
 import net.gregrapp.jhouse.interfaces.NodeInterface;
-import net.gregrapp.jhouse.managers.device.DeviceManager;
+import net.gregrapp.jhouse.services.DeviceService;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -39,7 +39,7 @@ public class InterfaceController
   ApplicationContext ctx;
   
   @Autowired
-  DeviceManager deviceManager;
+  DeviceService deviceService;
 
   @RequestMapping(value = "/{name}/nodes", method = RequestMethod.GET)
   public @ResponseBody

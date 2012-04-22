@@ -1,7 +1,7 @@
 /**
  * 
  */
-package net.gregrapp.jhouse.managers.device;
+package net.gregrapp.jhouse.services;
 
 import net.gregrapp.jhouse.device.Device;
 import net.gregrapp.jhouse.device.classes.DeviceClass;
@@ -10,7 +10,7 @@ import net.gregrapp.jhouse.device.classes.DeviceClass;
  * @author Greg Rapp
  * 
  */
-public interface DeviceManager
+public interface DeviceService
 {
   /**
    * Execute a method on a device

@@ -13,7 +13,7 @@ import java.util.List;
 import net.gregrapp.jhouse.device.Device;
 import net.gregrapp.jhouse.device.DriverDevice;
 import net.gregrapp.jhouse.device.drivers.types.DeviceDriver;
-import net.gregrapp.jhouse.managers.device.DeviceManager;
+import net.gregrapp.jhouse.services.DeviceService;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -44,14 +44,14 @@ public class DeviceController
   private ApplicationContext ctx;
   
   @Autowired
-  private DeviceManager deviceManager;
+  private DeviceService deviceService;
   
   @RequestMapping(value = "/{id}/{method}", method = RequestMethod.GET)
   public @ResponseBody
   String deviceAction(@PathVariable("id") int id,
       @PathVariable("method") String method, Model model)
   {
-    Device device = deviceManager.get(id);
+    Device device = deviceService.get(id);
     
     if (device == null)
     {
@@ -98,7 +98,7 @@ public class DeviceController
   @RequestMapping(value = "/{id}", method = RequestMethod.GET)
   public @ResponseBody HashMap<String, Object> deviceDetails(@PathVariable("id") int id, Model model)
   {
-    Device device = deviceManager.get(id);
+    Device device = deviceService.get(id);
    // String[] devclass = null;
     HashMap<String, Object> ret = new HashMap<String,Object>();
     if (device == null)
@@ -131,7 +131,7 @@ public class DeviceController
     HashMap<String, Object> ret = new HashMap<String, Object>();
     
     List<HashMap<String,Object>> devices = new ArrayList<HashMap<String,Object>>();
-    for (Device device : deviceManager.getDevices())
+    for (Device device : deviceService.getDevices())
     {
       HashMap<String,Object> val = new HashMap<String,Object>();
       val.put("id", device.getId());
