@@ -13,7 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import net.gregrapp.jhouse.events.DeviceTextEvent;
 import net.gregrapp.jhouse.events.DeviceValueEvent;
-import net.gregrapp.jhouse.managers.event.EventManager;
+import net.gregrapp.jhouse.services.event.EventService;
 
 /**
  * @author Greg Rapp
@@ -34,7 +34,7 @@ public class AbstractDevice implements Device
   private Calendar lastChange;
 
   @Autowired
-  EventManager eventManager;
+  EventService eventService;
 
 
   public AbstractDevice(int deviceId)
@@ -157,8 +157,8 @@ public class AbstractDevice implements Device
     
     this.changes.firePropertyChange("text", oldText, deviceText);
     
-    if (eventManager != null)
-      eventManager.eventCallback(new DeviceTextEvent(this, deviceText, oldText));
+    if (eventService != null)
+      eventService.eventCallback(new DeviceTextEvent(this, deviceText, oldText));
   }
 
   /*
@@ -178,7 +178,7 @@ public class AbstractDevice implements Device
     
     this.changes.firePropertyChange("value", oldValue, deviceValue);
     
-    if (eventManager != null)
-      eventManager.eventCallback(new DeviceValueEvent(this, deviceValue, oldValue));
+    if (eventService != null)
+      eventService.eventCallback(new DeviceValueEvent(this, deviceValue, oldValue));
   }
 }

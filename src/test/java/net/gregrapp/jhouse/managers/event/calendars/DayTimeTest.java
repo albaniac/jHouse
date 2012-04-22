@@ -3,6 +3,8 @@ package net.gregrapp.jhouse.managers.event.calendars;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import net.gregrapp.jhouse.services.event.calendars.DayTime;
+
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.test.context.ContextConfiguration;
