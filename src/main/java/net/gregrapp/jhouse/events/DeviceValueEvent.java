@@ -59,4 +59,18 @@ public class DeviceValueEvent extends DeviceEvent
   {
     return value;
   }
+
+  @Override
+  public String toString()
+  {
+    StringBuilder builder = new StringBuilder();
+    builder.append("DeviceValueEvent [oldValue=");
+    builder.append(oldValue);
+    builder.append(", value=");
+    builder.append(value);
+    builder.append(", device=");
+    builder.append(device.getName());
+    builder.append("]");
+    return builder.toString();
+  }
 }
