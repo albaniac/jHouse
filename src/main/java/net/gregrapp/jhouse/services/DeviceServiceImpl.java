@@ -6,6 +6,7 @@ package net.gregrapp.jhouse.services;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import net.gregrapp.jhouse.device.Device;
@@ -194,10 +195,10 @@ public class DeviceServiceImpl implements DeviceService
    * @see net.gregrapp.jhouse.managers.device.DeviceService#getDevices()
    */
   @Override
-  public Device[] getDevices()
+  public List<Device> getDevices()
   {
     Device[] devices = appContext.getBeansOfType(Device.class).values().toArray(new Device[0]);
-    return devices;
+    return Arrays.asList(devices);
   }
 
   /* (non-Javadoc)

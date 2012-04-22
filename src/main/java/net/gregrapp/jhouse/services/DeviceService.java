@@ -3,6 +3,8 @@
  */
 package net.gregrapp.jhouse.services;
 
+import java.util.List;
+
 import net.gregrapp.jhouse.device.Device;
 import net.gregrapp.jhouse.device.classes.DeviceClass;
 
@@ -64,9 +66,9 @@ public interface DeviceService
   /**
    * Get all devices
    * 
-   * @return array of devices
+   * @return List of devices
    */
-  public Device[] getDevices();
+  public List<Device> getDevices();
 
   /**
    * Get driver for device, casting the driver to a device class

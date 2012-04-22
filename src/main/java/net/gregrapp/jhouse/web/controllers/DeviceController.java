@@ -12,6 +12,7 @@ import java.util.List;
 
 import net.gregrapp.jhouse.device.Device;
 import net.gregrapp.jhouse.device.DriverDevice;
+import net.gregrapp.jhouse.device.classes.DeviceClass;
 import net.gregrapp.jhouse.device.drivers.types.DeviceDriver;
 import net.gregrapp.jhouse.services.DeviceService;
 
@@ -22,6 +23,7 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Scope;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
+import org.springframework.ui.ExtendedModelMap;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -34,18 +36,57 @@ import org.springframework.web.bind.annotation.ResponseBody;
  */
 
 @Controller
-@RequestMapping("/device")
+@RequestMapping("/controllers/device")
 @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_DEVICE_USER')")
 public class DeviceController
 {
   private static final Logger logger = LoggerFactory.getLogger(DeviceController.class);
   
   @Autowired
-  private ApplicationContext ctx;
-  
-  @Autowired
   private DeviceService deviceService;
   
+  @RequestMapping(value = "/all", method = RequestMethod.GET)
+  public Model getAllDevices()
+  {
+    Model model = new ExtendedModelMap();
+    
+    List<HashMap<String,Object>> devices = new ArrayList<HashMap<String,Object>>();
+
+    logger.debug("Getting all devices from the device service");
+    for (Device device : deviceService.getDevices())
+    {
+      logger.trace("Building map for device [%s]", device.getName());
+      HashMap<String,Object> deviceMap = new HashMap<String,Object>();
+      deviceMap.put("id", device.getId());
+      deviceMap.put("name", device.getName());
+      deviceMap.put("text", device.getText());
+      deviceMap.put("value", device.getValue());
+      deviceMap.put("lastchange", device.getLastChange());
+      
+      if (device instanceof DriverDevice)
+      {
+        logger.debug("Device is a driver device, getting associated device classes");
+        List<String> deviceClasses = new ArrayList<String>();
+        DeviceDriver driver = ((DriverDevice)device).getDriver();
+        for (Class<?> deviceClass : driver.getClass().getInterfaces())
+        {
+          if (deviceclass instanceof DeviceClass)
+          {
+            deviceClasses.add(deviceClass.getCanonicalName());
+          }
+        }
+        logger.trace("Device classes associated with this device [%s]", deviceClasses.toString());
+        deviceMap.put("classes", deviceClasses);
+      }
+      
+      devices.add(deviceMap);
+    }
+    
+    logger.debug("Done getting all devices");
+    model.addAttribute("devices", devices);
+  }
+  
+  /*
   @RequestMapping(value = "/{id}/{method}", method = RequestMethod.GET)
   public @ResponseBody
   String deviceAction(@PathVariable("id") int id,
@@ -115,14 +156,15 @@ public class DeviceController
       return ret;
     }
     
-    /*String strDevClasses = "";
-    for (String s : devclass)
-      strDevClasses += s + ",";
-    strDevClasses.substring(0, strDevClasses.length()-1);
-    model.addAttribute("stuff", strDevClasses); 
+    //String strDevClasses = "";
+    //for (String s : devclass)
+    //  strDevClasses += s + ",";
+    //strDevClasses.substring(0, strDevClasses.length()-1);
+    //model.addAttribute("stuff", strDevClasses); 
     
-   return "home"; */
+   //return "home";
   }
+  
   
   @RequestMapping(value = "/all", method = RequestMethod.GET)
   public @ResponseBody
@@ -148,4 +190,5 @@ public class DeviceController
     return ret;
   }
 
+*/
 }
