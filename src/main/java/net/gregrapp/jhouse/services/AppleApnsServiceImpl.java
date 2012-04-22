@@ -7,8 +7,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
-import net.gregrapp.jhouse.services.config.ConfigService;
-import net.gregrapp.jhouse.services.email.EmailServiceImpl;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

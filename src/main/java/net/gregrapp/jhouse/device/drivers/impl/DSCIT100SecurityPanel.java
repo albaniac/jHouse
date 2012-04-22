@@ -12,7 +12,7 @@ import net.gregrapp.jhouse.device.drivers.types.AbstractDeviceDriver;
 import net.gregrapp.jhouse.interfaces.InterfaceCallback;
 import net.gregrapp.jhouse.interfaces.dscit100.DSCIT100Callback;
 import net.gregrapp.jhouse.interfaces.dscit100.DSCIT100Interface;
-import net.gregrapp.jhouse.services.config.ConfigService;
+import net.gregrapp.jhouse.services.ConfigService;
 
 /**
  * @author Greg Rapp

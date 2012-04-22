@@ -6,7 +6,7 @@ package net.gregrapp.jhouse.web.controllers;
 import java.util.HashMap;
 import java.util.Map;
 
-import net.gregrapp.jhouse.services.config.ConfigService;
+import net.gregrapp.jhouse.services.ConfigService;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

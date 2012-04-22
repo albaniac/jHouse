@@ -12,7 +12,7 @@ import net.gregrapp.jhouse.device.Device;
 import net.gregrapp.jhouse.device.DriverDevice;
 import net.gregrapp.jhouse.device.classes.DeviceClass;
 import net.gregrapp.jhouse.device.drivers.types.DeviceDriver;
-import net.gregrapp.jhouse.services.lifecycle.BeanLifecycleService;
+import net.gregrapp.jhouse.services.BeanLifecycleService;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
