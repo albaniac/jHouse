@@ -33,7 +33,7 @@ import javax.persistence.Transient;
 public class User
 {
 
-  private Set<ApnsDeviceToken> apnsDeviceTokens;
+  private Set<ApnsDevice> apnsDevices;
   private String emailAddress;
   private boolean enabled;
   private String firstName;
@@ -52,20 +52,20 @@ public class User
    * @param token
    */
   @Transient
-  public void addApnsDeviceToken(ApnsDeviceToken token)
+  public void addApnsDevice(ApnsDevice device)
   {
-    this.apnsDeviceTokens.add(token);
+    this.apnsDevices.add(device);
   }
 
   /**
-   * Apple APNs device tokens associated with this user
+   * Apple APNs devices associated with this user
    * 
-   * @return the apnsDeviceTokens
+   * @return the apnsDevices
    */
-  @OneToMany(mappedBy = "user", targetEntity = ApnsDeviceToken.class, cascade = CascadeType.ALL)
-  public Set<ApnsDeviceToken> getApnsDeviceTokens()
+  @OneToMany(mappedBy = "user", targetEntity = ApnsDevice.class, cascade = CascadeType.ALL)
+  public Set<ApnsDevice> getApnsDevices()
   {
-    return apnsDeviceTokens;
+    return apnsDevices;
   }
 
   /**
@@ -212,14 +212,14 @@ public class User
   }
 
   /**
-   * Apple APNs device tokens associated with this user
+   * Apple APNs devices associated with this user
    * 
-   * @param apnsDeviceTokens
+   * @param apnsDevices
    *          the APNs tokens to set
    */
-  public void setApnsDeviceTokens(Set<ApnsDeviceToken> apnsDeviceTokens)
+  public void setApnsDevices(Set<ApnsDevice> apnsDevices)
   {
-    this.apnsDeviceTokens = apnsDeviceTokens;
+    this.apnsDevices = apnsDevices;
   }
 
   /**

@@ -19,7 +19,7 @@ import javax.persistence.Table;
  */
 @Entity
 @Table(name = "apns_device_tokens")
-public class ApnsDeviceToken
+public class ApnsDevice
 {
   private String description;
   private boolean enabled;
