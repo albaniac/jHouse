@@ -46,17 +46,18 @@ public class LocationController
    * 
    * @return dictionary of methods
    */
+  /*
   @RequestMapping(method = RequestMethod.GET)
   public Model config()
   {
     Model model = new ExtendedModelMap();
 
-    model.addAttribute("userUpdate", "controllers/location/userUpdate");
+    model.addAttribute("userUpdate", "controllers/location/user");
     model.addAttribute("newestAll", "controllers/location/newest");
 
     return model;
   }
-
+*/
   /**
    * Get the currently logged in user
    * 
@@ -79,13 +80,13 @@ public class LocationController
   }
 
   /**
-   * Update user location
+   * Add a user location
    * 
    * @param latitude
    * @param longitude
    */
-  @RequestMapping(value = "/userUpdate", method = RequestMethod.POST)
-  public void userUpdate(@RequestBody UserLocation userLocation)
+  @RequestMapping(value = "/user", method = RequestMethod.PUT)
+  public void putUserLocation(@RequestBody UserLocation userLocation)
   {
     String username = this.getCurrentUsername();
 
@@ -101,7 +102,7 @@ public class LocationController
 
     } else
     {
-      logger.warn("Unable to retrieve username from SecurityContext");
+      logger.warn("Unable to retrieve username [{}] from SecurityContext", username);
     }
   }
   

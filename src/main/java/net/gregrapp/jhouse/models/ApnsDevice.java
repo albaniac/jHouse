@@ -3,6 +3,8 @@
  */
 package net.gregrapp.jhouse.models;
 
+import java.util.Calendar;
+
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -10,6 +12,8 @@ import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
+import javax.persistence.Temporal;
+import javax.persistence.TemporalType;
 
 /**
  * Apple Push Notification service device tokens
@@ -22,11 +26,14 @@ import javax.persistence.Table;
 public class ApnsDevice
 {
   private String description;
+
   private boolean enabled;
+
   private Long id;
+  private Calendar lastUpdate;
   private String token;
   private User user;
-
+  private String uuid;
   /**
    * Token description
    * 
@@ -37,7 +44,6 @@ public class ApnsDevice
   {
     return description;
   }
-
   /**
    * Unique ID
    * 
@@ -48,6 +54,17 @@ public class ApnsDevice
   public Long getId()
   {
     return id;
+  }
+
+  /**
+   * Last update time of this token
+   * 
+   * @return the lastUpdate
+   */
+  @Temporal(value = TemporalType.TIMESTAMP)
+  public Calendar getLastUpdate()
+  {
+    return lastUpdate;
   }
 
   /**
@@ -71,6 +88,17 @@ public class ApnsDevice
   public User getUser()
   {
     return user;
+  }
+
+  /**
+   * Unique device identifier
+   * 
+   * @return the UUID
+   */
+  @Column
+  public String getUuid()
+  {
+    return uuid;
   }
 
   /**
@@ -112,6 +140,17 @@ public class ApnsDevice
   }
 
   /**
+   * Last update time of this token
+   * 
+   * @param lastUpdate
+   *          the lastUpdate to set
+   */
+  public void setLastUpdate(Calendar lastUpdate)
+  {
+    this.lastUpdate = lastUpdate;
+  }
+
+  /**
    * @param token
    *          the token to set
    */
@@ -129,4 +168,12 @@ public class ApnsDevice
     this.user = user;
   }
 
+  /**
+   * @param uuid
+   *          the uuid to set
+   */
+  public void setUuid(String uuid)
+  {
+    this.uuid = uuid;
+  }
 }

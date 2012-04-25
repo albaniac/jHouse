@@ -43,8 +43,8 @@ public class SystemController
     Model model = new ExtendedModelMap();
     
     Map<String,String> controllers = new HashMap<String,String>();
-    controllers.put("webcam", configService.get("net.gregrapp.jhouse.web.controllers.WebcamController", "configPath"));
-    controllers.put("location", configService.get("net.gregrapp.jhouse.web.controllers.LocationController", "configPath"));
+    controllers.put("webcam", configService.get("net.gregrapp.jhouse.web.controllers.WebcamController", "CONFIG_PATH"));
+    controllers.put("location", configService.get("net.gregrapp.jhouse.web.controllers.LocationController", "CONFIG_PATH"));
     logger.debug("jHouse controllers [{}]", controllers.toString());
     
     model.addAttribute("controllers", controllers);

@@ -19,11 +19,24 @@ import org.springframework.stereotype.Service;
 @Service
 public class ConfigServiceImpl implements ConfigService
 {
+  private static final String DEFAULT_NAMESPACE = "net.gregrapp.jhouse";
+
   private static final Logger logger = LoggerFactory
       .getLogger(ConfigServiceImpl.class);
 
   @Autowired
   private ConfigRepository configRepository;
+
+  /*
+   * (non-Javadoc)
+   * 
+   * @see net.gregrapp.jhouse.services.ConfigService#get(java.lang.String)
+   */
+  @Override
+  public String get(String key)
+  {
+    return this.get(DEFAULT_NAMESPACE, key);
+  }
 
   /*
    * (non-Javadoc)
@@ -45,12 +58,23 @@ public class ConfigServiceImpl implements ConfigService
         logger.debug("Got config object - {}", config.toString());
         return config.getValue();
       }
-    }
-    else
+    } else
     {
       logger.warn("Unable to retrieve config value [{}.{}]", namespace, key);
     }
     return null;
+  }
+
+  /*
+   * (non-Javadoc)
+   * 
+   * @see net.gregrapp.jhouse.services.ConfigService#set(java.lang.String,
+   * java.lang.String)
+   */
+  @Override
+  public void set(String key, String value)
+  {
+    this.set(DEFAULT_NAMESPACE, value);
   }
 
   /*
@@ -75,8 +99,7 @@ public class ConfigServiceImpl implements ConfigService
         config.setValue(value);
         if (configRepository != null)
           configRepository.save(config);
-      }
-      else
+      } else
       {
         logger.debug("Config value doesn't exist, creating new entry");
         Config newConfig = new Config();
@@ -86,8 +109,7 @@ public class ConfigServiceImpl implements ConfigService
         if (configRepository != null)
           configRepository.save(newConfig);
       }
-    }
-    else
+    } else
     {
       logger.warn("Unable to set config value [{}.{}] to [{}]", new Object[] {
           namespace, key, value });

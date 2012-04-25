@@ -31,7 +31,7 @@ public class EmailServiceImpl implements EmailService
   /*
    * Config options
    */
-  private static final String CONFIG_NAMESPACE = "net.gregrapp.jhouse.services.email.EmailService";
+  private static final String CONFIG_NAMESPACE = "net.gregrapp.jhouse.services.EmailService";
   private static final String HOST = "HOST";
   private static final String PORT = "PORT";
   private static final String FROM = "FROM";

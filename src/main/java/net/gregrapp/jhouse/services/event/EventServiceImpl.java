@@ -11,6 +11,7 @@ import javax.annotation.PreDestroy;
 
 import net.gregrapp.jhouse.events.Event;
 import net.gregrapp.jhouse.events.TimeEvent;
+import net.gregrapp.jhouse.services.AppleApnsService;
 import net.gregrapp.jhouse.services.ConfigService;
 import net.gregrapp.jhouse.services.DeviceService;
 import net.gregrapp.jhouse.services.EmailService;
@@ -44,6 +45,7 @@ public class EventServiceImpl implements EventService
   private static final Logger logger = LoggerFactory
       .getLogger(EventServiceImpl.class);
 
+  private static final String CONFIG_NAMESPACE = "net.gregrapp.jhouse.managers.event.EventManager";
   private static final String RULES_FILE = "RULESFILE";
 
   private ConfigService configService;
@@ -84,8 +86,7 @@ public class EventServiceImpl implements EventService
   /*
    * (non-Javadoc)
    * 
-   * @see
-   * net.gregrapp.jhouse.services.EventService#eventCallback(net.gregrapp
+   * @see net.gregrapp.jhouse.services.EventService#eventCallback(net.gregrapp
    * .jhouse.events.Event)
    */
   @Override
@@ -108,7 +109,7 @@ public class EventServiceImpl implements EventService
         ResourceType.DRL);
 
     String rulesFile = configService.get(
-        this.getClass().getInterfaces()[0].getName(), RULES_FILE);
+        CONFIG_NAMESPACE, RULES_FILE);
 
     if (rulesFile != null && !"".equals(rulesFile))
     {
@@ -146,7 +147,8 @@ public class EventServiceImpl implements EventService
     ksession.addEventListener(new DebugAgendaEventListener());
 
     logger.info("Creating new rules engine runner thread");
-    Thread kthread = new Thread(new Runnable() {
+    Thread kthread = new Thread(new Runnable()
+    {
       @Override
       public void run()
       {
@@ -158,53 +160,6 @@ public class EventServiceImpl implements EventService
     kthread.setDaemon(true);
     logger.info("Starting new rules engine runner thread");
     kthread.start();
-  }
-
-  /**
-   * Add the calendar implementations to the KnowledgeSession
-   */
-  private void setCalendars()
-  {
-    String latitudeString = configService
-        .get("net.gregrapp.jhouse", "LATITUDE");
-    String longitudeString = configService.get("net.gregrapp.jhouse",
-        "LONGITUDE");
-
-    if (latitudeString != null && longitudeString != null)
-    {
-      try
-      {
-        double latitude = Double.valueOf(latitudeString);
-        double longitude = Double.valueOf(longitudeString);
-        logger.debug("Setting calendars in rules rules engine");
-        ksession.getCalendars().set("nighttime", new NightTime(latitude, longitude));
-        ksession.getCalendars().set("daytime", new DayTime(latitude, longitude));
-      } catch (NumberFormatException e)
-      {
-        logger
-            .warn("Invalid net.gregrapp.jhouse.LATITUDE or net.gregrapp.jhouse.LONGITUDE values in CONFIG table");
-      }
-    }
-  }
-
-  /**
-   * @param deviceService
-   */
-  @Autowired
-  public void setDeviceService(DeviceService deviceService)
-  {
-    logger.debug("DeviceService class injected");
-    ksession.setGlobal("ds", deviceService);
-  }
-
-  /**
-   * @param emailService
-   */
-  @Autowired
-  public void setEmailService(EmailService emailService)
-  {
-    logger.debug("EmailService class injected");
-    ksession.setGlobal("email", emailService);
   }
 
   /**
@@ -220,11 +175,9 @@ public class EventServiceImpl implements EventService
       now.add(Calendar.MINUTE, 1);
       now.set(Calendar.SECOND, 0);
     }
-    
-    String latitudeString = configService
-        .get("net.gregrapp.jhouse", "LATITUDE");
-    String longitudeString = configService.get("net.gregrapp.jhouse",
-        "LONGITUDE");
+
+    String latitudeString = configService.get("LATITUDE");
+    String longitudeString = configService.get("LONGITUDE");
 
     if (latitudeString != null && longitudeString != null)
     {
@@ -232,8 +185,9 @@ public class EventServiceImpl implements EventService
       {
         final double latitude = Double.valueOf(latitudeString);
         final double longitude = Double.valueOf(longitudeString);
-        
-        timeEventTimer.scheduleAtFixedRate(new TimerTask() {
+
+        timeEventTimer.scheduleAtFixedRate(new TimerTask()
+        {
           @Override
           public void run()
           {
@@ -253,12 +207,12 @@ public class EventServiceImpl implements EventService
             noon.set(Calendar.MINUTE, 0);
             noon.set(Calendar.SECOND, 0);
             noon.set(Calendar.MILLISECOND, 0);
-            
+
             logger.trace("Getting curent time");
             Calendar now = Calendar.getInstance();
             now.set(Calendar.SECOND, 0);
             now.set(Calendar.MILLISECOND, 0);
-            
+
             logger.debug("Comparing time event times to current time");
             if (sunset.compareTo(now) == 0)
             {
@@ -267,11 +221,11 @@ public class EventServiceImpl implements EventService
             } else if (sunrise.compareTo(now) == 0)
             {
               logger.debug("Firing sunrise time event");
-              eventCallback(new TimeEvent(TimeEvent.TimeEventType.SUNRISE));              
+              eventCallback(new TimeEvent(TimeEvent.TimeEventType.SUNRISE));
             } else if (noon.compareTo(now) == 0)
             {
               logger.debug("Firing noon time event");
-              eventCallback(new TimeEvent(TimeEvent.TimeEventType.NOON));                            
+              eventCallback(new TimeEvent(TimeEvent.TimeEventType.NOON));
             }
           }
         }, now.getTime(), 60 * 1000);
@@ -279,9 +233,72 @@ public class EventServiceImpl implements EventService
       } catch (NumberFormatException e)
       {
         logger
-            .warn("Invalid net.gregrapp.jhouse.LATITUDE or net.gregrapp.jhouse.LONGITUDE values in CONFIG table");
+            .warn("Invalid LATITUDE or LONGITUDE values in config");
       }
     }
 
+  }
+
+  /**
+   * Inject the Apple Push Notification service
+   * 
+   * @param apnsService
+   */
+  @Autowired
+  public void setAppleApnsService(AppleApnsService apnsService)
+  {
+    logger.debug("AppleApnsService class injected");
+    ksession.setGlobal("apns", apnsService);
+  }
+
+  /**
+   * Add the calendar implementations to the KnowledgeSession
+   */
+  private void setCalendars()
+  {
+    String latitudeString = configService.get("LATITUDE");
+    String longitudeString = configService.get("LONGITUDE");
+
+    if (latitudeString != null && longitudeString != null)
+    {
+      try
+      {
+        double latitude = Double.valueOf(latitudeString);
+        double longitude = Double.valueOf(longitudeString);
+        logger.debug("Setting calendars in rules rules engine");
+        ksession.getCalendars().set("nighttime",
+            new NightTime(latitude, longitude));
+        ksession.getCalendars()
+            .set("daytime", new DayTime(latitude, longitude));
+      } catch (NumberFormatException e)
+      {
+        logger
+            .warn("Invalid LATITUDE or LONGITUDE values in config");
+      }
+    }
+  }
+
+  /**
+   * Inject the device service
+   * 
+   * @param deviceService
+   */
+  @Autowired
+  public void setDeviceService(DeviceService deviceService)
+  {
+    logger.debug("DeviceService class injected");
+    ksession.setGlobal("device", deviceService);
+  }
+
+  /**
+   * Inject the email service
+   * 
+   * @param emailService
+   */
+  @Autowired
+  public void setEmailService(EmailService emailService)
+  {
+    logger.debug("EmailService class injected");
+    ksession.setGlobal("email", emailService);
   }
 }
