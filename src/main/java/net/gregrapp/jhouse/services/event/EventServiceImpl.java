@@ -47,7 +47,9 @@ public class EventServiceImpl implements EventService
 
   private static final String CONFIG_NAMESPACE = "net.gregrapp.jhouse.managers.event.EventManager";
   private static final String RULES_FILE = "RULESFILE";
-
+  private static final String JHOUSE_DSL = "jhouse.dsl";
+  private static final String CONFIG_DRL = "config.drl";
+  
   private ConfigService configService;
 
   private StatefulKnowledgeSession ksession;
@@ -103,22 +105,23 @@ public class EventServiceImpl implements EventService
     logger.debug("Creating new KnowledgeBuilder");
     KnowledgeBuilder kbuilder = KnowledgeBuilderFactory.newKnowledgeBuilder();
 
-    kbuilder.add(ResourceFactory.newClassPathResource("jhouse.dsl"),
+    kbuilder.add(ResourceFactory.newClassPathResource(JHOUSE_DSL),
         ResourceType.DSL);
-    kbuilder.add(ResourceFactory.newClassPathResource("config.drl"),
+    kbuilder.add(ResourceFactory.newClassPathResource(CONFIG_DRL),
         ResourceType.DRL);
 
     String rulesFile = configService.get(
         CONFIG_NAMESPACE, RULES_FILE);
 
-    if (rulesFile != null && !"".equals(rulesFile))
+    if (rulesFile == null || "".equals(rulesFile))
+    {
+      logger.error("Invalid rules file specified in config [{}]", rulesFile);
+    } 
+    else
     {
       logger.debug("Adding rules file to KnowledgeBuilder");
       kbuilder.add(ResourceFactory.newFileResource(rulesFile),
           ResourceType.DSLR);
-    } else
-    {
-      logger.error("Invalid rules file specified in config [{}]", rulesFile);
     }
 
     logger.debug("Starting rule file change scanner service");
