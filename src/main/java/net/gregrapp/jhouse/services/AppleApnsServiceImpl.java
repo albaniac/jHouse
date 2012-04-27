@@ -10,6 +10,8 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
+import javax.annotation.PreDestroy;
+
 import net.gregrapp.jhouse.models.ApnsDevice;
 import net.gregrapp.jhouse.models.User;
 import net.gregrapp.jhouse.repositories.ApnsDeviceRepository;
@@ -36,33 +38,43 @@ import com.notnoop.exceptions.RuntimeIOException;
 public class AppleApnsServiceImpl implements AppleApnsService
 {
 
+  private static final String APNS_ENVIRONMENT = "APNS_ENVIRONMENT";
+  private static final String CERT_PASSWORD = "CERT_PASSWORD";
+  private static final String CERT_PATH = "CERT_PATH";
   /*
    * Config keys
    */
   private static final String CONFIG_NAMESPACE = "net.gregrapp.jhouse.services.AppleApnsService";
-  private static final String CERT_PATH = "CERT_PATH";
-  private static final String CERT_PASSWORD = "CERT_PASSWORD";
   private static final String INACTIVE_DEVICE_POLL_MINUTES = "INACTIVE_DEVICE_POLL_MINUTES";
-  private static final String APNS_ENVIRONMENT = "APNS_ENVIRONMENT";
 
   private static final Logger logger = LoggerFactory
       .getLogger(AppleApnsServiceImpl.class);
 
-  private ApnsService apnsService;
-  private ConfigService configService;
-
-  private ScheduledExecutorService inactiveDeviceExecutor;
-
   @Autowired
   private ApnsDeviceRepository apnsDeviceRepository;
-
-  @Autowired
-  private UserRepository userRepository;
+  private ApnsService apnsService;
 
   @Autowired
   private ApplicationContext appContext;
 
+  private ConfigService configService;
+
   private int DEFAULT_POLL_MINUTES = 60;
+
+  private ScheduledExecutorService inactiveDeviceExecutor;
+
+  @Autowired
+  private UserRepository userRepository;
+
+  /**
+   * Shut down APNs cleanly
+   */
+  @PreDestroy
+  public void destroy()
+  {
+    logger.info("Destroying Apple Push Notification service");
+    apnsService.stop();
+  }
 
   /**
    * Return Spring proxy of this service
@@ -111,17 +123,18 @@ public class AppleApnsServiceImpl implements AppleApnsService
         {
           try
           {
-            Map<String, Date> inactiveDevices = apnsService.getInactiveDevices();
+            Map<String, Date> inactiveDevices = apnsService
+                .getInactiveDevices();
             for (String deviceToken : inactiveDevices.keySet())
             {
               ApnsDevice device = apnsDeviceRepository.findByToken(deviceToken);
               apnsDeviceRepository.delete(device);
             }
             apnsDeviceRepository.flush();
-          }
-          catch (NetworkIOException e)
+          } catch (NetworkIOException e)
           {
-            logger.error("Unable to connect to APNs inactive device service", e);
+            logger
+                .error("Unable to connect to APNs inactive device service", e);
           }
         }
       }
@@ -132,19 +145,57 @@ public class AppleApnsServiceImpl implements AppleApnsService
   /*
    * (non-Javadoc)
    * 
-   * @see net.gregrapp.jhouse.services.AppleApnsService#send(java.lang.String,
-   * java.lang.String, int)
+   * @see
+   * net.gregrapp.jhouse.services.AppleApnsService#putToken(java.lang.String,
+   * java.lang.String, java.lang.String, java.lang.String)
    */
   @Override
-  public void send(String token, String alertBody, int badge)
+  public void putDevice(String username, String uuid, String token,
+      String description)
   {
-    logger.debug("Building APNs payload [alertBody={}, badge={}]", alertBody,
-        badge);
-    String payload = APNS.newPayload().alertBody(alertBody).shrinkBody("...")
-        .badge(badge).build();
+    ApnsDevice device = apnsDeviceRepository.findByUuid(uuid);
 
-    logger.debug("Sending APNs alert to device [token={}]", token);
-    apnsService.push(token, payload);
+    if (device != null)
+    {
+      logger
+          .debug(
+              "Existing APNs device record found, updating token and description [token={}, description={}]",
+              token, description);
+      device.setToken(token);
+      device.setDescription(description);
+      device.setLastUpdate(Calendar.getInstance());
+      apnsDeviceRepository.save(device);
+    } else
+    {
+      logger
+          .debug("Existing APNs device record not found, creating new record");
+      User user = userRepository.findByUsername(username);
+
+      if (user != null)
+      {
+        ApnsDevice newDevice = new ApnsDevice();
+        newDevice.setUuid(uuid);
+        newDevice.setDescription(description);
+        newDevice.setToken(token);
+        newDevice.setEnabled(true);
+        newDevice.setUser(user);
+        newDevice.setLastUpdate(Calendar.getInstance());
+        apnsDeviceRepository.save(newDevice);
+      } else
+      {
+        logger
+            .warn(
+                "User [{}] not found in database, unable to create APNs device record",
+                username);
+      }
+    }
+  }
+
+  @Override
+  public void send(long userId, String alertBody)
+  {
+    // Call method through Spring proxy so that a transaction is created
+    getSpringProxy().send(userId, alertBody, 0);
   }
 
   @Override
@@ -170,11 +221,22 @@ public class AppleApnsServiceImpl implements AppleApnsService
     }
   }
 
+  /*
+   * (non-Javadoc)
+   * 
+   * @see net.gregrapp.jhouse.services.AppleApnsService#send(java.lang.String,
+   * java.lang.String, int)
+   */
   @Override
-  public void send(long userId, String alertBody)
+  public void send(String token, String alertBody, int badge)
   {
-    // Call method through Spring proxy so that a transaction is created
-    getSpringProxy().send(userId, alertBody, 0);
+    logger.debug("Building APNs payload [alertBody={}, badge={}]", alertBody,
+        badge);
+    String payload = APNS.newPayload().alertBody(alertBody).shrinkBody("...")
+        .badge(badge).build();
+
+    logger.debug("Sending APNs alert to device [token={}]", token);
+    apnsService.push(token, payload);
   }
 
   /**
@@ -202,7 +264,7 @@ public class AppleApnsServiceImpl implements AppleApnsService
 
     String apnsEnvironment = configService.get(CONFIG_NAMESPACE,
         APNS_ENVIRONMENT);
-    
+
     try
     {
       if (apnsEnvironment != null
@@ -216,55 +278,14 @@ public class AppleApnsServiceImpl implements AppleApnsService
         logger.debug("Creating sandbox APNs service instance");
         apnsService = APNS.newService().withCert(certPath, certPassword)
             .withSandboxDestination().build();
-      }      
-    }
-    catch (RuntimeIOException e)
+      }
+    } catch (RuntimeIOException e)
     {
       logger.error("Error connecting to APNs service", e);
     }
-  
+
     // Start polling Apple for inactive devices
     if (apnsService != null)
       this.monitorInactiveDevices();
-  }
-
-  /* (non-Javadoc)
-   * @see net.gregrapp.jhouse.services.AppleApnsService#putToken(java.lang.String, java.lang.String, java.lang.String, java.lang.String)
-   */
-  @Override
-  public void putDevice(String username, String uuid, String token,
-      String description)
-  {
-    ApnsDevice device = apnsDeviceRepository.findByUuid(uuid);
-
-    if (device != null)
-    {
-      logger.debug("Existing APNs device record found, updating token and description [token={}, description={}]", token, description);
-      device.setToken(token);
-      device.setDescription(description);
-      device.setLastUpdate(Calendar.getInstance());
-      apnsDeviceRepository.save(device);
-    } 
-    else
-    {
-      logger.debug("Existing APNs device record not found, creating new record");
-      User user = userRepository.findByUsername(username);
-      
-      if (user != null)
-      {
-        ApnsDevice newDevice = new ApnsDevice();
-        newDevice.setUuid(uuid);
-        newDevice.setDescription(description);
-        newDevice.setToken(token);
-        newDevice.setEnabled(true);
-        newDevice.setUser(user);
-        newDevice.setLastUpdate(Calendar.getInstance());
-        apnsDeviceRepository.save(newDevice);
-      }
-      else
-      {
-        logger.warn("User [{}] not found in database, unable to create APNs device record", username);
-      }
-    }
   }
 }
