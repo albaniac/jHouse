@@ -16,6 +16,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
 
 /**
  * @author Greg Rapp
@@ -54,12 +55,14 @@ public class AppleIosController
     return username;
   }
 
+  /**
+   * Add/update device token for currently authenticated user
+   * 
+   * @param device
+   */
   @RequestMapping(value = "/device_tokens", method = RequestMethod.PUT)
-  @PreAuthorize("isAuthenticated()")
   public void putDeviceToken(@RequestBody ApnsDevice device)
   {
-    logger.debug("");
-
     String username = this.getCurrentUsername();
 
     if (username != null && !"".equals(username))
@@ -76,4 +79,22 @@ public class AppleIosController
     }
   }
 
+  @RequestMapping(value = "/apnsalertbadge")
+  public void apnsAlertWithBadge(@RequestParam int userId, @RequestParam String alertBody, @RequestParam int badge)
+  {
+    apnsService.send(userId, alertBody, badge);
+  }
+/*
+  @RequestMapping(value = "/apnsalert")
+  public void apnsAlert(@RequestParam int userId, @RequestParam String alertBody)
+  {
+    apnsService.send(userId, alertBody);
+  }
+  
+  @RequestMapping(value = "/apnsbadge")
+  public void apnsBadge(@RequestParam int userId, @RequestParam int badge)
+  {
+    apnsService.send(userId, null, badge);
+  }
+*/
 }

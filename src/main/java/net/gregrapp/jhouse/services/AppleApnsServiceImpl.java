@@ -18,7 +18,9 @@ import net.gregrapp.jhouse.repositories.UserRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.notnoop.apns.APNS;
 import com.notnoop.apns.ApnsService;
@@ -57,7 +59,20 @@ public class AppleApnsServiceImpl implements AppleApnsService
   @Autowired
   private UserRepository userRepository;
 
+  @Autowired
+  private ApplicationContext appContext;
+
   private int DEFAULT_POLL_MINUTES = 60;
+
+  /**
+   * Return Spring proxy of this service
+   * 
+   * @return service proxy
+   */
+  private AppleApnsService getSpringProxy()
+  {
+    return appContext.getBean(AppleApnsService.class);
+  }
 
   /**
    * Starts executor to pull down inactive APNs devices periodically
@@ -133,6 +148,7 @@ public class AppleApnsServiceImpl implements AppleApnsService
   }
 
   @Override
+  @Transactional(readOnly = true)
   public void send(long userId, String alertBody, int badge)
   {
     if (userRepository != null)
@@ -157,7 +173,8 @@ public class AppleApnsServiceImpl implements AppleApnsService
   @Override
   public void send(long userId, String alertBody)
   {
-    this.send(userId, alertBody, 0);
+    // Call method through Spring proxy so that a transaction is created
+    getSpringProxy().send(userId, alertBody, 0);
   }
 
   /**
