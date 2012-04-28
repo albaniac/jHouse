@@ -74,6 +74,7 @@ public class AppleApnsServiceImpl implements AppleApnsService
   {
     logger.info("Destroying Apple Push Notification service");
     apnsService.stop();
+    inactiveDeviceExecutor.shutdownNow();
   }
 
   /**
