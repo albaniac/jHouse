@@ -7,6 +7,7 @@ import java.util.Calendar;
 import java.util.Timer;
 import java.util.TimerTask;
 
+import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 
 import net.gregrapp.jhouse.events.Event;
@@ -42,31 +43,28 @@ import org.springframework.stereotype.Service;
 @Service
 public class EventServiceImpl implements EventService
 {
+  private static final String CONFIG_DRL = "config.drl";
+  private static final String CONFIG_NAMESPACE = "net.gregrapp.jhouse.managers.event.EventManager";
+  private static final String JHOUSE_DSL = "jhouse.dsl";
   private static final Logger logger = LoggerFactory
       .getLogger(EventServiceImpl.class);
-
-  private static final String CONFIG_NAMESPACE = "net.gregrapp.jhouse.managers.event.EventManager";
   private static final String RULES_FILE = "RULESFILE";
-  private static final String JHOUSE_DSL = "jhouse.dsl";
-  private static final String CONFIG_DRL = "config.drl";
-  
+
+  @Autowired
+  private AppleApnsService appleApnsService;
+
+  @Autowired
   private ConfigService configService;
+
+  @Autowired
+  private DeviceService deviceService;
+
+  @Autowired
+  private EmailService emailService;
 
   private StatefulKnowledgeSession ksession;
 
   private Timer timeEventTimer;
-
-  /**
-   * @param configService
-   */
-  @Autowired
-  public EventServiceImpl(ConfigService configService)
-  {
-    this.configService = configService;
-    initDrools();
-    setCalendars();
-    initTimeEventTimer();
-  }
 
   /*
    * (non-Javadoc)
@@ -98,6 +96,15 @@ public class EventServiceImpl implements EventService
     ksession.insert(event);
   }
 
+  @PostConstruct
+  public void init()
+  {
+    initDrools();
+    setGlobals();
+    setCalendars();
+    initTimeEventTimer();
+  }
+
   private void initDrools()
   {
     logger.info("Creating rules engine");
@@ -110,14 +117,12 @@ public class EventServiceImpl implements EventService
     kbuilder.add(ResourceFactory.newClassPathResource(CONFIG_DRL),
         ResourceType.DRL);
 
-    String rulesFile = configService.get(
-        CONFIG_NAMESPACE, RULES_FILE);
+    String rulesFile = configService.get(CONFIG_NAMESPACE, RULES_FILE);
 
     if (rulesFile == null || "".equals(rulesFile))
     {
       logger.error("Invalid rules file specified in config [{}]", rulesFile);
-    } 
-    else
+    } else
     {
       logger.debug("Adding rules file to KnowledgeBuilder");
       kbuilder.add(ResourceFactory.newFileResource(rulesFile),
@@ -235,23 +240,10 @@ public class EventServiceImpl implements EventService
 
       } catch (NumberFormatException e)
       {
-        logger
-            .warn("Invalid LATITUDE or LONGITUDE values in config");
+        logger.warn("Invalid LATITUDE or LONGITUDE values in config");
       }
     }
 
-  }
-
-  /**
-   * Inject the Apple Push Notification service
-   * 
-   * @param apnsService
-   */
-  @Autowired
-  public void setAppleApnsService(AppleApnsService apnsService)
-  {
-    logger.debug("AppleApnsService class injected");
-    ksession.setGlobal("apns", apnsService);
   }
 
   /**
@@ -275,33 +267,19 @@ public class EventServiceImpl implements EventService
             .set("daytime", new DayTime(latitude, longitude));
       } catch (NumberFormatException e)
       {
-        logger
-            .warn("Invalid LATITUDE or LONGITUDE values in config");
+        logger.warn("Invalid LATITUDE or LONGITUDE values in config");
       }
     }
   }
 
   /**
-   * Inject the device service
-   * 
-   * @param deviceService
+   * Set knowledge session globals
    */
-  @Autowired
-  public void setDeviceService(DeviceService deviceService)
+  private void setGlobals()
   {
-    logger.debug("DeviceService class injected");
-    ksession.setGlobal("device", deviceService);
-  }
-
-  /**
-   * Inject the email service
-   * 
-   * @param emailService
-   */
-  @Autowired
-  public void setEmailService(EmailService emailService)
-  {
-    logger.debug("EmailService class injected");
+    logger.debug("Setting StatefulKnowledgeSession globals");
     ksession.setGlobal("email", emailService);
+    ksession.setGlobal("device", deviceService);
+    ksession.setGlobal("apns", appleApnsService);
   }
 }
