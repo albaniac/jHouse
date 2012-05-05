@@ -6,14 +6,18 @@ package net.gregrapp.jhouse.interfaces.zwave;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Random;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 import javax.annotation.PreDestroy;
 
 import net.gregrapp.jhouse.device.drivers.types.DeviceDriver;
 import net.gregrapp.jhouse.device.drivers.types.ZwaveDeviceDriver;
 import net.gregrapp.jhouse.interfaces.InterfaceCallback;
-import net.gregrapp.jhouse.interfaces.TransportInterface;
 import net.gregrapp.jhouse.interfaces.NodeInterface;
+import net.gregrapp.jhouse.interfaces.TransportInterface;
 import net.gregrapp.jhouse.interfaces.zwave.ApplicationLayerImpl.MemoryGetId;
 import net.gregrapp.jhouse.interfaces.zwave.ApplicationLayerImpl.SerialApiCapabilities;
 import net.gregrapp.jhouse.interfaces.zwave.Constants.CommandBasic;
@@ -53,12 +57,16 @@ public class ZwaveInterface extends TransportInterface implements
 
   private Map<Integer, ArrayList<ZwaveDeviceDriver>> drivers = new HashMap<Integer, ArrayList<ZwaveDeviceDriver>>();
 
+  private ScheduledExecutorService executor;
+
+  private Random random = new Random();
+
   public ZwaveInterface(Transport transport)
   {
-    super(transport);
+    super(transport);    
   }
 
-  public void attachDeviceDriver(DeviceDriver driver)
+  public void attachDeviceDriver(final DeviceDriver driver)
   {
     if (!(driver instanceof ZwaveDeviceDriver))
     {
@@ -66,7 +74,7 @@ public class ZwaveInterface extends TransportInterface implements
           "Cannot attach non ZWave device to this interface");
     } else
     {
-      logger.info("Attaching device driver: {}", driver.getClass().getName());
+      logger.info("Attaching device driver [{}]", driver.getClass().getName());
       ZwaveDeviceDriver zwaveDevice = (ZwaveDeviceDriver) driver;
 
       if (drivers.containsKey(zwaveDevice.getNodeId()))
@@ -89,7 +97,21 @@ public class ZwaveInterface extends TransportInterface implements
 
       if (this.interfaceReady && (driver instanceof InterfaceCallback))
       {
-        ((InterfaceCallback) driver).interfaceReady();
+        executor.schedule(new Runnable()
+        {
+          public void run()
+          {
+            try
+            {
+              // Delay so these don't run so fast
+              Thread.sleep(2000);
+            } catch (InterruptedException e)
+            {
+            }
+            ((InterfaceCallback) driver).interfaceReady();
+          }
+        }, 0, TimeUnit.SECONDS);
+
       }
     }
   }
@@ -100,11 +122,11 @@ public class ZwaveInterface extends TransportInterface implements
 
     if (payload[3] == CommandClass.COMMAND_CLASS_BASIC.get())
     {
-      logger.debug("Received COMMAND_CLASS_BASIC from node {}", nodeId);
+      logger.debug("Received COMMAND_CLASS_BASIC from node [{}]", nodeId);
       if (payload[4] == CommandBasic.BASIC_SET.get())
       {
         int value = payload[5];
-        logger.debug("Received BASIC_SET from node {} with a value of [{}]",
+        logger.debug("Received BASIC_SET from node [{}] with a value of [{}]",
             nodeId, value);
 
         if (drivers.containsKey(nodeId))
@@ -116,7 +138,8 @@ public class ZwaveInterface extends TransportInterface implements
       } else if (payload[4] == CommandBasic.BASIC_REPORT.get())
       {
         int value = payload[5];
-        logger.debug("Received BASIC_REPORT from node {} with a value of [{}]",
+        logger.debug(
+            "Received BASIC_REPORT from node [{}] with a value of [{}]",
             nodeId, value);
 
         if (drivers.containsKey(nodeId))
@@ -128,14 +151,15 @@ public class ZwaveInterface extends TransportInterface implements
       }
     } else if (payload[3] == CommandClass.COMMAND_CLASS_SWITCH_MULTILEVEL.get())
     {
-      logger.debug("Received COMMAND_CLASS_SWITCH_MULTILEVEL from node {}",
+      logger.debug("Received COMMAND_CLASS_SWITCH_MULTILEVEL from node [{}]",
           nodeId);
       if (payload[4] == CommandSwitchMultilevel.SWITCH_MULTILEVEL_SET.get())
       {
         int value = payload[5];
-        logger.debug(
-            "Received SWITCH_MULTILEVEL_SET from node {} with a value of [{}]",
-            nodeId, value);
+        logger
+            .debug(
+                "Received SWITCH_MULTILEVEL_SET from node [{}] with a value of [{}]",
+                nodeId, value);
 
         if (drivers.containsKey(nodeId))
         {
@@ -150,7 +174,7 @@ public class ZwaveInterface extends TransportInterface implements
         int value = payload[5];
         logger
             .debug(
-                "Received SWITCH_MULTILEVEL_REPORT from node {} with a value of [{}]",
+                "Received SWITCH_MULTILEVEL_REPORT from node [{}] with a value of [{}]",
                 nodeId, value);
 
         if (drivers.containsKey(nodeId))
@@ -185,9 +209,10 @@ public class ZwaveInterface extends TransportInterface implements
     {
       if (payload[4] == CommandSensorBinary.SENSOR_BINARY_REPORT.get())
       {
-        logger.debug(
-            "Received SENSOR_BINARY_REPORT from node {} with a value of [{}]",
-            nodeId, payload[5]);
+        logger
+            .debug(
+                "Received SENSOR_BINARY_REPORT from node [{}] with a value of [{}]",
+                nodeId, payload[5]);
         if (drivers.get(nodeId) != null)
         {
           for (Object device : drivers.get(nodeId))
@@ -265,6 +290,8 @@ public class ZwaveInterface extends TransportInterface implements
    */
   public void init()
   {
+    executor = Executors.newSingleThreadScheduledExecutor();
+
     try
     {
       this.transport.init();
@@ -450,7 +477,7 @@ public class ZwaveInterface extends TransportInterface implements
 
     return false;
   }
-  
+
   /**
    * Get node's neighbor table
    * 
@@ -460,21 +487,23 @@ public class ZwaveInterface extends TransportInterface implements
   public String getNodeNeighbors(int nodeId)
   {
     String nodes = null;
-    
+
     try
     {
-       nodes = appLayer.getRoutingTableLine(nodeId, false, false).toString();
+      nodes = appLayer.getRoutingTableLine(nodeId, false, false).toString();
     } catch (FrameLayerException e)
     {
-      logger.warn("Error sending routing table request to node [{}]", nodeId, e);
+      logger
+          .warn("Error sending routing table request to node [{}]", nodeId, e);
     } catch (ApplicationLayerException e)
     {
-      logger.warn("Error sending routing table request to node [{}]", nodeId, e);
+      logger
+          .warn("Error sending routing table request to node [{}]", nodeId, e);
     }
-    
+
     return nodes;
   }
-  
+
   /**
    * Request node to delete its return route to this node
    * 
@@ -484,21 +513,22 @@ public class ZwaveInterface extends TransportInterface implements
   public boolean zwaveDeleteReturnRoute(int nodeId)
   {
     TXStatus status = null;
-    
+
     try
     {
       status = appLayer.zwaveDeleteReturnRoute(nodeId);
     } catch (FrameLayerException e)
     {
-      logger.warn("Error sending delete return route request to node [{}]", nodeId, e);
+      logger.warn("Error sending delete return route request to node [{}]",
+          nodeId, e);
     }
-    
+
     if (status == TXStatus.CompleteOk)
       return true;
     else
       return false;
   }
-  
+
   /**
    * Request node to update it's neighbor table
    * 
@@ -508,21 +538,22 @@ public class ZwaveInterface extends TransportInterface implements
   public boolean zwaveRequestNodeNeighborUpdate(int nodeId)
   {
     RequestNeighbor status = null;
-    
+
     try
     {
       status = appLayer.zwaveRequestNodeNeighborUpdate(nodeId);
     } catch (FrameLayerException e)
     {
-      logger.warn("Error sending delete return route request to node [{}]", nodeId, e);
+      logger.warn("Error sending delete return route request to node [{}]",
+          nodeId, e);
     }
-    
+
     if (status == RequestNeighbor.UpdateDone)
       return true;
     else
       return false;
   }
-  
+
   /**
    * Request node to update its return route to this node
    * 
@@ -533,15 +564,16 @@ public class ZwaveInterface extends TransportInterface implements
   {
     TXStatus status = null;
     int controllerNodeId = appLayer.getControllerNodeId();
-    
+
     try
     {
       status = appLayer.zwaveAssignReturnRoute(nodeId, controllerNodeId);
     } catch (FrameLayerException e)
     {
-      logger.warn("Error sending assign return route request to node [{}]", nodeId, e);
+      logger.warn("Error sending assign return route request to node [{}]",
+          nodeId, e);
     }
-    
+
     if (status == TXStatus.CompleteOk)
       return true;
     else

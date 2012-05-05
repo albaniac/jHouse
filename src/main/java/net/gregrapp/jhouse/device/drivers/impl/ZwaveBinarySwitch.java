@@ -23,8 +23,8 @@ import org.slf4j.LoggerFactory;
  * 
  */
 public class ZwaveBinarySwitch extends ZwaveDeviceDriver implements
-    BinarySwitch,
-    CommandClassBasic, CommandClassManufacturerSpecific, InterfaceCallback
+    BinarySwitch, CommandClassBasic, CommandClassManufacturerSpecific,
+    InterfaceCallback
 {
   private static final Logger logger = LoggerFactory
       .getLogger(ZwaveBinarySwitch.class);
@@ -74,8 +74,7 @@ public class ZwaveBinarySwitch extends ZwaveDeviceDriver implements
   {
     logger.info(
         "Received COMMAND_CLASS_BASIC_REPORT from Z-Wave node {}: [{}]",
-        this.nodeId, value == 255 ? "ON"
-            : "OFF");
+        this.nodeId, value == 255 ? "ON" : "OFF");
 
     this.switchState = value;
     this.updateDeviceValue(SWITCH_VALUE_IDX, value);
@@ -112,9 +111,8 @@ public class ZwaveBinarySwitch extends ZwaveDeviceDriver implements
   @Override
   public void commandClassManufacturerSpecificGet()
   {
-    logger
-        .debug("Requesting manufacturer specific report from Z-Wave node {}",
-            nodeId);
+    logger.debug("Requesting manufacturer specific report from Z-Wave node {}",
+        nodeId);
 
     driverInterface.zwaveSendData(nodeId,
         CommandClass.COMMAND_CLASS_MANUFACTURER_SPECIFIC.get(),
@@ -140,7 +138,9 @@ public class ZwaveBinarySwitch extends ZwaveDeviceDriver implements
   {
   }
 
-  /* (non-Javadoc)
+  /*
+   * (non-Javadoc)
+   * 
    * @see net.gregrapp.jhouse.interfaces.InterfaceCallback#interfaceReady()
    */
   @Override
