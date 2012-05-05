@@ -129,7 +129,7 @@ public class ZwaveBinarySensor extends ZwaveDeviceDriver implements
   @Override
   public void poll()
   {
-    logger.info("Polling Z-Wave node {}", this.nodeId);
+    logger.info("Polling Z-Wave node [{}]", this.nodeId);
     // Request a BASIC_REPORT to get the current status of the switch
     this.commandClassBasicGet();
   }

@@ -22,6 +22,7 @@ import net.gregrapp.jhouse.interfaces.zwave.Constants.CommandManufacturerSpecifi
 import net.gregrapp.jhouse.interfaces.zwave.Constants.CommandSensorBinary;
 import net.gregrapp.jhouse.interfaces.zwave.Constants.CommandSwitchMultilevel;
 import net.gregrapp.jhouse.interfaces.zwave.Constants.Manufacturer;
+import net.gregrapp.jhouse.interfaces.zwave.Constants.RequestNeighbor;
 import net.gregrapp.jhouse.interfaces.zwave.Constants.TXOption;
 import net.gregrapp.jhouse.interfaces.zwave.Constants.TXStatus;
 import net.gregrapp.jhouse.interfaces.zwave.DataFrame.CommandType;
@@ -426,6 +427,13 @@ public class ZwaveInterface extends TransportInterface implements
     setInterfaceReady(true);
   }
 
+  /**
+   * Send data out Z-Wave interface
+   * 
+   * @param nodeId
+   * @param data
+   * @return
+   */
   public boolean zwaveSendData(int nodeId, int... data)
   {
     try
@@ -441,5 +449,102 @@ public class ZwaveInterface extends TransportInterface implements
     }
 
     return false;
+  }
+  
+  /**
+   * Get node's neighbor table
+   * 
+   * @param nodeId
+   * @return
+   */
+  public String getNodeNeighbors(int nodeId)
+  {
+    String nodes = null;
+    
+    try
+    {
+       nodes = appLayer.getRoutingTableLine(nodeId, false, false).toString();
+    } catch (FrameLayerException e)
+    {
+      logger.warn("Error sending routing table request to node [{}]", nodeId, e);
+    } catch (ApplicationLayerException e)
+    {
+      logger.warn("Error sending routing table request to node [{}]", nodeId, e);
+    }
+    
+    return nodes;
+  }
+  
+  /**
+   * Request node to delete its return route to this node
+   * 
+   * @param nodeId
+   * @return
+   */
+  public boolean zwaveDeleteReturnRoute(int nodeId)
+  {
+    TXStatus status = null;
+    
+    try
+    {
+      status = appLayer.zwaveDeleteReturnRoute(nodeId);
+    } catch (FrameLayerException e)
+    {
+      logger.warn("Error sending delete return route request to node [{}]", nodeId, e);
+    }
+    
+    if (status == TXStatus.CompleteOk)
+      return true;
+    else
+      return false;
+  }
+  
+  /**
+   * Request node to update it's neighbor table
+   * 
+   * @param nodeId
+   * @return
+   */
+  public boolean zwaveRequestNodeNeighborUpdate(int nodeId)
+  {
+    RequestNeighbor status = null;
+    
+    try
+    {
+      status = appLayer.zwaveRequestNodeNeighborUpdate(nodeId);
+    } catch (FrameLayerException e)
+    {
+      logger.warn("Error sending delete return route request to node [{}]", nodeId, e);
+    }
+    
+    if (status == RequestNeighbor.UpdateDone)
+      return true;
+    else
+      return false;
+  }
+  
+  /**
+   * Request node to update its return route to this node
+   * 
+   * @param nodeId
+   * @return
+   */
+  public boolean zwaveAssignReturnRoute(int nodeId)
+  {
+    TXStatus status = null;
+    int controllerNodeId = appLayer.getControllerNodeId();
+    
+    try
+    {
+      status = appLayer.zwaveAssignReturnRoute(nodeId, controllerNodeId);
+    } catch (FrameLayerException e)
+    {
+      logger.warn("Error sending assign return route request to node [{}]", nodeId, e);
+    }
+    
+    if (status == TXStatus.CompleteOk)
+      return true;
+    else
+      return false;
   }
 }

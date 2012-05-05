@@ -41,7 +41,7 @@ public interface DeviceService
    * 
    * @param deviceId
    *          the device's ID
-   * @return the device's object instance
+   * @return the device's object instance, null if not found
    */
   public Device get(int deviceId);
 
@@ -50,7 +50,7 @@ public interface DeviceService
    *          the device's ID
    * @param type
    *          type of device to return
-   * @return the device's instance cast to type
+   * @return the device's instance cast to type, null if not found or not assignable to class
    */
   public <T extends Device> T get(int deviceId, Class<T> type);
 

@@ -42,7 +42,7 @@ public abstract class TransportInterface extends AbstractInterface
    */
   public void setTransport(Transport transport)
   {
-    logger.debug("Setting Transport on this Interface to instance of {}",
+    logger.debug("Setting Transport on this Interface to instance of [{}]",
         transport.getClass().getName());
     this.transport = transport;
     this.init();

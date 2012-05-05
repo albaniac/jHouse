@@ -29,6 +29,7 @@ import java.util.List;
 
 import net.gregrapp.jhouse.interfaces.zwave.ApplicationLayerImpl.ControllerCapabilities;
 import net.gregrapp.jhouse.interfaces.zwave.ApplicationLayerImpl.MemoryGetId;
+import net.gregrapp.jhouse.interfaces.zwave.ApplicationLayerImpl.NodeMask;
 import net.gregrapp.jhouse.interfaces.zwave.ApplicationLayerImpl.SerialApiCapabilities;
 import net.gregrapp.jhouse.interfaces.zwave.Constants.ChipType;
 import net.gregrapp.jhouse.interfaces.zwave.Constants.ControllerChangeMode;
@@ -52,9 +53,10 @@ public interface ApplicationLayer
    * 
    */
   public void destroy();
-  
+
   /**
-   * Returns a copy of the node list stored in the DLL (does not read from Z-Wave module)
+   * Returns a copy of the node list stored in the DLL (does not read from
+   * Z-Wave module)
    * 
    * @return Copy of node list
    */
@@ -73,6 +75,13 @@ public interface ApplicationLayer
    * @return the Z-Wave {@link ChipType}
    */
   ChipType getChipType();
+
+  /**
+   * Get this controller's node ID
+   * 
+   * @return node ID
+   */
+  public int getControllerNodeId();
 
   // <summary>
   //
@@ -113,10 +122,25 @@ public interface ApplicationLayer
   // int GetNodeCount();
   int getNodeCount();
 
-  // <summary>
-  // Returns the Z-Wave SerialAPI version
-  // </summary>
-  // <returns></returns>
+  /**
+   * Get routing table from node
+   * 
+   * @param nodeId
+   * @param removeBadRepeaters
+   * @param removeNonRepeatingDevices
+   * @return
+   * @throws FrameLayerException
+   * @throws ApplicationLayerException
+   */
+  NodeMask getRoutingTableLine(int nodeId, boolean removeBadRepeaters,
+      boolean removeNonRepeatingDevices) throws FrameLayerException,
+      ApplicationLayerException;
+
+  /**
+   * Returns the Z-Wave SerialAPI version
+   * 
+   * @return
+   */
   public int getSerialApiVersion();
 
   // <summary>
@@ -263,13 +287,15 @@ public interface ApplicationLayer
       throws FrameLayerException;
 
   /**
-   * Update the controller capabilities and return a list of nodes as read from the Z-Wave module
+   * Update the controller capabilities and return a list of nodes as read from
+   * the Z-Wave module
    * 
    * @return array of {@link Node}s
    * @throws FrameLayerException
    * @throws ApplicationLayerException
    */
-  Node[] zwaveEnumerateNodes() throws FrameLayerException, ApplicationLayerException;
+  Node[] zwaveEnumerateNodes() throws FrameLayerException,
+      ApplicationLayerException;
 
   /**
    * Get the Zwave controller capabilities and current configuration
@@ -376,6 +402,17 @@ public interface ApplicationLayer
   // <returns></returns>
   TXStatus zwaveMemoryPutByte(long offset, int value)
       throws FrameLayerException;
+
+  /**
+   * Request manufacturer specific info from a node
+   * 
+   * @param nodeId
+   *          Z-Wave node ID
+   * @throws ApplicationLayerException
+   * @throws FrameLayerException
+   */
+  public void zwaveNodeManufacturerSpecific(int nodeId)
+      throws FrameLayerException, ApplicationLayerException;
 
   // <summary>
   // Z-wave rediscovery needed.
@@ -591,8 +628,7 @@ public interface ApplicationLayer
   // </summary>
   // <returns>bitmask of supported capabilities</returns>
   SerialApiCapabilities zwaveSerialApiGetCapabilities()
-      throws FrameLayerException,
-      ApplicationLayerException;
+      throws FrameLayerException, ApplicationLayerException;
 
   // <summary>
   // Set the Serial communication timeouts in 10ms
@@ -644,14 +680,14 @@ public interface ApplicationLayer
       ApplicationLayerException;
 
   // endregion
+
+  // endregion
   // <summary>
   // Enable or disable RF on the Z-Wave module.
   // </summary>
   // <param name="mode"></param>
   void zwaveSetRFReceiveMode(int mode) throws FrameLayerException,
       ApplicationLayerException;
-
-  // endregion
 
   // <summary>
   // Used when a Static controller wants to become SUC itself.
@@ -743,14 +779,5 @@ public interface ApplicationLayer
   int zwaveTest(int testCmd, int testDelay, int testPayloadLength,
       int testCount, TXOption[] testTXOptions, int maxLength, int[] testNodeMask)
       throws FrameLayerException;
-  
-  /**
-   * Request manufacturer specific info from a node
-   * 
-   * @param nodeId Z-Wave node ID
-   * @throws ApplicationLayerException 
-   * @throws FrameLayerException 
-   */
-  public void zwaveNodeManufacturerSpecific(int nodeId) throws FrameLayerException, ApplicationLayerException;
 
 }

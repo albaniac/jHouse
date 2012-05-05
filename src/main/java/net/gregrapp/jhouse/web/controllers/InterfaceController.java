@@ -17,6 +17,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
+import org.springframework.ui.ExtendedModelMap;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -57,19 +58,21 @@ public class InterfaceController
     return null;
   }
   
-  @RequestMapping(value = "/{name}/{method}", method = RequestMethod.GET)
-  public @ResponseBody
-  String deviceAction(@PathVariable("name") String name,
-      @PathVariable("method") String method, Model model)
+  @RequestMapping(value = "/{name}/{method}/{param}", method = RequestMethod.GET)
+  public Model deviceAction(@PathVariable("name") String name,
+      @PathVariable("method") String method, @PathVariable("param") int param)
   {
+    Model model = new ExtendedModelMap();
+
     if (ctx.containsBean(name))
     {
       Object bean = ctx.getBean(name);
       
       try
       {
-        Method meth = bean.getClass().getMethod(method);
-        Object ret = meth.invoke(bean);
+        Method meth = bean.getClass().getMethod(method, int.class);
+        Object ret = meth.invoke(bean, param);
+        model.addAttribute("value", ret);
         //System.out.println(ret.toString());
         //model.addAttribute("stuff", ret);
       } catch (SecurityException e)
@@ -79,7 +82,6 @@ public class InterfaceController
       } catch (NoSuchMethodException e)
       {
         model.addAttribute("errorDetail", "No such method found");
-        return "error";
       } catch (IllegalArgumentException e)
       {
         // TODO Auto-generated catch block
@@ -94,6 +96,6 @@ public class InterfaceController
         e.printStackTrace();
       }
     }
-    return "home";
+    return model;
   }
 }

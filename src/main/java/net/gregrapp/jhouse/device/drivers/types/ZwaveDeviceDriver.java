@@ -12,7 +12,8 @@ import net.gregrapp.jhouse.interfaces.zwave.command.CommandClassHail;
  * @author Greg Rapp
  * 
  */
-public abstract class ZwaveDeviceDriver extends AbstractDeviceDriver implements CommandClassHail
+public abstract class ZwaveDeviceDriver extends AbstractDeviceDriver implements
+    CommandClassHail
 {
   protected ZwaveInterface driverInterface;
   protected int nodeId;
@@ -37,20 +38,49 @@ public abstract class ZwaveDeviceDriver extends AbstractDeviceDriver implements 
   }
 
   /**
-   * Set this driver's ZWave node ID 
-   */
-  public void setNodeId(int nodeId)
-  {
-    this.nodeId = nodeId;
-    driverInterface.attachDeviceDriver(this);
-  }
-  
-  /**
    * Poll the device when we receive a HAIL from the device
    */
   public void hail()
   {
     this.poll();
+  }
+
+  public String optimizeNode()
+  {
+    StringBuffer status = new StringBuffer();
+
+    boolean result = driverInterface
+        .zwaveRequestNodeNeighborUpdate(this.nodeId);
+
+    if (result)
+    {
+      status.append("Request node neighbor update succeeded.");
+      result = driverInterface.zwaveDeleteReturnRoute(this.nodeId);
+
+      if (result)
+      {
+        status.append(" Delete return route succeeded.");
+        result = driverInterface.zwaveAssignReturnRoute(this.nodeId);
+
+        if (result)
+        {
+          status.append(" Assign return route succeeded.");
+          status.append(" Neighbors: ");
+          status.append(driverInterface.getNodeNeighbors(getNodeId()));
+        } else
+        {
+          status.append(" Assign return route failed.");
+        }
+      } else
+      {
+        status.append(" Delete return route failed.");
+      }
+    } else
+    {
+      status.append("Request node neighbor update failed.");
+    }
+
+    return status.toString();
   }
 
   /**
@@ -64,5 +94,14 @@ public abstract class ZwaveDeviceDriver extends AbstractDeviceDriver implements 
   public void requestNodeInfo()
   {
     driverInterface.requestNodeInfo(this.nodeId);
+  }
+
+  /**
+   * Set this driver's ZWave node ID
+   */
+  public void setNodeId(int nodeId)
+  {
+    this.nodeId = nodeId;
+    driverInterface.attachDeviceDriver(this);
   }
 }

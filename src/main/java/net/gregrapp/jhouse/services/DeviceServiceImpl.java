@@ -33,9 +33,6 @@ public class DeviceServiceImpl implements DeviceService
   private static final Logger logger = LoggerFactory
       .getLogger(DeviceService.class);
 
-  //@Autowired(required = false)
-  //Device[] devices;
-
   @Autowired
   ApplicationContext appContext;
   
@@ -48,7 +45,7 @@ public class DeviceServiceImpl implements DeviceService
   @Override
   public void execute(int deviceId, String method)
   {
-    logger.debug("Executing method {} on device {}", method, deviceId);
+    logger.debug("Executing method [{}] on device [{}]", method, deviceId);
     Device device = get(deviceId);
 
     if (device != null && device instanceof DriverDevice)
@@ -65,7 +62,7 @@ public class DeviceServiceImpl implements DeviceService
             method);
       } catch (NoSuchMethodException e)
       {
-        logger.warn("Method [{}] not found for device {}", method, deviceId);
+        logger.warn("Method [{}] not found for device [{}]", method, deviceId);
       } catch (IllegalArgumentException e)
       {
         logger.warn("Illegal arguments for method [{}]", method);
@@ -89,7 +86,7 @@ public class DeviceServiceImpl implements DeviceService
   @Override
   public void execute(int deviceId, String method, Object... args)
   {
-    logger.debug("Executing method {} on device {}", method, deviceId);
+    logger.debug("Executing method [{}] on device [{}]", method, deviceId);
     Device device = get(deviceId);
 
     if (device != null && device instanceof DriverDevice)
@@ -109,14 +106,14 @@ public class DeviceServiceImpl implements DeviceService
       } catch (SecurityException e)
       {
         logger.warn(
-            "Security exception while attempting to execute method: {}",
+            "Security exception while attempting to execute method [{}]",
             method);
       } catch (NoSuchMethodException e)
       {
-        logger.warn("Method not found for device {}: {}", deviceId, method);
+        logger.warn("Method not found for device [{}]: [{}]", deviceId, method);
       } catch (IllegalArgumentException e)
       {
-        logger.warn("Illegal arguments for method: {}", method);
+        logger.warn("Illegal arguments for method [{}]", method);
       } catch (IllegalAccessException e)
       {
         logger.warn("Error executing method", e);
@@ -170,7 +167,7 @@ public class DeviceServiceImpl implements DeviceService
    */
   public String[] getDeviceClassesForDevice(Device device)
   {
-    logger.debug("Getting device classes for device {}", device.getId());
+    logger.debug("Getting device classes for device [{}]", device.getId());
     List<String> klasses = new ArrayList<String>();
 
     if (device instanceof DriverDevice)
@@ -186,7 +183,7 @@ public class DeviceServiceImpl implements DeviceService
       }
     }
     String[] strKlasses = klasses.toArray(new String[0]);
-    logger.debug("DeviceDriver {} has classes: {}", ((DriverDevice) device)
+    logger.debug("DeviceDriver [{}] has classes: [{}]", ((DriverDevice) device)
         .getDriver().getClass().getSimpleName(), strKlasses);
     return strKlasses;
   }

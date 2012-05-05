@@ -3,6 +3,8 @@
  */
 package net.gregrapp.jhouse.web.controllers;
 
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -12,6 +14,8 @@ import net.gregrapp.jhouse.device.DriverDevice;
 import net.gregrapp.jhouse.device.classes.DeviceClass;
 import net.gregrapp.jhouse.device.drivers.types.DeviceDriver;
 import net.gregrapp.jhouse.services.DeviceService;
+import net.gregrapp.jhouse.web.controllers.exception.ClientErrorBadRequestException;
+import net.gregrapp.jhouse.web.controllers.exception.ServerErrorInternalErrorException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,12 +24,14 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.ExtendedModelMap;
 import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 
 /**
  * @author Greg Rapp
- *
+ * 
  */
 
 @Controller
@@ -33,34 +39,63 @@ import org.springframework.web.bind.annotation.RequestMethod;
 @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_DEVICE_USER')")
 public class DeviceController
 {
-  private static final Logger logger = LoggerFactory.getLogger(DeviceController.class);
-  
+  public static class DeviceAction
+  {
+    private Object[] args;
+
+    /**
+     * @return the args
+     */
+    public Object[] getArgs()
+    {
+      return args;
+    }
+
+    /**
+     * @param args
+     *          the args to set
+     */
+    public void setArgs(Object[] args)
+    {
+      this.args = args;
+    }
+  }
+
+  private static final Logger logger = LoggerFactory
+      .getLogger(DeviceController.class);
+
   @Autowired
   private DeviceService deviceService;
-  
+
+  /**
+   * Get current state of all devices
+   * 
+   * @return map containing all devices and their states
+   */
   @RequestMapping(value = "/all", method = RequestMethod.GET)
   public Model getAllDevices()
   {
     Model model = new ExtendedModelMap();
-    
-    List<HashMap<String,Object>> devices = new ArrayList<HashMap<String,Object>>();
+
+    List<HashMap<String, Object>> devices = new ArrayList<HashMap<String, Object>>();
 
     logger.debug("Getting all devices from the device service");
     for (Device device : deviceService.getDevices())
     {
       logger.trace("Building map for device [%s]", device.getName());
-      HashMap<String,Object> deviceMap = new HashMap<String,Object>();
+      HashMap<String, Object> deviceMap = new HashMap<String, Object>();
       deviceMap.put("id", device.getId());
       deviceMap.put("name", device.getName());
       deviceMap.put("text", device.getText());
       deviceMap.put("value", device.getValue());
       deviceMap.put("lastchange", device.getLastChange());
-      
+
       if (device instanceof DriverDevice)
       {
-        logger.debug("Device is a driver device, getting associated device classes");
+        logger
+            .debug("Device is a driver device, getting associated device classes");
         List<String> deviceClasses = new ArrayList<String>();
-        DeviceDriver driver = ((DriverDevice)device).getDriver();
+        DeviceDriver driver = ((DriverDevice) device).getDriver();
         for (Class<?> deviceClass : driver.getClass().getInterfaces())
         {
           if (DeviceClass.class.isAssignableFrom(deviceClass))
@@ -68,122 +103,145 @@ public class DeviceController
             deviceClasses.add(deviceClass.getCanonicalName());
           }
         }
-        logger.trace("Device classes associated with this device [%s]", deviceClasses.toString());
+        logger.trace("Device classes associated with this device [{}]",
+            deviceClasses.toString());
         deviceMap.put("classes", deviceClasses);
       }
-      
+
       devices.add(deviceMap);
     }
-    
+
     logger.debug("Done getting all devices");
     model.addAttribute("devices", devices);
-    
+
     return model;
   }
-  
-  /*
-  @RequestMapping(value = "/{id}/{method}", method = RequestMethod.GET)
-  public @ResponseBody
-  String deviceAction(@PathVariable("id") int id,
-      @PathVariable("method") String method, Model model)
+
+  /**
+   * Get a device's state
+   * 
+   * @param deviceId
+   * @return map containing device state
+   */
+  @RequestMapping(value = "/{deviceId}", method = RequestMethod.GET)
+  public Model getDevice(@PathVariable int deviceId)
   {
-    Device device = deviceService.get(id);
-    
+    Model model = new ExtendedModelMap();
+
+    logger.debug("Getting device [{}]", deviceId);
+    Device device = deviceService.get(deviceId);
+
     if (device == null)
     {
-      model.addAttribute("stuff", "device is null man");
-      return "home";
+      model.addAttribute("status", "error");
+      model.addAttribute("message", "device not found");
+      return model;
     }
-    
+
+    logger.trace("Building map for device [{}]", device.getName());
+    HashMap<String, Object> deviceMap = new HashMap<String, Object>();
+    deviceMap.put("id", device.getId());
+    deviceMap.put("name", device.getName());
+    deviceMap.put("text", device.getText());
+    deviceMap.put("value", device.getValue());
+    deviceMap.put("lastchange", device.getLastChange());
+
+    if (device instanceof DriverDevice)
+    {
+      logger
+          .debug("Device is a driver device, getting associated device classes");
+      List<String> deviceClasses = new ArrayList<String>();
+      DeviceDriver driver = ((DriverDevice) device).getDriver();
+      for (Class<?> deviceClass : driver.getClass().getInterfaces())
+      {
+        if (DeviceClass.class.isAssignableFrom(deviceClass))
+        {
+          deviceClasses.add(deviceClass.getCanonicalName());
+        }
+      }
+      logger.trace("Device classes associated with this device [%s]",
+          deviceClasses.toString());
+      deviceMap.put("classes", deviceClasses);
+    }
+
+    logger.debug("Done getting device");
+    model.addAttribute("device", deviceMap);
+
+    return model;
+  }
+
+  @RequestMapping(value = "/{deviceId}/action/{method}", method = {
+      RequestMethod.GET, RequestMethod.PUT })
+  public Model putDeviceAction(@PathVariable int deviceId,
+      @PathVariable String method, @RequestBody DeviceAction action)
+  {
+    Model model = new ExtendedModelMap();
+
+    logger.debug("Getting device [{}]", deviceId);
+    Device device = deviceService.get(deviceId);
+
+    if (device == null)
+    {
+      model.addAttribute("status", "error");
+      model.addAttribute("message", "device not found");
+      return model;
+    }
+
     if (!(device instanceof DriverDevice))
     {
-      model.addAttribute("stuff", "device isn't a driver device");
-      return "home";      
+      model.addAttribute("status", "error");
+      model.addAttribute("message", "device is not a driver device");
+      return model;
     }
-    
-    DeviceDriver driver = ((DriverDevice)device).getDriver();
+
+    DeviceDriver driver = ((DriverDevice) device).getDriver();
+
+    model.addAttribute("status", "ok");
+
+    List<Class<?>> klasses = new ArrayList<Class<?>>();
+    for (Object obj : action.getArgs())
+    {
+      klasses.add(obj.getClass());
+      // System.out.println("CLASS="+obj.getClass().getName());
+    }
+
+    Method methodOjbect = null;
     try
     {
-      Method meth = driver.getClass().getMethod(method);
-      meth.invoke(driver);
+      methodOjbect = driver.getClass().getMethod(method,
+          klasses.toArray(new Class<?>[0]));
     } catch (SecurityException e)
     {
-      // TODO Auto-generated catch block
-      e.printStackTrace();
+      logger.warn("Security exception accessing method [{}]: ", method, e);
+      throw new ServerErrorInternalErrorException();
     } catch (NoSuchMethodException e)
     {
-      model.addAttribute("stuff", "no such method");
-      return "home";
+      logger.warn("Method [{}] not found", method);
+      throw new ClientErrorBadRequestException();
+    }
+
+    try
+    {
+      Object retVal = methodOjbect.invoke(driver, action.getArgs());
+      if (retVal != null)
+      {
+        logger.debug(retVal.toString());
+        model.addAttribute("message", retVal.toString());
+      }
     } catch (IllegalArgumentException e)
     {
-      // TODO Auto-generated catch block
-      e.printStackTrace();
+      logger.warn("Illegal argument(s) specified for method [{}]: ", method, e);
+      throw new ClientErrorBadRequestException();
     } catch (IllegalAccessException e)
     {
-      // TODO Auto-generated catch block
-      e.printStackTrace();
+      logger.warn("Illegal access exception: ", e);
+      throw new ServerErrorInternalErrorException();
     } catch (InvocationTargetException e)
     {
-      // TODO Auto-generated catch block
-      e.printStackTrace();
+      logger.warn("Invocation target exception: ", e);
+      throw new ServerErrorInternalErrorException();
     }
 
-    return "home";
+    return model;
   }
-  
-  @RequestMapping(value = "/{id}", method = RequestMethod.GET)
-  public @ResponseBody HashMap<String, Object> deviceDetails(@PathVariable("id") int id, Model model)
-  {
-    Device device = deviceService.get(id);
-   // String[] devclass = null;
-    HashMap<String, Object> ret = new HashMap<String,Object>();
-    if (device == null)
-    {
-      ret.put("error", "device not found");
-      return ret;
-    } 
-    else {
-      ret.put("name", device.getName());
-      ret.put("value", device.getValue());
-      ret.put("text", device.getText());
-      SimpleDateFormat dateFormat = new SimpleDateFormat("MM/dd/yyyy HH:mm:ss");
-      ret.put("lastChange", dateFormat.format(device.getLastChange()));
-      return ret;
-    }
-    
-    //String strDevClasses = "";
-    //for (String s : devclass)
-    //  strDevClasses += s + ",";
-    //strDevClasses.substring(0, strDevClasses.length()-1);
-    //model.addAttribute("stuff", strDevClasses); 
-    
-   //return "home";
-  }
-  
-  
-  @RequestMapping(value = "/all", method = RequestMethod.GET)
-  public @ResponseBody
-  HashMap<String, Object> allDeviceDetails(Model model)
-  {
-    HashMap<String, Object> ret = new HashMap<String, Object>();
-    
-    List<HashMap<String,Object>> devices = new ArrayList<HashMap<String,Object>>();
-    for (Device device : deviceService.getDevices())
-    {
-      HashMap<String,Object> val = new HashMap<String,Object>();
-      val.put("id", device.getId());
-      val.put("name", device.getName());
-      val.put("value", device.getValue());
-      val.put("text", device.getText());
-      SimpleDateFormat dateFormat = new SimpleDateFormat("MM/dd/yyyy HH:mm:ss");
-      val.put("lastChange", dateFormat.format(device.getLastChange().getTime()));
-      
-      devices.add(val);
-    }
-    ret.put("success", true);
-    ret.put("devices", devices);
-    return ret;
-  }
-
-*/
 }

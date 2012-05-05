@@ -38,9 +38,9 @@ public class TCPClientImpl extends AbstractTransport
     super(config);
     logger.info("Instantiating TCPClientImpl instance");
     this.host = this.config.get(0);
-    logger.debug("Host set to {}", this.host);
+    logger.debug("Host set to [{}]", this.host);
     this.port = Integer.valueOf(this.config.get(1));
-    logger.debug("TCP port set to {}", this.port);
+    logger.debug("TCP port set to [{}]", this.port);
   }
 
   /* (non-Javadoc)
@@ -70,12 +70,12 @@ public class TCPClientImpl extends AbstractTransport
   public void init() throws TransportException
   {
     try
-    {
+    {      
       tcp = new Socket();
       tcp.connect(new InetSocketAddress(host, port), CONNECT_TIMEOUT);
     } catch (UnknownHostException e)
     {
-      throw new TransportException("unknown host " + host + ":" + String.valueOf(port));
+      throw new TransportException("unknown host [" + host + "]:" + String.valueOf(port));
     } catch (SocketTimeoutException e)
     {
       throw new TransportException("connect timed out");
