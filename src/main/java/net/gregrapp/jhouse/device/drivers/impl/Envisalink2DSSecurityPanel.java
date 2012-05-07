@@ -47,6 +47,9 @@ public class Envisalink2DSSecurityPanel extends AbstractDeviceDriver implements
   // Config constant
   private static final String CONFIG_PASSWORD = "PASSWORD";
 
+  // Config constant for user code to name mapping
+  private static final String CONFIG_USER_MAP = "USER-%d";
+
   private static final int LAST_ARMED_BY_INDEX = 1;
 
   private static final int LAST_DISARMED_BY_INDEX = 2;
@@ -73,44 +76,6 @@ public class Envisalink2DSSecurityPanel extends AbstractDeviceDriver implements
     driverInterface.attachDeviceDriver(this);
   }
 
-  /**
-   * 
-   */
-  @PostConstruct
-  public void init()
-  {
-    if (this.driverInterface.isReady())
-    {
-      this.networkLogin();
-    }
-  }
-
-  /**
-   * Login to the Envisalink 2DS
-   */
-  private void networkLogin()
-  {
-    logger.info("Performing login");
-    String password = configService.get(this.getClass().getName(),
-        CONFIG_PASSWORD);
-    
-    // Truncate password to six characters in length
-    if (password != null && password.length() > 6)
-      password = password.substring(0, 6);
-    
-    driverInterface.sendCommand("005", password);
-  }
-
-  /**
-   * Request panel status from Envisalink 2DS
-   */
-  private void statusReport()
-  {
-    logger.info("Requesting panel status report");
-    // Request the current panel status
-    driverInterface.sendCommand("001");
-  }
-
   /*
    * (non-Javadoc)
    * 
@@ -119,7 +84,7 @@ public class Envisalink2DSSecurityPanel extends AbstractDeviceDriver implements
   @Override
   public void arm()
   {
-    String code = configService.get(this.getClass().getName(), CONFIG_CODE);
+    String code = configService.get(this, CONFIG_CODE);
     driverInterface.sendCommand("033", "1" + code);
   }
 
@@ -162,17 +127,6 @@ public class Envisalink2DSSecurityPanel extends AbstractDeviceDriver implements
   /*
    * (non-Javadoc)
    * 
-   * @see net.gregrapp.jhouse.interfaces.envisalink2ds.Envisalink2DSCallback#
-   * broadcastLabels (int, java.lang.String)
-   */
-  /*
-   * @Override public void broadcastLabels(int zone, String label) {
-   * logger.debug("Received label broadcast [{}] for zone [{}]", label, zone); }
-   */
-
-  /*
-   * (non-Javadoc)
-   * 
    * @see
    * net.gregrapp.jhouse.interfaces.envisalink2ds.Envisalink2DSCallback#codeRequired
    * (int)
@@ -195,6 +149,29 @@ public class Envisalink2DSSecurityPanel extends AbstractDeviceDriver implements
     String code = configService.get(this.getClass().getName(), CONFIG_CODE);
     driverInterface.sendCommand("040", "1" + code);
   }
+
+  /**
+   * 
+   */
+  @PostConstruct
+  public void init()
+  {
+    if (this.driverInterface.isReady())
+    {
+      this.networkLogin();
+    }
+  }
+
+  /*
+   * (non-Javadoc)
+   * 
+   * @see net.gregrapp.jhouse.interfaces.envisalink2ds.Envisalink2DSCallback#
+   * broadcastLabels (int, java.lang.String)
+   */
+  /*
+   * @Override public void broadcastLabels(int zone, String label) {
+   * logger.debug("Received label broadcast [{}] for zone [{}]", label, zone); }
+   */
 
   /*
    * (non-Javadoc)
@@ -244,6 +221,21 @@ public class Envisalink2DSSecurityPanel extends AbstractDeviceDriver implements
       this.networkLogin();
       break;
     }
+  }
+
+  /**
+   * Login to the Envisalink 2DS
+   */
+  private void networkLogin()
+  {
+    logger.info("Performing login");
+    String password = configService.get(this, CONFIG_PASSWORD);
+
+    // Truncate password to six characters in length
+    if (password != null && password.length() > 6)
+      password = password.substring(0, 6);
+
+    driverInterface.sendCommand("005", password);
   }
 
   /*
@@ -385,6 +377,16 @@ public class Envisalink2DSSecurityPanel extends AbstractDeviceDriver implements
         + LAST_ARMED_BY_INDEX, "Special Closing");
   }
 
+  /**
+   * Request panel status from Envisalink 2DS
+   */
+  private void statusReport()
+  {
+    logger.info("Requesting panel status report");
+    // Request the current panel status
+    driverInterface.sendCommand("001");
+  }
+
   /*
    * (non-Javadoc)
    * 
@@ -395,12 +397,14 @@ public class Envisalink2DSSecurityPanel extends AbstractDeviceDriver implements
   @Override
   public void userClosing(int partition, int userCode)
   {
-    logger.debug("User [{}] closing for partition [{}]", userCode, partition);
+    String username = configService.get(this,
+        String.format(CONFIG_USER_MAP, userCode));
+
+    logger.debug("User [{}] closing for partition [{}]", username, partition);
     updateDeviceValue((PARTITION_INDEX_MULTIPLIER * partition)
         + LAST_ARMED_BY_INDEX, userCode);
-    // TODO Add userCode to person name mapping
     updateDeviceText((PARTITION_INDEX_MULTIPLIER * partition)
-        + LAST_ARMED_BY_INDEX, String.valueOf(userCode));
+        + LAST_ARMED_BY_INDEX, username);
   }
 
   /*
@@ -413,12 +417,14 @@ public class Envisalink2DSSecurityPanel extends AbstractDeviceDriver implements
   @Override
   public void userOpening(int partition, int userCode)
   {
-    logger.debug("User [{}] opening for partition [{}]", userCode, partition);
+    String username = configService.get(this,
+        String.format(CONFIG_USER_MAP, userCode));
+
+    logger.debug("User [{}] opening for partition [{}]", username, partition);
     updateDeviceValue((PARTITION_INDEX_MULTIPLIER * partition)
         + LAST_DISARMED_BY_INDEX, userCode);
-    // TODO Add userCode to person name mapping
     updateDeviceText((PARTITION_INDEX_MULTIPLIER * partition)
-        + LAST_DISARMED_BY_INDEX, String.valueOf(userCode));
+        + LAST_DISARMED_BY_INDEX, username);
   }
 
   /*

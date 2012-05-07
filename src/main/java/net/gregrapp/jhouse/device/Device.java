@@ -5,16 +5,15 @@ import java.util.Calendar;
 
 public interface Device
 {
-
   /**
    * @param listener
    */
   public void addPropertyChangeListener(final PropertyChangeListener listener);
 
   /**
-   * @return the deviceName
+   * @return
    */
-  public String getName();
+  public String getFloor();
 
   /**
    * @return the deviceId
@@ -25,6 +24,16 @@ public interface Device
    * @return the lastChange
    */
   public Calendar getLastChange();
+
+  /**
+   * @return the deviceName
+   */
+  public String getName();
+
+  /**
+   * @return
+   */
+  public String getRoom();
 
   /**
    * @return the deviceText
@@ -39,14 +48,23 @@ public interface Device
   /**
    * @param listener
    */
-  public void removePropertyChangeListener(
-      final PropertyChangeListener listener);
+  public void removePropertyChangeListener(final PropertyChangeListener listener);
+
+  /**
+   * @param floor
+   */
+  public void setFloor(String floor);
 
   /**
    * @param deviceName
    *          the deviceName to set
    */
   public void setName(String deviceName);
+
+  /**
+   * @param room
+   */
+  public void setRoom(String room);
 
   /**
    * @param deviceText
@@ -58,7 +76,7 @@ public interface Device
    * @param deviceValue
    *          the deviceValue to set
    */
-  
+
   /**
    * @param deviceValue
    */

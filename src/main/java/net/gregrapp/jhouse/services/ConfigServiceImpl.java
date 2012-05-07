@@ -27,6 +27,15 @@ public class ConfigServiceImpl implements ConfigService
   @Autowired
   private ConfigRepository configRepository;
 
+  /* (non-Javadoc)
+   * @see net.gregrapp.jhouse.services.ConfigService#get(java.lang.Object, java.lang.String)
+   */
+  @Override
+  public String get(Object namespace, String key)
+  {
+    return this.get(namespace.getClass().getName(), key);
+  }
+
   /*
    * (non-Javadoc)
    * 
@@ -63,6 +72,15 @@ public class ConfigServiceImpl implements ConfigService
       logger.warn("Unable to retrieve config value [{}.{}]", namespace, key);
     }
     return null;
+  }
+
+  /* (non-Javadoc)
+   * @see net.gregrapp.jhouse.services.ConfigService#set(java.lang.Object, java.lang.String, java.lang.String)
+   */
+  @Override
+  public void set(Object namespace, String key, String value)
+  {
+    this.set(namespace.getClass().getName(), key, value);
   }
 
   /*

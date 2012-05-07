@@ -12,6 +12,8 @@ import java.util.List;
 import net.gregrapp.jhouse.device.Device;
 import net.gregrapp.jhouse.device.DriverDevice;
 import net.gregrapp.jhouse.device.classes.DeviceClass;
+import net.gregrapp.jhouse.device.classes.SecurityPanel;
+import net.gregrapp.jhouse.device.classes.Webcam;
 import net.gregrapp.jhouse.device.drivers.types.DeviceDriver;
 import net.gregrapp.jhouse.services.DeviceService;
 import net.gregrapp.jhouse.web.controllers.exception.ClientErrorBadRequestException;
@@ -96,6 +98,11 @@ public class DeviceController
             .debug("Device is a driver device, getting associated device classes");
         List<String> deviceClasses = new ArrayList<String>();
         DeviceDriver driver = ((DriverDevice) device).getDriver();
+
+        // Don't include security panel devices
+        if (driver instanceof SecurityPanel)
+          continue;
+
         for (Class<?> deviceClass : driver.getClass().getInterfaces())
         {
           if (DeviceClass.class.isAssignableFrom(deviceClass))
@@ -113,6 +120,81 @@ public class DeviceController
 
     logger.debug("Done getting all devices");
     model.addAttribute("devices", devices);
+
+    return model;
+  }
+
+  /**
+   * Get current state of all devices
+   * 
+   * @return map containing all devices and their states
+   */
+  @RequestMapping(value = "/all/bylocation", method = RequestMethod.GET)
+  public Model getAllDevicesByLocation()
+  {
+    Model model = new ExtendedModelMap();
+
+    // Map<String, HashMap<String, Object>> devices = new HashMap<String,
+    // HashMap<String, Object>>();
+    HashMap<String, ArrayList<HashMap<String, Object>>> devices = new HashMap<String, ArrayList<HashMap<String, Object>>>();
+    // ArrayList<ArrayList<HashMap<String, Object>>> devices = new
+    // ArrayList<ArrayList<HashMap<String, Object>>>();
+
+    logger.debug("Getting all devices from the device service");
+    for (Device device : deviceService.getDevices())
+    {
+      logger.trace("Building map for device [%s]", device.getName());
+      HashMap<String, Object> deviceMap = new HashMap<String, Object>();
+      deviceMap.put("id", device.getId());
+      deviceMap.put("name", device.getName());
+      deviceMap.put("text", device.getText());
+      deviceMap.put("value", device.getValue());
+      deviceMap.put("lastchange", device.getLastChange());
+      deviceMap.put("floor", device.getFloor());
+      deviceMap.put("room", device.getRoom());
+      
+      if (device instanceof DriverDevice)
+      {
+        logger
+            .debug("Device is a driver device, getting associated device classes");
+        List<String> deviceClasses = new ArrayList<String>();
+        DeviceDriver driver = ((DriverDevice) device).getDriver();
+
+        // Don't include security panel or webcam devices since we display those
+        // separately
+        if (driver instanceof SecurityPanel || driver instanceof Webcam)
+          continue;
+
+        for (Class<?> deviceClass : driver.getClass().getInterfaces())
+        {
+          if (DeviceClass.class.isAssignableFrom(deviceClass))
+          {
+            deviceClasses.add(deviceClass.getCanonicalName());
+          }
+        }
+        logger.trace("Device classes associated with this device [{}]",
+            deviceClasses.toString());
+        deviceMap.put("classes", deviceClasses);
+      }
+      String location = String.format("%s - %s", device.getFloor(),
+          device.getRoom());
+
+      if (devices.containsKey(location)
+          && devices.get(location) instanceof ArrayList)
+      {
+        devices.get(location).add(deviceMap);
+      } else
+      {
+        ArrayList<HashMap<String, Object>> newList = new ArrayList<HashMap<String, Object>>();
+        newList.add(deviceMap);
+        devices.put(location, newList);
+      }
+    }
+
+    logger.debug("Done getting all devices");
+    // Return devices as a list grouped by location (for iOS grouped table)
+    model.addAttribute("devices",
+        new ArrayList<ArrayList<HashMap<String, Object>>>(devices.values()));
 
     return model;
   }
@@ -202,7 +284,6 @@ public class DeviceController
     for (Object obj : action.getArgs())
     {
       klasses.add(obj.getClass());
-      // System.out.println("CLASS="+obj.getClass().getName());
     }
 
     Method methodOjbect = null;

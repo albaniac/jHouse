@@ -6,7 +6,6 @@ package net.gregrapp.jhouse.interfaces.zwave;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Random;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -58,8 +57,6 @@ public class ZwaveInterface extends TransportInterface implements
   private Map<Integer, ArrayList<ZwaveDeviceDriver>> drivers = new HashMap<Integer, ArrayList<ZwaveDeviceDriver>>();
 
   private ScheduledExecutorService executor;
-
-  private Random random = new Random();
 
   public ZwaveInterface(Transport transport)
   {

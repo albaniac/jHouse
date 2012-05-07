@@ -113,7 +113,7 @@ public class BeanLifecycleServiceImpl implements BeanLifecycleService
                   .isEnabled() == false)
           {
             logger.warn(
-                "Transport disabled, cannot instantiate device bean {}",
+                "Transport disabled, cannot instantiate device bean [{}]",
                 bean.toString());
             continue;
           }
@@ -123,21 +123,21 @@ public class BeanLifecycleServiceImpl implements BeanLifecycleService
               && bean.getDriver().getDriverInterface().isEnabled() == false)
           {
             logger.warn(
-                "Interface disabled, cannot instantiate device bean {}",
+                "Interface disabled, cannot instantiate device bean [{}]",
                 bean.toString());
             continue;
           }
 
           if (bean.getDriver() != null && bean.getDriver().isEnabled() == false)
           {
-            logger.warn("Driver disabled, cannot instantiate device bean {}",
+            logger.warn("Driver disabled, cannot instantiate device bean [{}]",
                 bean.toString());
             continue;
           }
 
           if (bean.isEnabled())
           {
-            logger.info("Building bean definition for device bean {}",
+            logger.info("Building bean definition for device bean [{}]",
                 bean.toString());
 
             GenericBeanDefinition beanDefinition = new GenericBeanDefinition();
@@ -159,6 +159,10 @@ public class BeanLifecycleServiceImpl implements BeanLifecycleService
             
             MutablePropertyValues propertyValues = new MutablePropertyValues();
             propertyValues.addPropertyValue("name", bean.getName());
+            if (bean.getLocation() != null && bean.getLocation().getFloor() != null)
+              propertyValues.addPropertyValue("floor", bean.getLocation().getFloor());
+            if (bean.getLocation() != null && bean.getLocation().getRoom() != null)
+              propertyValues.addPropertyValue("room", bean.getLocation().getRoom());            
             beanDefinition.setPropertyValues(propertyValues);
             
             beanDefinition.setBeanClassName(bean.getKlass());
@@ -170,7 +174,7 @@ public class BeanLifecycleServiceImpl implements BeanLifecycleService
           } else
           {
             logger
-                .info("Device bean not enabled, skipping {}", bean.toString());
+                .info("Device bean not enabled, skipping [{}]", bean.toString());
           }
         }
         beanFactory.preInstantiateSingletons();
@@ -210,7 +214,7 @@ public class BeanLifecycleServiceImpl implements BeanLifecycleService
               && bean.getDriverInterface().getTransport().isEnabled() == false)
           {
             logger.warn(
-                "Transport disabled, cannot instantiate driver bean {}",
+                "Transport disabled, cannot instantiate driver bean [{}]",
                 bean.toString());
             continue;
           }
@@ -219,14 +223,14 @@ public class BeanLifecycleServiceImpl implements BeanLifecycleService
               && bean.getDriverInterface().isEnabled() == false)
           {
             logger.warn(
-                "Interface disabled, cannot instantiate driver bean {}",
+                "Interface disabled, cannot instantiate driver bean [{}]",
                 bean.toString());
             continue;
           }
 
           if (bean.isEnabled())
           {
-            logger.info("Building bean definition for device driver bean {}",
+            logger.info("Building bean definition for device driver bean [{}]",
                 bean.toString());
             GenericBeanDefinition beanDefinition = new GenericBeanDefinition();
 
@@ -267,7 +271,7 @@ public class BeanLifecycleServiceImpl implements BeanLifecycleService
                 DRIVER_BEAN_NAME_PREFIX + bean.getId(), beanDefinition);
           } else
           {
-            logger.info("Device driver bean not enabled, skipping {}",
+            logger.info("Device driver bean not enabled, skipping [{}]",
                 bean.toString());
           }
         }
@@ -306,14 +310,14 @@ public class BeanLifecycleServiceImpl implements BeanLifecycleService
           if (bean.getTransport().isEnabled() == false)
           {
             logger.warn(
-                "Transport disabled, cannot instantiate interface bean {}",
+                "Transport disabled, cannot instantiate interface bean [{}]",
                 bean.toString());
             continue;
           }
 
           if (bean.isEnabled())
           {
-            logger.info("Building bean definition for interface bean {}",
+            logger.info("Building bean definition for interface bean [{}]",
                 bean.toString());
             GenericBeanDefinition beanDefinition = new GenericBeanDefinition();
 
@@ -337,7 +341,7 @@ public class BeanLifecycleServiceImpl implements BeanLifecycleService
                 + bean.getId(), beanDefinition);
           } else
           {
-            logger.info("Interface bean not enabled, skipping {}",
+            logger.info("Interface bean not enabled, skipping [{}]",
                 bean.toString());
           }
         }
@@ -375,7 +379,7 @@ public class BeanLifecycleServiceImpl implements BeanLifecycleService
         {
           if (bean.isEnabled())
           {
-            logger.info("Building bean definition for transport bean {}",
+            logger.info("Building bean definition for transport bean [{}]",
                 bean.toString());
             GenericBeanDefinition beanDefinition = new GenericBeanDefinition();
 
@@ -392,7 +396,7 @@ public class BeanLifecycleServiceImpl implements BeanLifecycleService
                 + bean.getId(), beanDefinition);
           } else
           {
-            logger.info("Transport bean not enabled, skipping {}",
+            logger.info("Transport bean not enabled, skipping [{}]",
                 bean.toString());
           }
         }

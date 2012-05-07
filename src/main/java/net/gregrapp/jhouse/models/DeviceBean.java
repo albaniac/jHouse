@@ -7,6 +7,7 @@ import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
+import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
@@ -18,8 +19,8 @@ import javax.persistence.UniqueConstraint;
  * 
  */
 @Entity
-@Table(name = "device_beans", 
-       uniqueConstraints = { @UniqueConstraint(columnNames = { "driver_id", "valueIndex" }) })
+@Table(name = "device_beans", uniqueConstraints = { @UniqueConstraint(columnNames = {
+    "driver_id", "valueIndex" }) })
 public class DeviceBean
 {
 
@@ -29,11 +30,12 @@ public class DeviceBean
   private int valueIndex;
   private String klass;
   private String name;
-  
+  private DeviceLocation location;
+
   /**
    * Get the driver utilized by this bean
    * 
-   * @return the driver interface 
+   * @return the driver interface
    */
   @ManyToOne
   public DriverBean getDriver()
@@ -94,7 +96,8 @@ public class DeviceBean
   }
 
   /**
-   * @param driver the driver to set
+   * @param driver
+   *          the driver to set
    */
   public void setDriver(DriverBean driver)
   {
@@ -122,7 +125,8 @@ public class DeviceBean
   /**
    * Driver value index for this device
    * 
-   * @param index the index to set
+   * @param index
+   *          the index to set
    */
   public void setValueIndex(int valueIndex)
   {
@@ -132,7 +136,8 @@ public class DeviceBean
   /**
    * Set the driver utilized by this bean
    * 
-   * @param driverInterface the driver to set
+   * @param driverInterface
+   *          the driver to set
    */
   public void setInterface(DriverBean driver)
   {
@@ -153,14 +158,17 @@ public class DeviceBean
   /**
    * Set device name
    * 
-   * @param name the name to set
+   * @param name
+   *          the name to set
    */
   public void setName(String name)
   {
     this.name = name;
   }
 
-  /* (non-Javadoc)
+  /*
+   * (non-Javadoc)
+   * 
    * @see java.lang.Object#toString()
    */
   @Override
@@ -179,5 +187,24 @@ public class DeviceBean
     builder.append(name);
     builder.append("]");
     return builder.toString();
+  }
+
+  /**
+   * @return the location
+   */
+  @ManyToOne
+  @JoinColumn(name = "location_id")
+  public DeviceLocation getLocation()
+  {
+    return location;
+  }
+
+  /**
+   * @param location
+   *          the location to set
+   */
+  public void setLocation(DeviceLocation location)
+  {
+    this.location = location;
   }
 }

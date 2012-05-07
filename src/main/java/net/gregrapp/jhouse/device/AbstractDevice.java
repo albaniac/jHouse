@@ -31,11 +31,12 @@ public class AbstractDevice implements Device
   private String deviceName;
   private String deviceText;
   private Long deviceValue;
-  private Calendar lastChange;
-
   @Autowired
   EventService eventService;
+  private String floor;
+  private Calendar lastChange;
 
+  private String room;
 
   public AbstractDevice(int deviceId)
   {
@@ -56,8 +57,19 @@ public class AbstractDevice implements Device
   @Override
   public void addPropertyChangeListener(final PropertyChangeListener listener)
   {
-    logger.debug("Adding property change listener to device {}", this.deviceId);
+    logger.debug("Adding property change listener to device [{}]", this.deviceId);
     this.changes.addPropertyChangeListener(listener);
+  }
+
+  /*
+   * (non-Javadoc)
+   * 
+   * @see net.gregrapp.jhouse.device.Device#getFloor()
+   */
+  @Override
+  public String getFloor()
+  {
+    return floor;
   }
 
   /*
@@ -91,6 +103,17 @@ public class AbstractDevice implements Device
   public String getName()
   {
     return deviceName;
+  }
+
+  /*
+   * (non-Javadoc)
+   * 
+   * @see net.gregrapp.jhouse.device.Device#getRoom()
+   */
+  @Override
+  public String getRoom()
+  {
+    return room;
   }
 
   /*
@@ -131,13 +154,37 @@ public class AbstractDevice implements Device
   /*
    * (non-Javadoc)
    * 
+   * @see net.gregrapp.jhouse.device.Device#setFloor(java.lang.String)
+   */
+  @Override
+  public void setFloor(String floor)
+  {
+    logger.debug("Setting device [{}] floor to [{}]", this.deviceId, floor);
+    this.floor = floor;
+  }
+
+  /*
+   * (non-Javadoc)
+   * 
    * @see net.gregrapp.jhouse.device.Device#setDeviceName(java.lang.String)
    */
   @Override
   public void setName(String deviceName)
   {
-    logger.debug("Setting device {} name to {}", this.deviceId, deviceName);
+    logger.debug("Setting device [{}] name to [{}]", this.deviceId, deviceName);
     this.deviceName = deviceName;
+  }
+
+  /*
+   * (non-Javadoc)
+   * 
+   * @see net.gregrapp.jhouse.device.Device#setRoom(java.lang.String)
+   */
+  @Override
+  public void setRoom(String room)
+  {
+    logger.debug("Setting device [{}] room to [{}]", this.deviceId, room);
+    this.room = room;
   }
 
   /*
@@ -148,17 +195,18 @@ public class AbstractDevice implements Device
   @Override
   public void setText(String deviceText)
   {
-    logger.debug("Setting device {} text to: {}", this.deviceId, deviceText);
-    
+    logger.debug("Setting device [{}] text to [{}]", this.deviceId, deviceText);
+
     String oldText = this.deviceText;
-    
+
     this.deviceText = deviceText;
     this.lastChange = Calendar.getInstance();
-    
+
     this.changes.firePropertyChange("text", oldText, deviceText);
-    
+
     if (eventService != null)
-      eventService.eventCallback(new DeviceTextEvent(this, deviceText, oldText));
+      eventService
+          .eventCallback(new DeviceTextEvent(this, deviceText, oldText));
   }
 
   /*
@@ -169,16 +217,18 @@ public class AbstractDevice implements Device
   @Override
   public void setValue(Long deviceValue)
   {
-    logger.debug("Setting device [{}] value to [{}]", this.deviceId, deviceValue);
-    
+    logger.debug("Setting device [{}] value to [{}]", this.deviceId,
+        deviceValue);
+
     Long oldValue = this.deviceValue;
 
     this.deviceValue = deviceValue;
     this.lastChange = Calendar.getInstance();
-    
+
     this.changes.firePropertyChange("value", oldValue, deviceValue);
-    
+
     if (eventService != null)
-      eventService.eventCallback(new DeviceValueEvent(this, deviceValue, oldValue));
+      eventService.eventCallback(new DeviceValueEvent(this, deviceValue,
+          oldValue));
   }
 }
