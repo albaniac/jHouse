@@ -103,6 +103,7 @@ public class Envisalink2DSInterface extends TransportInterface implements
   public void destroy()
   {
     logger.info("Destroying Envisalink 2DS interface");
+    keepaliveExecutor.shutdownNow();
     frameLayer.destroy();
   }
 

@@ -56,7 +56,7 @@ public class ZwaveInterface extends TransportInterface implements
 
   private Map<Integer, ArrayList<ZwaveDeviceDriver>> drivers = new HashMap<Integer, ArrayList<ZwaveDeviceDriver>>();
 
-  private ScheduledExecutorService executor;
+  private ScheduledExecutorService interfaceReadyExecutor;
 
   public ZwaveInterface(Transport transport)
   {
@@ -94,7 +94,7 @@ public class ZwaveInterface extends TransportInterface implements
 
       if (this.interfaceReady && (driver instanceof InterfaceCallback))
       {
-        executor.schedule(new Runnable()
+        interfaceReadyExecutor.schedule(new Runnable()
         {
           public void run()
           {
@@ -249,6 +249,7 @@ public class ZwaveInterface extends TransportInterface implements
   public void destroy()
   {
     logger.info("Destroying Z-Wave interface");
+    interfaceReadyExecutor.shutdownNow();
     appLayer.destroy();
   }
 
@@ -287,7 +288,7 @@ public class ZwaveInterface extends TransportInterface implements
    */
   public void init()
   {
-    executor = Executors.newSingleThreadScheduledExecutor();
+    interfaceReadyExecutor = Executors.newSingleThreadScheduledExecutor();
 
     try
     {
