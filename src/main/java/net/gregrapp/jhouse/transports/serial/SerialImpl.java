@@ -56,7 +56,7 @@ public class SerialImpl extends AbstractTransport
   public void destroy()
   {
     super.destroy();
-    logger.debug("Closing serial port");
+    logger.info("Closing serial port");
     this.serialPort.close();
   }
 

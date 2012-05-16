@@ -62,6 +62,8 @@ public class SessionLayerImpl implements SessionLayer, FrameLayerAsyncCallback
   private DataFrame.CommandType command;
   private FrameLayer frameLayer;
   private DataFrame lastDataFrame = null;
+  // Last frame received epoch time
+  private long lastFrameReceivedTime = 0;
   private BlockingQueue<DataPacket> queue;
   private DataPacket request;
   private int sequenceNumber = MIN_SEQUENCE_NUMBER;
@@ -100,6 +102,8 @@ public class SessionLayerImpl implements SessionLayer, FrameLayerAsyncCallback
     {
       stats.receivedPackets++;
     }
+
+    this.lastFrameReceivedTime = System.currentTimeMillis();
 
     if (frame.getCommand() == command)
     {
@@ -151,6 +155,18 @@ public class SessionLayerImpl implements SessionLayer, FrameLayerAsyncCallback
       }
     }
 
+  }
+
+  /*
+   * (non-Javadoc)
+   * 
+   * @see
+   * net.gregrapp.jhouse.interfaces.zwave.SessionLayer#getLastFrameReceivedTime
+   * ()
+   */
+  public long getLastFrameReceivedTime()
+  {
+    return lastFrameReceivedTime;
   }
 
   /*

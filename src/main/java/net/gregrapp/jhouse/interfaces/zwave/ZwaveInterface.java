@@ -49,6 +49,12 @@ import org.slf4j.LoggerFactory;
 public class ZwaveInterface extends TransportInterface implements
     ApplicationLayerAsyncCallback, NodeInterface
 {
+  // Amount of time that must pass before connection is restarted
+  private static final int keepaliveHoldtimeSeconds = 60;
+
+  // Interval between keep alive attempts
+  private static final int keepaliveIntervalSeconds = 20;
+
   private static final Logger logger = LoggerFactory
       .getLogger(ZwaveInterface.class);
 
@@ -58,9 +64,14 @@ public class ZwaveInterface extends TransportInterface implements
 
   private ScheduledExecutorService interfaceReadyExecutor;
 
+  // Keep alive executor
+  private ScheduledExecutorService keepaliveExecutor;
+
+  private SessionLayer sessionLayer;
+
   public ZwaveInterface(Transport transport)
   {
-    super(transport);    
+    super(transport);
   }
 
   public void attachDeviceDriver(final DeviceDriver driver)
@@ -253,6 +264,32 @@ public class ZwaveInterface extends TransportInterface implements
     appLayer.destroy();
   }
 
+  /**
+   * Get node's neighbor table
+   * 
+   * @param nodeId
+   * @return
+   */
+  public String getNodeNeighbors(int nodeId)
+  {
+    String nodes = null;
+
+    try
+    {
+      nodes = appLayer.getRoutingTableLine(nodeId, false, false).toString();
+    } catch (FrameLayerException e)
+    {
+      logger
+          .warn("Error sending routing table request to node [{}]", nodeId, e);
+    } catch (ApplicationLayerException e)
+    {
+      logger
+          .warn("Error sending routing table request to node [{}]", nodeId, e);
+    }
+
+    return nodes;
+  }
+
   @Override
   public HashMap<String, HashMap<String, Object>> getNodes()
   {
@@ -288,6 +325,10 @@ public class ZwaveInterface extends TransportInterface implements
    */
   public void init()
   {
+    // Kill the executor if it's already running
+    if (interfaceReadyExecutor != null)
+      interfaceReadyExecutor.shutdownNow();
+
     interfaceReadyExecutor = Executors.newSingleThreadScheduledExecutor();
 
     try
@@ -302,11 +343,13 @@ public class ZwaveInterface extends TransportInterface implements
     }
 
     FrameLayer frameLayer = new FrameLayerImpl(this.transport);
-    SessionLayer sessionLayer = new SessionLayerImpl(frameLayer);
+    sessionLayer = new SessionLayerImpl(frameLayer);
     appLayer = new ApplicationLayerImpl(sessionLayer);
     appLayer.setCallbackHandler(this);
 
-    zwaveInit();
+    this.zwaveInit();
+
+    this.startKeepalives();
   }
 
   /**
@@ -323,6 +366,27 @@ public class ZwaveInterface extends TransportInterface implements
     } catch (FrameLayerException e)
     {
       logger.error("Error requesting node info from node {}", nodeId, e);
+    }
+  }
+
+  /**
+   * Send a keep alive frame
+   */
+  private void sendKeepalive()
+  {
+    try
+    {
+      VersionInfoType zwaveVersion = appLayer.zwaveGetVersion();
+      logger.info("Controller library: {}, version: {}",
+          zwaveVersion.library.toString(), zwaveVersion.version.trim());
+    } catch (FrameLayerException e)
+    {
+      logger.error("Error retrieving version info from ZWave controller", e);
+      return;
+    } catch (ApplicationLayerException e)
+    {
+      logger.error("Error retrieving version info from ZWave controller", e);
+      return;
     }
   }
 
@@ -346,6 +410,99 @@ public class ZwaveInterface extends TransportInterface implements
         }
       }
     }
+  }
+
+  /**
+   * Start keep alive executor
+   */
+  private void startKeepalives()
+  {
+    logger.debug("Starting keepalive executor");
+
+    keepaliveExecutor = Executors.newSingleThreadScheduledExecutor();
+    keepaliveExecutor.scheduleWithFixedDelay(new Runnable()
+    {
+      public void run()
+      {
+        if ((System.currentTimeMillis() - sessionLayer
+            .getLastFrameReceivedTime()) > (keepaliveHoldtimeSeconds * 1000))
+        {
+          logger.error("Keep alive holdtime expired, resetting transport");
+
+          appLayer.destroy();
+
+          init();
+
+          try
+          {
+            // Give the interface time to reconnect before resuming keepalives
+            Thread.sleep(20000);
+          } catch (InterruptedException e)
+          {
+          }
+        } else
+        {
+          if ((System.currentTimeMillis() - sessionLayer
+              .getLastFrameReceivedTime()) > keepaliveIntervalSeconds)
+          {
+            logger.debug("Sending keep alive request");
+            sendKeepalive();
+          }
+        }
+
+      }
+    }, 0, keepaliveIntervalSeconds, TimeUnit.SECONDS);
+  }
+
+  /**
+   * Request node to update its return route to this node
+   * 
+   * @param nodeId
+   * @return
+   */
+  public boolean zwaveAssignReturnRoute(int nodeId)
+  {
+    TXStatus status = null;
+    int controllerNodeId = appLayer.getControllerNodeId();
+
+    try
+    {
+      status = appLayer.zwaveAssignReturnRoute(nodeId, controllerNodeId);
+    } catch (FrameLayerException e)
+    {
+      logger.warn("Error sending assign return route request to node [{}]",
+          nodeId, e);
+    }
+
+    if (status == TXStatus.CompleteOk)
+      return true;
+    else
+      return false;
+  }
+
+  /**
+   * Request node to delete its return route to this node
+   * 
+   * @param nodeId
+   * @return
+   */
+  public boolean zwaveDeleteReturnRoute(int nodeId)
+  {
+    TXStatus status = null;
+
+    try
+    {
+      status = appLayer.zwaveDeleteReturnRoute(nodeId);
+    } catch (FrameLayerException e)
+    {
+      logger.warn("Error sending delete return route request to node [{}]",
+          nodeId, e);
+    }
+
+    if (status == TXStatus.CompleteOk)
+      return true;
+    else
+      return false;
   }
 
   /**
@@ -438,7 +595,7 @@ public class ZwaveInterface extends TransportInterface implements
     try
     {
       appLayer.zwaveEnumerateNodes();
-      logger.debug("Z-Wave chip informtion: {}{}", appLayer.getChipType(),
+      logger.debug("Z-Wave chip information: {}{}", appLayer.getChipType(),
           appLayer.getChipRev());
 
     } catch (FrameLayerException e)
@@ -450,81 +607,6 @@ public class ZwaveInterface extends TransportInterface implements
     }
 
     setInterfaceReady(true);
-  }
-
-  /**
-   * Send data out Z-Wave interface
-   * 
-   * @param nodeId
-   * @param data
-   * @return
-   */
-  public boolean zwaveSendData(int nodeId, int... data)
-  {
-    try
-    {
-      TXStatus txStatus = appLayer.zwaveSendData(nodeId, data,
-          new TXOption[] { TXOption.TransmitOptionAcknowledge,
-              TXOption.TransmitOptionAutoRoute });
-      if (txStatus == TXStatus.CompleteOk)
-        return true;
-    } catch (FrameLayerException e)
-    {
-      return false;
-    }
-
-    return false;
-  }
-
-  /**
-   * Get node's neighbor table
-   * 
-   * @param nodeId
-   * @return
-   */
-  public String getNodeNeighbors(int nodeId)
-  {
-    String nodes = null;
-
-    try
-    {
-      nodes = appLayer.getRoutingTableLine(nodeId, false, false).toString();
-    } catch (FrameLayerException e)
-    {
-      logger
-          .warn("Error sending routing table request to node [{}]", nodeId, e);
-    } catch (ApplicationLayerException e)
-    {
-      logger
-          .warn("Error sending routing table request to node [{}]", nodeId, e);
-    }
-
-    return nodes;
-  }
-
-  /**
-   * Request node to delete its return route to this node
-   * 
-   * @param nodeId
-   * @return
-   */
-  public boolean zwaveDeleteReturnRoute(int nodeId)
-  {
-    TXStatus status = null;
-
-    try
-    {
-      status = appLayer.zwaveDeleteReturnRoute(nodeId);
-    } catch (FrameLayerException e)
-    {
-      logger.warn("Error sending delete return route request to node [{}]",
-          nodeId, e);
-    }
-
-    if (status == TXStatus.CompleteOk)
-      return true;
-    else
-      return false;
   }
 
   /**
@@ -553,28 +635,26 @@ public class ZwaveInterface extends TransportInterface implements
   }
 
   /**
-   * Request node to update its return route to this node
+   * Send data out Z-Wave interface
    * 
    * @param nodeId
+   * @param data
    * @return
    */
-  public boolean zwaveAssignReturnRoute(int nodeId)
+  public boolean zwaveSendData(int nodeId, int... data)
   {
-    TXStatus status = null;
-    int controllerNodeId = appLayer.getControllerNodeId();
-
     try
     {
-      status = appLayer.zwaveAssignReturnRoute(nodeId, controllerNodeId);
+      TXStatus txStatus = appLayer.zwaveSendData(nodeId, data,
+          new TXOption[] { TXOption.TransmitOptionAcknowledge,
+              TXOption.TransmitOptionAutoRoute });
+      if (txStatus == TXStatus.CompleteOk)
+        return true;
     } catch (FrameLayerException e)
     {
-      logger.warn("Error sending assign return route request to node [{}]",
-          nodeId, e);
+      return false;
     }
 
-    if (status == TXStatus.CompleteOk)
-      return true;
-    else
-      return false;
+    return false;
   }
 }

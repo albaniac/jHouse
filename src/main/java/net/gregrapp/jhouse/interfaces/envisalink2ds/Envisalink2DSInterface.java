@@ -27,21 +27,21 @@ import org.slf4j.LoggerFactory;
 public class Envisalink2DSInterface extends TransportInterface implements
     Envisalink2DSFrameLayerAsyncCallback
 {
-  // Amount of time that must pass before keepalive trips
-  private static final int keepaliveHoldtimeSeconds = 30;
+  // Amount of time that must pass before connection is restarted
+  private static final int keepaliveHoldtimeSeconds = 60;
 
-  // Interval between keepalives
-  private static final int keepaliveIntervalSeconds = 10;
+  // Interval between keep alive attempts
+  private static final int keepaliveIntervalSeconds = 20;
 
   private static final Logger logger = LoggerFactory
       .getLogger(Envisalink2DSInterface.class);
 
   private Envisalink2DSFrameLayer frameLayer;
 
-  // Keepalive executor
+  // Keep alive executor
   private ScheduledExecutorService keepaliveExecutor;
 
-  // Last frame receive epoch time
+  // Last frame received epoch time
   private long lastFrameReceiveTime = 0;
 
   private DeviceDriver panel;
@@ -277,7 +277,7 @@ public class Envisalink2DSInterface extends TransportInterface implements
   }
 
   /**
-   * Start keepalive executor
+   * Start keep alive executor
    */
   private void startKeepalives()
   {
@@ -294,7 +294,7 @@ public class Envisalink2DSInterface extends TransportInterface implements
       {
         if ((System.currentTimeMillis() - lastFrameReceiveTime) > (keepaliveHoldtimeSeconds * 1000))
         {
-          logger.error("Keepalive holdtime expired, resetting transport");
+          logger.error("Keep alive holdtime expired, resetting transport");
 
           frameLayer.destroy();
 
@@ -309,8 +309,11 @@ public class Envisalink2DSInterface extends TransportInterface implements
           }
         } else
         {
-          logger.debug("Sending keepalive request");
-          sendCommand("000");
+          if ((System.currentTimeMillis() - lastFrameReceiveTime) > keepaliveIntervalSeconds)
+          {
+            logger.debug("Sending keep alive request");
+            sendCommand("000");            
+          }
         }
 
       }

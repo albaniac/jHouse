@@ -53,7 +53,7 @@ public class TCPClientImpl extends AbstractTransport
     
     try
     {
-      logger.debug("Closing TCP connection");
+      logger.info("Closing TCP connection");
       this.tcp.close();
     } catch (IOException e)
     {

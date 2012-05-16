@@ -75,11 +75,11 @@ public class EventServiceImpl implements EventService
   @PreDestroy
   public void destroy()
   {
-    logger.debug("Halting KnowledgeSession");
+    logger.info("Halting KnowledgeSession");
     ksession.halt();
-    logger.debug("Stopping resource change scanner service");
+    logger.info("Stopping resource change scanner service");
     ResourceFactory.getResourceChangeScannerService().stop();
-    logger.debug("Canceling TimeEvent timer");
+    logger.info("Canceling TimeEvent timer");
     timeEventTimer.cancel();
   }
 

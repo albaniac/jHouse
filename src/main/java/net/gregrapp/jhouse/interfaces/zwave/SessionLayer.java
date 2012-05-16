@@ -34,24 +34,61 @@ import net.gregrapp.jhouse.interfaces.zwave.Constants.TXStatus;
 public interface SessionLayer
 {
   /**
-   * @return
-   */
-  public boolean isReady();
-
-  /**
    * 
    */
   public void destroy();
-  
+
   /**
-   * @param handler
+   * Epoch time of last received frame
+   * 
+   * @return time in milliseconds from epoch
    */
-  public void setCallbackHandler(SessionLayerAsyncCallback handler);
+  public long getLastFrameReceivedTime();
 
   /**
    * @return
    */
   SessionStatistics getStatistics();
+
+  /**
+   * @return
+   */
+  public boolean isReady();
+
+  /**
+   * @param cmd
+   * @param request
+   * @param maxResponses
+   * @return
+   * @throws FrameLayerException
+   */
+  TXStatus requestWithMultipleResponses(DataFrame.CommandType cmd,
+      DataPacket request, int maxResponses) throws FrameLayerException;
+
+  /**
+   * @param cmd
+   * @param request
+   * @param maxResponses
+   * @param sequenceCheck
+   * @return
+   * @throws FrameLayerException
+   */
+  TXStatus requestWithMultipleResponses(DataFrame.CommandType cmd,
+      DataPacket request, int maxResponses, boolean sequenceCheck)
+      throws FrameLayerException;
+
+  /**
+   * @param cmd
+   * @param request
+   * @param maxResponses
+   * @param sequenceCheck
+   * @param timeout
+   * @return
+   * @throws FrameLayerException
+   */
+  TXStatus requestWithMultipleResponses(DataFrame.CommandType cmd,
+      DataPacket request, int maxResponses, boolean sequenceCheck, int timeout)
+      throws FrameLayerException;
 
   /**
    * @param cmd
@@ -65,27 +102,6 @@ public interface SessionLayer
   /**
    * @param cmd
    * @param request
-   * @param sequenceCheck
-   * @param timeout
-   * @return
-   * @throws FrameLayerException
-   */
-  TXStatus requestWithResponse(DataFrame.CommandType cmd, DataPacket request,
-      boolean sequenceCheck, int timeout) throws FrameLayerException;
-
-  /**
-   * @param cmd
-   * @param request
-   * @param sequenceCheck
-   * @return
-   * @throws FrameLayerException
-   */
-  TXStatus requestWithResponse(DataFrame.CommandType cmd, DataPacket request,
-      boolean sequenceCheck) throws FrameLayerException;
-
-  /**
-   * @param cmd
-   * @param request
    * @return
    * @throws FrameLayerException
    */
@@ -95,41 +111,23 @@ public interface SessionLayer
   /**
    * @param cmd
    * @param request
-   * @param maxResponses
-   * @return
-   * @throws FrameLayerException
-   */
-  TXStatus requestWithMultipleResponses(DataFrame.CommandType cmd,
-      DataPacket request,
-      int maxResponses) throws FrameLayerException;
-
-  /**
-   * @param cmd
-   * @param request
-   * @param maxResponses
    * @param sequenceCheck
    * @return
    * @throws FrameLayerException
    */
-  TXStatus requestWithMultipleResponses(DataFrame.CommandType cmd,
-      DataPacket request,
-      int maxResponses,
+  TXStatus requestWithResponse(DataFrame.CommandType cmd, DataPacket request,
       boolean sequenceCheck) throws FrameLayerException;
 
   /**
    * @param cmd
    * @param request
-   * @param maxResponses
    * @param sequenceCheck
    * @param timeout
    * @return
    * @throws FrameLayerException
    */
-  TXStatus requestWithMultipleResponses(DataFrame.CommandType cmd,
-      DataPacket request,
-      int maxResponses,
-      boolean sequenceCheck,
-      int timeout) throws FrameLayerException;
+  TXStatus requestWithResponse(DataFrame.CommandType cmd, DataPacket request,
+      boolean sequenceCheck, int timeout) throws FrameLayerException;
 
   /**
    * Requests a command which may give different numbers of callbacks. Supply
@@ -151,11 +149,8 @@ public interface SessionLayer
    * @throws FrameLayerException
    */
   TXStatus requestWithVariableResponses(DataFrame.CommandType cmd,
-      DataPacket request,
-      int maxResponses,
-      int[] breakVal,
-      boolean sequenceCheck,
-      int timeout) throws FrameLayerException;
+      DataPacket request, int maxResponses, int[] breakVal,
+      boolean sequenceCheck, int timeout) throws FrameLayerException;
 
   /**
    * Requests a command which may give different numbers of callbacks. Supply
@@ -177,9 +172,11 @@ public interface SessionLayer
    * @throws FrameLayerException
    */
   TXStatus requestWithVariableReturnsAndResponses(DataFrame.CommandType cmd,
-      DataPacket request,
-      int maxResponses,
-      int[] breakVal,
-      boolean sequenceCheck,
-      int timeout) throws FrameLayerException;
+      DataPacket request, int maxResponses, int[] breakVal,
+      boolean sequenceCheck, int timeout) throws FrameLayerException;
+
+  /**
+   * @param handler
+   */
+  public void setCallbackHandler(SessionLayerAsyncCallback handler);
 }

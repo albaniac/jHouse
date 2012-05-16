@@ -43,9 +43,6 @@ import org.slf4j.LoggerFactory;
  */
 public class FrameLayerImpl implements FrameLayer
 {
-  private static final Logger logger = LoggerFactory
-      .getLogger(FrameLayerImpl.class);
-
   /**
    * The Data Frame received will be split up into the following states
    * 
@@ -84,15 +81,18 @@ public class FrameLayerImpl implements FrameLayer
   }
 
   private static final int ACK_WAIT_TIME = 2000; // How long in ms to wait for
+
+  private static final Logger logger = LoggerFactory
+      .getLogger(FrameLayerImpl.class);
   private static final int MAX_FRAME_SIZE = 88;
   // an ack
   private static final int MAX_RETRANSMISSION = 3;
   private static final int MIN_FRAME_SIZE = 3;
-  private boolean receiveThreadActive;
   private FrameLayerAsyncCallback callbackHandler;
   private DataFrame currentDataFrame;
   private FrameReceiveState parserState;
   private Thread receiveThread;
+  private boolean receiveThreadActive;
   private Stack<TransmittedDataFrame> retransmissionStack = new Stack<TransmittedDataFrame>();
   private ScheduledExecutorService retransmissionTimeoutExecutor;
   private ScheduledFuture<?> retransmissionTimeoutExecutorFuture;
