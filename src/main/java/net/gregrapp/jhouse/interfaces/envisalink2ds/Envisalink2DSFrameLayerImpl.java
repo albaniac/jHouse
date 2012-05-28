@@ -3,40 +3,115 @@
  */
 package net.gregrapp.jhouse.interfaces.envisalink2ds;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.PrintWriter;
+import static org.jboss.netty.channel.Channels.pipeline;
 
-import net.gregrapp.jhouse.transports.Transport;
+import java.net.InetSocketAddress;
+import java.util.concurrent.Executors;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.jboss.netty.bootstrap.ClientBootstrap;
+import org.jboss.netty.channel.Channel;
+import org.jboss.netty.channel.ChannelFuture;
+import org.jboss.netty.channel.ChannelHandler;
+import org.jboss.netty.channel.ChannelPipeline;
+import org.jboss.netty.channel.ChannelPipelineFactory;
+import org.jboss.netty.channel.socket.nio.NioClientSocketChannelFactory;
+import org.jboss.netty.handler.codec.frame.DelimiterBasedFrameDecoder;
+import org.jboss.netty.handler.codec.frame.Delimiters;
+import org.jboss.netty.handler.codec.string.StringDecoder;
+import org.jboss.netty.handler.codec.string.StringEncoder;
+import org.jboss.netty.handler.timeout.ReadTimeoutHandler;
+import org.jboss.netty.util.HashedWheelTimer;
+import org.jboss.netty.util.Timer;
+import org.slf4j.ext.XLogger;
+import org.slf4j.ext.XLoggerFactory;
 
 /**
  * @author Greg Rapp
  * 
  */
-public class Envisalink2DSFrameLayerImpl implements Envisalink2DSFrameLayer
+public class Envisalink2DSFrameLayerImpl implements Envisalink2DSFrameLayer,
+    SocketCallback
 {
-  private static final Logger logger = LoggerFactory
-      .getLogger(Envisalink2DSFrameLayerImpl.class);
-  private Envisalink2DSFrameLayerAsyncCallback handler;
-  private BufferedReader reader;
-  private Thread receiveThread;
-  private boolean receiveThreadActive;
+  private static final XLogger logger = XLoggerFactory
+      .getXLogger(Envisalink2DSFrameLayerImpl.class);
 
-  private Transport transport;
-  private PrintWriter writer;
+  // Reconnect seconds when the server sends nothing
+  private static final int READ_TIMEOUT = 45;
+
+  // Delay before a socket reconnection attempt.
+  static final int RECONNECT_DELAY = 10;
+
+  private final ClientBootstrap bootstrap = null;
+
+  private Envisalink2DSFrameLayerAsyncCallback handler;
+
+  private Channel socketChannel;
+
+  private final Timer socketReconnectTimer;
 
   /**
    * 
    */
-  public Envisalink2DSFrameLayerImpl(Transport transport)
+  public Envisalink2DSFrameLayerImpl(String host, int port)
   {
-    this.transport = transport;
+    logger.entry();
+    logger.info("Instantiating frame layer");
 
-    this.startReceiveThread();
+    // Initialize the timer that schedules subsequent reconnection attempts.
+    socketReconnectTimer = new HashedWheelTimer();
+
+    // Configure the client.
+    final ClientBootstrap bootstrap = new ClientBootstrap(
+        new NioClientSocketChannelFactory(Executors.newCachedThreadPool(),
+            Executors.newCachedThreadPool()));
+
+    // Configure the pipeline factory.
+    bootstrap.setPipelineFactory(new ChannelPipelineFactory()
+    {
+
+      private final ChannelHandler socketHandler = new SocketHandler(bootstrap,
+          socketReconnectTimer, Envisalink2DSFrameLayerImpl.this);
+      private final ChannelHandler timeoutHandler = new ReadTimeoutHandler(
+          socketReconnectTimer, READ_TIMEOUT);
+
+      public ChannelPipeline getPipeline() throws Exception
+      {
+        ChannelPipeline pipeline = pipeline();
+
+        // Decoders
+        pipeline.addLast("frameDecoder", new DelimiterBasedFrameDecoder(80,
+            Delimiters.lineDelimiter()));
+        pipeline.addLast("stringDecoder", new StringDecoder());
+
+        // Encoder
+        pipeline.addLast("stringEncoder", new StringEncoder());
+
+        // Handlers
+        pipeline.addLast("timeoutHandler", timeoutHandler);
+        pipeline.addLast("socketHandler", socketHandler);
+
+        return pipeline;
+      }
+    });
+
+    // Start the connection attempt.
+    bootstrap.setOption("remoteAddress", new InetSocketAddress(host,
+        port));
+    ChannelFuture future = bootstrap.connect();
+
+    // Wait until the connection is closed or the connection attempt fails.
+    socketChannel = future.awaitUninterruptibly().getChannel();
+
+    if (!future.isSuccess())
+    {
+      logger.error("Error connecting to host", future.getCause());
+      bootstrap.releaseExternalResources();
+      socketReconnectTimer.stop();
+      logger.exit();
+      return;
+    }
+
+    logger.exit();
   }
 
   /*
@@ -49,68 +124,17 @@ public class Envisalink2DSFrameLayerImpl implements Envisalink2DSFrameLayer
   @Override
   public void destroy()
   {
+    logger.entry();
+
     logger.debug("Destroying frame layer");
-    this.receiveThreadActive = false;
-    transport.destroy();
-  }
 
-  /**
-   * Data receive thread loop
-   * 
-   * @throws Envisalink2DSFrameLayerException
-   */
-  private void receiveThread()
-  {
-    logger.info("Receive thread started");
+    // Shut down socket connection
+    bootstrap.releaseExternalResources();
 
-    String stringRead = null;
+    // Shut down socket reconnect timer
+    socketReconnectTimer.stop();
 
-    while (receiveThreadActive)
-    {
-      try
-      {
-        stringRead = reader.readLine();
-        logger.trace("Received data [{}]", stringRead);
-        if (stringRead == null)
-        {
-          logger.error("Null string received, terminating receive thread");
-          receiveThreadActive = false;
-        } else
-        {
-          Envisalink2DSDataFrame frame = new Envisalink2DSDataFrame(stringRead);
-          if (this.handler == null)
-          {
-            logger.warn("Data received [{}] but handler not set", stringRead);
-          } else
-          {
-            if (frame.isValidChecksum())
-            {
-              this.handler.frameReceived(frame);
-            } else
-            {
-              logger.warn("Invalid data received [{}]", stringRead);
-            }
-          }
-        }
-      } catch (IOException e)
-      {
-        if (this.receiveThreadActive)
-        {
-          logger.warn("Error reading data: ", e);
-          this.receiveThreadActive = false;
-        }
-      } catch (Envisalink2DSDataFrameException e)
-      {
-        logger.warn("Error parsing raw data [{}]", stringRead);
-      }
-
-      if (!transport.isOpen())
-      {
-        logger.error("Transport closed, exiting receive thread");
-        receiveThreadActive = false;
-      }
-    }
-    logger.info("Receive thread exiting");
+    logger.exit();
   }
 
   /*
@@ -123,40 +147,56 @@ public class Envisalink2DSFrameLayerImpl implements Envisalink2DSFrameLayer
   @Override
   public void setCallbackHandler(Envisalink2DSFrameLayerAsyncCallback handler)
   {
+    logger.entry();
+
     logger.debug("Callback handler set to [{}]", handler.getClass().getName());
     this.handler = handler;
+
+    logger.exit();
   }
 
-  /**
-   * Start receive thread run loop
+  /*
+   * (non-Javadoc)
+   * 
+   * @see
+   * net.gregrapp.jhouse.interfaces.envisalink2ds.SocketCallback#stringReceived
+   * (java.lang.String)
    */
-  public void startReceiveThread()
+  @Override
+  public void stringReceived(String data)
   {
-    if (transport == null || transport.getOutputStream() == null
-        || transport.getInputStream() == null)
+    logger.entry(data);
+
+    logger.trace("Received data [{}]", data);
+    if (data == null)
     {
-      logger.error("Transport in invalid state, cannot start receive thread.");
-      return;
+      logger.error("Null string received");
+    } else
+    {
+      Envisalink2DSDataFrame frame = null;
+      try
+      {
+        frame = new Envisalink2DSDataFrame(data);
+      } catch (Envisalink2DSDataFrameException e)
+      {
+        logger.warn("Error parsing raw data [{}]", data);
+      }
+      if (this.handler == null)
+      {
+        logger.warn("Data received [{}] but handler not set", data);
+      } else
+      {
+        if (frame.isValidChecksum())
+        {
+          this.handler.frameReceived(frame);
+        } else
+        {
+          logger.warn("Invalid data received [{}]", data);
+        }
+      }
     }
 
-    this.writer = new PrintWriter(transport.getOutputStream(), true);
-    this.reader = new BufferedReader(new InputStreamReader(
-        transport.getInputStream()));
-
-    this.receiveThreadActive = true;
-
-    receiveThread = new Thread(new Runnable()
-    {
-      public void run()
-      {
-        receiveThread();
-      }
-    });
-
-    receiveThread.setPriority(Thread.MAX_PRIORITY);
-    receiveThread.setDaemon(true);
-    logger.debug("Starting receive thread");
-    receiveThread.start();
+    logger.exit();
   }
 
   /*
@@ -170,11 +210,17 @@ public class Envisalink2DSFrameLayerImpl implements Envisalink2DSFrameLayer
   public void write(Envisalink2DSDataFrame frame)
       throws Envisalink2DSFrameLayerException
   {
+    logger.entry();
+
     logger.debug("Writing frame to transport");
     synchronized (this)
     {
       logger.trace("Sending frame [{}]", frame.getFrameNoCrlf());
-      writer.println(frame.getFrame());
+
+      socketChannel.write(frame.getFrame());
     }
+
+    logger.exit();
   }
+
 }

@@ -29,22 +29,12 @@ package net.gregrapp.jhouse.interfaces.zwave;
  * @author Greg Rapp
  *
  */
-// <summary>
-// 
-// </summary>
 public class FrameStatistics
 {
-  // <summary>
-  // 
-  // </summary>
   public FrameStatistics()
   {
   }
 
-  // <summary>
-  // 
-  // </summary>
-  // <param name="stats"></param>
   public FrameStatistics(FrameStatistics stats)
   {
     if (stats == null)
@@ -61,37 +51,20 @@ public class FrameStatistics
     this.droppedFrames = stats.droppedFrames;
   }
   
-  // <summary>
-  // 
-  // </summary>
   int transmittedAcks;
-  // <summary>
-  // 
-  // </summary>
+
   int transmittedNaks;
-  // <summary>
-  // 
-  // </summary>
+
   int receivedAcks;
-  // <summary>
-  // 
-  // </summary>
+
   int receivedNaks;
-  // <summary>
-  // 
-  // </summary>
+
   int transmittedFrames;
-  // <summary>
-  // 
-  // </summary>
+
   int receivedFrames;
-  // <summary>
-  // 
-  // </summary>
+
   int retransmittedFrames;
-  // <summary>
-  // 
-  // </summary>
+
   int droppedFrames;
 }
 

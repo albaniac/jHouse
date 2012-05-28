@@ -36,30 +36,20 @@ public class ApplicationLayerException extends Exception
    */
   private static final long serialVersionUID = 1L;
 
-  // <summary>
-  //
-  // </summary>
   public ApplicationLayerException()
   {
 
   }
 
-  // <summary>
-  //
-  // </summary>
   public ApplicationLayerException(String describe)
   {
     super(describe);
   }
 
-  // <summary>
-  //
-  // </summary>
   public ApplicationLayerException(String describe, Exception innerException)
   {
     // Add any type-specific logic for inner exceptions.
-
+    
     super(describe, innerException);
   }
-
 }

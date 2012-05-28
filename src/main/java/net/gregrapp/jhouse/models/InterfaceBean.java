@@ -3,11 +3,15 @@
  */
 package net.gregrapp.jhouse.models;
 
+import java.util.Map;
+
+import javax.persistence.CollectionTable;
 import javax.persistence.Column;
+import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
-import javax.persistence.OneToOne;
+import javax.persistence.MapKeyColumn;
 import javax.persistence.Table;
 
 /**
@@ -21,11 +25,38 @@ import javax.persistence.Table;
 public class InterfaceBean
 {
 
+  private Map<String, String> properties;
   private boolean enabled;
   private Long id;
   private String klass;
-  private TransportBean transport;
-  
+
+  /**
+   * Add property
+   * 
+   * @param key
+   *          property name
+   * @param value
+   *          property value
+   */
+  public void addProperty(String key, String value)
+  {
+    this.properties.put(key, value);
+  }
+
+  /**
+   * Get Map of config options for the bean
+   * 
+   * @return the config
+   */
+  @ElementCollection
+  @CollectionTable(name="interface_properties")
+  @MapKeyColumn(name="property")
+  @Column(name="value")
+  public Map<String, String> getProperties()
+  {
+    return properties;
+  }
+
   /**
    * Unique ID
    * 
@@ -50,23 +81,23 @@ public class InterfaceBean
   }
 
   /**
-   * Get the transport utilized by this bean
-   * 
-   * @return the transport 
-   */
-  @OneToOne
-  public TransportBean getTransport()
-  {
-    return transport;
-  }
-
-  /**
    * @return enabled
    */
   @Column
   public boolean isEnabled()
   {
     return enabled;
+  }
+
+  /**
+   * Set Map of properties for the bean
+   * 
+   * @param properties
+   *          the properties to set
+   */
+  public void setProperties(Map<String, String> properties)
+  {
+    this.properties = properties;
   }
 
   /**
@@ -98,17 +129,9 @@ public class InterfaceBean
     this.klass = klass;
   }
 
-  /**
-   * Set the transport utilized by this bean
+  /*
+   * (non-Javadoc)
    * 
-   * @param transport the transport to set
-   */
-  public void setTransport(TransportBean transport)
-  {
-    this.transport = transport;
-  }
-
-  /* (non-Javadoc)
    * @see java.lang.Object#toString()
    */
   @Override
@@ -121,9 +144,10 @@ public class InterfaceBean
     builder.append(id);
     builder.append(", klass=");
     builder.append(klass);
-    builder.append(", transport=");
-    builder.append(transport);
+    builder.append(", properties=");
+    builder.append(properties);
     builder.append("]");
     return builder.toString();
   }
+
 }

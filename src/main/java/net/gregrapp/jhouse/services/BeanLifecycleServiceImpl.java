@@ -12,15 +12,12 @@ import net.gregrapp.jhouse.interfaces.Interface;
 import net.gregrapp.jhouse.models.DeviceBean;
 import net.gregrapp.jhouse.models.DriverBean;
 import net.gregrapp.jhouse.models.InterfaceBean;
-import net.gregrapp.jhouse.models.TransportBean;
 import net.gregrapp.jhouse.repositories.DeviceBeanRepository;
 import net.gregrapp.jhouse.repositories.DriverBeanRepository;
 import net.gregrapp.jhouse.repositories.InterfaceBeanRepository;
-import net.gregrapp.jhouse.repositories.TransportBeanRepository;
-import net.gregrapp.jhouse.transports.Transport;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.slf4j.ext.XLogger;
+import org.slf4j.ext.XLoggerFactory;
 import org.springframework.beans.MutablePropertyValues;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.BeanDefinition;
@@ -39,11 +36,13 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional
 public class BeanLifecycleServiceImpl implements BeanLifecycleService
 {
-  private static final Logger logger = LoggerFactory
-      .getLogger(BeanLifecycleServiceImpl.class);
+  private static final XLogger logger = XLoggerFactory
+      .getXLogger(BeanLifecycleServiceImpl.class);
 
   @Autowired
   private ApplicationContext appContext;
+
+  private DefaultListableBeanFactory beanFactory;
 
   @Autowired
   private DeviceBeanRepository deviceBeanRepository;
@@ -54,27 +53,6 @@ public class BeanLifecycleServiceImpl implements BeanLifecycleService
   @Autowired
   private InterfaceBeanRepository interfaceBeanRepository;
 
-  @Autowired
-  private TransportBeanRepository transportBeanRepository;
-
-  private DefaultListableBeanFactory beanFactory;
-
-  /**
-   * Initialize the bean life cycle service
-   */
-  @PostConstruct
-  public void init()
-  {
-    beanFactory = (DefaultListableBeanFactory) appContext
-        .getAutowireCapableBeanFactory();
-
-    // Call method through Spring proxy so that transactions are created
-    getSpringProxy().instantiateTransportBeans();
-    getSpringProxy().instantiateInterfaceBeans();
-    getSpringProxy().instantiateDriverBeans();
-    getSpringProxy().instantiateDeviceBeans();
-  }
-
   /**
    * Return Spring proxy of this service
    * 
@@ -82,7 +60,26 @@ public class BeanLifecycleServiceImpl implements BeanLifecycleService
    */
   private BeanLifecycleService getSpringProxy()
   {
-    return appContext.getBean(BeanLifecycleService.class);
+    return appContext.getBean(BeanLifecycleService.class);    
+  }
+
+  /**
+   * Initialize the bean life cycle service
+   */
+  @PostConstruct
+  public void init()
+  {
+    logger.entry();
+    
+    beanFactory = (DefaultListableBeanFactory) appContext
+        .getAutowireCapableBeanFactory();
+
+    // Call method through Spring proxy so transactions are created (will not work otherwise)
+    getSpringProxy().instantiateInterfaceBeans();
+    getSpringProxy().instantiateDriverBeans();
+    getSpringProxy().instantiateDeviceBeans();
+    
+    logger.exit();
   }
 
   /*
@@ -94,6 +91,8 @@ public class BeanLifecycleServiceImpl implements BeanLifecycleService
   @Override
   public void instantiateDeviceBeans()
   {
+    logger.entry();
+    
     logger.info("Instantiating device beans");
 
     logger.debug("Retrieving all device beans from database");
@@ -106,18 +105,6 @@ public class BeanLifecycleServiceImpl implements BeanLifecycleService
         logger.debug("Iterating enabled device beans");
         for (DeviceBean bean : beans)
         {
-          if (bean.getDriver() != null
-              && bean.getDriver().getDriverInterface() != null
-              && bean.getDriver().getDriverInterface().getTransport() != null
-              && bean.getDriver().getDriverInterface().getTransport()
-                  .isEnabled() == false)
-          {
-            logger.warn(
-                "Transport disabled, cannot instantiate device bean [{}]",
-                bean.toString());
-            continue;
-          }
-
           if (bean.getDriver() != null
               && bean.getDriver().getDriverInterface() != null
               && bean.getDriver().getDriverInterface().isEnabled() == false)
@@ -186,6 +173,8 @@ public class BeanLifecycleServiceImpl implements BeanLifecycleService
     {
       logger.warn("No device beans found in database");
     }
+    
+    logger.exit();
   }
 
   /*
@@ -197,6 +186,8 @@ public class BeanLifecycleServiceImpl implements BeanLifecycleService
   @Override
   public void instantiateDriverBeans()
   {
+    logger.entry();
+    
     logger.info("Instantiating device driver beans");
 
     logger.debug("Retrieving all device driver beans from database");
@@ -209,16 +200,6 @@ public class BeanLifecycleServiceImpl implements BeanLifecycleService
         logger.debug("Iterating enabled interface beans");
         for (DriverBean bean : beans)
         {
-          if (bean.getDriverInterface() != null
-              && bean.getDriverInterface().getTransport() != null
-              && bean.getDriverInterface().getTransport().isEnabled() == false)
-          {
-            logger.warn(
-                "Transport disabled, cannot instantiate driver bean [{}]",
-                bean.toString());
-            continue;
-          }
-
           if (bean.getDriverInterface() != null
               && bean.getDriverInterface().isEnabled() == false)
           {
@@ -284,6 +265,8 @@ public class BeanLifecycleServiceImpl implements BeanLifecycleService
     {
       logger.warn("No device driver beans found in database");
     }
+    
+    logger.exit();
   }
 
   /*
@@ -295,6 +278,8 @@ public class BeanLifecycleServiceImpl implements BeanLifecycleService
   @Override
   public void instantiateInterfaceBeans()
   {
+    logger.entry();
+    
     logger.info("Instantiating interface beans");
 
     logger.debug("Retrieving all interface beans from database");
@@ -307,36 +292,21 @@ public class BeanLifecycleServiceImpl implements BeanLifecycleService
         logger.debug("Iterating enabled interface beans");
         for (InterfaceBean bean : beans)
         {
-          if (bean.getTransport().isEnabled() == false)
-          {
-            logger.warn(
-                "Transport disabled, cannot instantiate interface bean [{}]",
-                bean.toString());
-            continue;
-          }
-
           if (bean.isEnabled())
           {
             logger.info("Building bean definition for interface bean [{}]",
                 bean.toString());
             GenericBeanDefinition beanDefinition = new GenericBeanDefinition();
 
+            ConstructorArgumentValues args = new ConstructorArgumentValues();
+            args.addGenericArgumentValue(bean.getProperties());
+
+            beanDefinition.setConstructorArgumentValues(args);
             beanDefinition.setBeanClassName(bean.getKlass());
-
-            if (bean.getTransport() != null)
-            {
-              ConstructorArgumentValues args = new ConstructorArgumentValues();
-              logger.debug("Getting transport bean reference");
-              Transport transport = (Transport) appContext
-                  .getBean(TRANSPORT_BEAN_NAME_PREFIX
-                      + bean.getTransport().getId());
-              args.addGenericArgumentValue(transport);
-              beanDefinition.setConstructorArgumentValues(args);
-            }
-
             beanDefinition.setLazyInit(true);
             beanDefinition.setScope(BeanDefinition.SCOPE_SINGLETON);
-            logger.debug("Registering interface bean definition");
+            logger.debug("Registering interface bean definition [{}]", INTERFACE_BEAN_NAME_PREFIX
+                + bean.getId());
             beanFactory.registerBeanDefinition(INTERFACE_BEAN_NAME_PREFIX
                 + bean.getId(), beanDefinition);
           } else
@@ -354,60 +324,7 @@ public class BeanLifecycleServiceImpl implements BeanLifecycleService
     {
       logger.warn("No interface beans found in database");
     }
-  }
-
-  /*
-   * (non-Javadoc)
-   * 
-   * @see net.gregrapp.jhouse.services.lifecycle.BeanLifecycleService#
-   * instantiateTransportBeans()
-   */
-  @Override
-  public void instantiateTransportBeans()
-  {
-    logger.info("Instantiating transport beans");
-
-    logger.debug("Retrieving all transport beans from database");
-    List<TransportBean> beans = transportBeanRepository.findAll();
-
-    if (beans != null && beans.size() > 0)
-    {
-      if (beanFactory != null)
-      {
-        logger.debug("Iterating enabled transport beans");
-        for (TransportBean bean : beans)
-        {
-          if (bean.isEnabled())
-          {
-            logger.info("Building bean definition for transport bean [{}]",
-                bean.toString());
-            GenericBeanDefinition beanDefinition = new GenericBeanDefinition();
-
-            beanDefinition.setBeanClassName(bean.getKlass());
-
-            ConstructorArgumentValues args = new ConstructorArgumentValues();
-            args.addGenericArgumentValue(bean.getConfig());
-
-            beanDefinition.setConstructorArgumentValues(args);
-            beanDefinition.setLazyInit(true);
-            beanDefinition.setScope(BeanDefinition.SCOPE_SINGLETON);
-            logger.debug("Registering transport bean definition");
-            beanFactory.registerBeanDefinition(TRANSPORT_BEAN_NAME_PREFIX
-                + bean.getId(), beanDefinition);
-          } else
-          {
-            logger.info("Transport bean not enabled, skipping [{}]",
-                bean.toString());
-          }
-        }
-        beanFactory.preInstantiateSingletons();
-      } else
-      {
-        logger.warn("Cannot register transport beans, BeanFactory is null");
-      }
-    } else
-    {
-      logger.warn("No transport beans found in database");
-    }
+    
+    logger.exit();
   }
 }

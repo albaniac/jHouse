@@ -32,8 +32,8 @@ import java.util.concurrent.TimeUnit;
 import net.gregrapp.jhouse.interfaces.zwave.Constants.TXStatus;
 import net.gregrapp.jhouse.interfaces.zwave.DataFrame.CommandType;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.slf4j.ext.XLogger;
+import org.slf4j.ext.XLoggerFactory;
 
 /**
  * @author Greg Rapp
@@ -44,8 +44,8 @@ public class SessionLayerImpl implements SessionLayer, FrameLayerAsyncCallback
   private static final int DEFAULT_TIMEOUT = 10000; // How long in ms to wait
                                                     // for an response
 
-  private static final Logger logger = LoggerFactory
-      .getLogger(SessionLayerImpl.class);
+  private static final XLogger logger = XLoggerFactory
+      .getXLogger(SessionLayerImpl.class);
 
   private static final int MAX_SEQUENCE_NUMBER = 127;
   // ---- Note ----
@@ -86,12 +86,15 @@ public class SessionLayerImpl implements SessionLayer, FrameLayerAsyncCallback
   @Override
   public void destroy()
   {
+    logger.entry();
     logger.debug("Destroying session layer");
     frameLayer.destroy();
+    logger.exit();
   }
 
   public void frameReceived(DataFrame frame)
   {
+    logger.entry(frame);
     if (frame == null)
     {
       logger.warn("Null frame received");
@@ -116,6 +119,7 @@ public class SessionLayerImpl implements SessionLayer, FrameLayerAsyncCallback
           stats.duplicatePackets++;
         }
         logger.info("Duplicate frame received");
+        logger.exit();
         return;
       }
       lastDataFrame = frame;
@@ -155,6 +159,7 @@ public class SessionLayerImpl implements SessionLayer, FrameLayerAsyncCallback
       }
     }
 
+    logger.exit();
   }
 
   /*
@@ -185,6 +190,7 @@ public class SessionLayerImpl implements SessionLayer, FrameLayerAsyncCallback
 
   private int incrementSequenceNumber()
   {
+    logger.entry();
     int oldSequenceNumber = sequenceNumber;
     sequenceNumber++;
 
@@ -194,6 +200,7 @@ public class SessionLayerImpl implements SessionLayer, FrameLayerAsyncCallback
 
     logger.trace("Incrementing sequence number from [{}] to [{}] ",
         oldSequenceNumber, sequenceNumber);
+    logger.exit(sequenceNumber);
     return sequenceNumber;
   }
 
@@ -210,30 +217,40 @@ public class SessionLayerImpl implements SessionLayer, FrameLayerAsyncCallback
   public TXStatus requestWithMultipleResponses(CommandType cmd,
       DataPacket request, int maxResponses) throws FrameLayerException
   {
+    logger.entry(cmd, request, maxResponses);
     if (request == null)
     {
       throw new NullPointerException("request");
     }
-    return requestWithMultipleResponses(cmd, request, maxResponses, false,
-        DEFAULT_TIMEOUT);
+    TXStatus status = requestWithMultipleResponses(cmd, request, maxResponses,
+        false, DEFAULT_TIMEOUT);
+
+    logger.exit(status);
+    return status;
   }
 
   public TXStatus requestWithMultipleResponses(CommandType cmd,
       DataPacket request, int maxResponses, boolean sequenceCheck)
       throws FrameLayerException
   {
+    logger.entry(cmd, request, maxResponses, sequenceCheck);
     if (request == null)
     {
       throw new NullPointerException("request");
     }
-    return requestWithMultipleResponses(cmd, request, maxResponses,
+
+    TXStatus status = requestWithMultipleResponses(cmd, request, maxResponses,
         sequenceCheck, DEFAULT_TIMEOUT);
+
+    logger.exit(status);
+    return status;
   }
 
   public TXStatus requestWithMultipleResponses(CommandType cmd,
       DataPacket request, int maxResponses, boolean sequenceCheck, int timeout)
       throws FrameLayerException
   {
+    logger.entry(cmd, request, maxResponses, sequenceCheck, timeout);
     logger.debug(
         "New request submitted expecting multiple responses for command [{}]",
         cmd.toString());
@@ -280,7 +297,7 @@ public class SessionLayerImpl implements SessionLayer, FrameLayerAsyncCallback
         }
         if (responses[i] != null)
         {
-          logger.debug("Response {} out of a max of {} received", i + 1,
+          logger.debug("Response [{}] out of a max of [{}] received", i + 1,
               maxResponses);
 
           // Strip the sequence number if used by the request
@@ -295,6 +312,7 @@ public class SessionLayerImpl implements SessionLayer, FrameLayerAsyncCallback
             setReady(true);
             TXStatus txStatus = TXStatus.ResMissing;
             txStatus.setResponses(responses);
+            logger.exit(txStatus);
             return txStatus;
           }
         } else
@@ -305,12 +323,14 @@ public class SessionLayerImpl implements SessionLayer, FrameLayerAsyncCallback
             stats.receiveTimeouts++;
           }
           setReady(true);
+          logger.exit(TXStatus.NoAcknowledge);
           return TXStatus.NoAcknowledge;
         }
       } // for
       setReady(true);
       TXStatus txStatus = TXStatus.CompleteOk;
       txStatus.setResponses(responses);
+      logger.exit(txStatus);
       return txStatus;
     } // lock
   }
@@ -326,6 +346,7 @@ public class SessionLayerImpl implements SessionLayer, FrameLayerAsyncCallback
   public boolean requestWithNoResponse(CommandType cmd, DataPacket request)
       throws FrameLayerException
   {
+    logger.entry(cmd, request);
     logger.debug("New request submitted for command [{}]", cmd.toString());
     try
     {
@@ -349,7 +370,9 @@ public class SessionLayerImpl implements SessionLayer, FrameLayerAsyncCallback
               request.getSequenceNumber());
         frame.addPayload(request.getSequenceNumber());
         stats.transmittedPackets++;
-        return frameLayer.write(frame);
+        boolean writeStatus = frameLayer.write(frame);
+        logger.exit(writeStatus);
+        return writeStatus;
       }
     } catch (FrameLayerException e)
     {
@@ -360,11 +383,14 @@ public class SessionLayerImpl implements SessionLayer, FrameLayerAsyncCallback
   public TXStatus requestWithResponse(CommandType cmd, DataPacket request)
       throws FrameLayerException
   {
+    logger.entry(cmd, request);
     if (request == null)
     {
       throw new NullPointerException("request");
     }
-    return requestWithResponse(cmd, request, false, DEFAULT_TIMEOUT);
+    TXStatus status = requestWithResponse(cmd, request, false, DEFAULT_TIMEOUT);
+    logger.exit(status);
+    return status;
   }
 
   /*
@@ -379,12 +405,16 @@ public class SessionLayerImpl implements SessionLayer, FrameLayerAsyncCallback
   public TXStatus requestWithResponse(CommandType cmd, DataPacket request,
       boolean sequenceCheck) throws FrameLayerException
   {
+    logger.entry(cmd, request, sequenceCheck);
     if (request == null)
     {
       throw new NullPointerException("request");
     }
 
-    return requestWithResponse(cmd, request, sequenceCheck, DEFAULT_TIMEOUT);
+    TXStatus status = requestWithResponse(cmd, request, sequenceCheck,
+        DEFAULT_TIMEOUT);
+    logger.exit(status);
+    return status;
   }
 
   /*
@@ -399,6 +429,7 @@ public class SessionLayerImpl implements SessionLayer, FrameLayerAsyncCallback
   public TXStatus requestWithResponse(CommandType cmd, DataPacket request,
       boolean sequenceCheck, int timeout) throws FrameLayerException
   {
+    logger.entry(cmd, request, sequenceCheck, timeout);
     logger.debug(
         "New request submitted expecting a single response for command [{}]",
         cmd.toString());
@@ -450,6 +481,7 @@ public class SessionLayerImpl implements SessionLayer, FrameLayerAsyncCallback
           setReady(true);
           TXStatus txStatus = TXStatus.ResMissing;
           txStatus.setResponse(response);
+          logger.exit(txStatus);
           return txStatus;
         }
       } else
@@ -460,11 +492,13 @@ public class SessionLayerImpl implements SessionLayer, FrameLayerAsyncCallback
           stats.receiveTimeouts++;
         }
         setReady(true);
+        logger.exit(TXStatus.NoAcknowledge);
         return TXStatus.NoAcknowledge;
       }
       setReady(true);
       TXStatus txStatus = TXStatus.CompleteOk;
       txStatus.setResponse(response);
+      logger.exit(txStatus);
       return txStatus;
     } // lock
   }
@@ -473,6 +507,7 @@ public class SessionLayerImpl implements SessionLayer, FrameLayerAsyncCallback
       DataPacket request, int maxResponses, int[] breakVal,
       boolean sequenceCheck, int timeout) throws FrameLayerException
   {
+    logger.entry(cmd, request, maxResponses, breakVal, sequenceCheck, timeout);
     logger
         .debug(
             "New request submitted expecting a variable number of responses for command [{}]",
@@ -533,6 +568,7 @@ public class SessionLayerImpl implements SessionLayer, FrameLayerAsyncCallback
             setReady(true);
             TXStatus txStatus = TXStatus.ResMissing;
             txStatus.setResponses(responses);
+            logger.exit(txStatus);
             return txStatus;
           }
           if (i > 0)
@@ -544,6 +580,7 @@ public class SessionLayerImpl implements SessionLayer, FrameLayerAsyncCallback
                 logger.debug("Break value found in response, aborting");
                 TXStatus txStatus = TXStatus.CompleteFail;
                 txStatus.setResponses(responses);
+                logger.exit(txStatus);
                 return txStatus;
               }
             }
@@ -556,12 +593,14 @@ public class SessionLayerImpl implements SessionLayer, FrameLayerAsyncCallback
             stats.receiveTimeouts++;
           }
           setReady(true);
+          logger.exit(TXStatus.NoAcknowledge);
           return TXStatus.NoAcknowledge;
         }
       } // for
       setReady(true);
       TXStatus txStatus = TXStatus.CompleteOk;
       txStatus.setResponses(responses);
+      logger.exit(txStatus);
       return txStatus;
     } // lock
   }
@@ -570,6 +609,7 @@ public class SessionLayerImpl implements SessionLayer, FrameLayerAsyncCallback
       DataPacket request, int maxResponses, int[] breakVal,
       boolean sequenceCheck, int timeout) throws FrameLayerException
   {
+    logger.entry(cmd, request, maxResponses, breakVal, sequenceCheck, timeout);
     logger
         .debug(
             "New request submitted expecting a variable number of returns and responses for command [{}]",
@@ -627,6 +667,7 @@ public class SessionLayerImpl implements SessionLayer, FrameLayerAsyncCallback
             setReady(true);
             TXStatus txStatus = TXStatus.ResMissing;
             txStatus.setResponses(responses);
+            logger.exit(txStatus);
             return txStatus;
           }
           if (i >= 0)
@@ -638,6 +679,7 @@ public class SessionLayerImpl implements SessionLayer, FrameLayerAsyncCallback
                 logger.debug("Break value found in response, aborting");
                 TXStatus txStatus = TXStatus.CompleteFail;
                 txStatus.setResponses(responses);
+                logger.exit(txStatus);
                 return txStatus;
               }
             }
@@ -650,7 +692,7 @@ public class SessionLayerImpl implements SessionLayer, FrameLayerAsyncCallback
             stats.receiveTimeouts++;
           }
           setReady(true);
-
+          logger.exit(TXStatus.NoAcknowledge);
           return TXStatus.NoAcknowledge;
         }
       } // for
@@ -658,6 +700,7 @@ public class SessionLayerImpl implements SessionLayer, FrameLayerAsyncCallback
 
       TXStatus txStatus = TXStatus.CompleteOk;
       txStatus.setResponses(responses);
+      logger.exit(txStatus);
       return txStatus;
     } // lock
   }
@@ -671,15 +714,19 @@ public class SessionLayerImpl implements SessionLayer, FrameLayerAsyncCallback
    */
   public void setCallbackHandler(SessionLayerAsyncCallback handler)
   {
+    logger.entry(handler);
     logger.debug("Callback handler set");
     this.asyncCallback = handler;
+    logger.exit();
   }
 
-  // / <summary>
-  // /
-  // / </summary>
+  /**
+   * @param value
+   */
   public void setReady(boolean value)
   {
+    logger.entry(value);
     _isReady = value;
+    logger.exit();
   }
 }

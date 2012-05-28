@@ -54,8 +54,8 @@ import net.gregrapp.jhouse.transports.Transport;
 import net.gregrapp.jhouse.utils.ArrayUtils;
 import net.gregrapp.jhouse.utils.CollectionUtils;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.slf4j.ext.XLogger;
+import org.slf4j.ext.XLoggerFactory;
 
 /**
  * @author Greg Rapp
@@ -652,8 +652,8 @@ public class ApplicationLayerImpl implements ApplicationLayer,
   @SuppressWarnings("unused")
   private static final int GET_INIT_DATA_FLAG_TIMER_SUPPORT = 0x02;
 
-  private static final Logger logger = LoggerFactory
-      .getLogger(ApplicationLayerImpl.class);
+  private static final XLogger logger = XLoggerFactory
+      .getXLogger(ApplicationLayerImpl.class);
 
   // for an response
   private static final int TIMEOUT = 180000; // wait 3 minutes before timing out
@@ -728,13 +728,16 @@ public class ApplicationLayerImpl implements ApplicationLayer,
 
   public ApplicationLayerImpl(SessionLayer sessionLayer)
   {
+    logger.entry(sessionLayer);
     this.sessionLayer = sessionLayer;
     sessionLayer.setCallbackHandler(this);
+    logger.exit();
   }
 
   private DataPacket addPayloadToSUCNodeId(int nodeId, boolean sucState,
       TXOption[] txOptions, int capabilities)
   {
+    logger.entry(nodeId, sucState, txOptions, capabilities);
     int txOptInt = 0;
     for (TXOption txOpt : txOptions)
       txOptInt |= txOpt.get();
@@ -744,12 +747,14 @@ public class ApplicationLayerImpl implements ApplicationLayer,
     req.addPayload(sucState ? 1 : 0);
     req.addPayload(txOptInt);
     req.addPayload(capabilities);
+    logger.exit(req);
     return req;
   }
 
   public boolean clockCompare(Time time) throws FrameLayerException,
       ApplicationLayerException
   {
+    logger.entry(time);
     logger.info("Comparing interface clock time with time [{}]", time);
 
     if (time == null)
@@ -766,11 +771,14 @@ public class ApplicationLayerImpl implements ApplicationLayer,
     if (rc != TXStatus.CompleteOk)
       throw new ApplicationLayerException("CMD_CLOCK_CMP");
     int[] payload = rc.getResponse().getPayload();
-    return payload[0] == 0 ? false : true;
+    boolean success = payload[0] == 0 ? false : true;
+    logger.exit(success);
+    return success;
   }
 
   public Time clockGet() throws FrameLayerException, ApplicationLayerException
   {
+    logger.entry();
     logger.info("Getting interface clock time");
 
     DataPacket req = new DataPacket();
@@ -779,12 +787,15 @@ public class ApplicationLayerImpl implements ApplicationLayer,
     if (rc != TXStatus.CompleteOk)
       throw new ApplicationLayerException("CMD_CLOCK_GET");
     int[] payload = rc.getResponse().getPayload();
-    return new Time(payload[0], payload[1], payload[2]);
+    Time time = new Time(payload[0], payload[1], payload[2]);
+    logger.exit(time);
+    return time;
   }
 
   public void clockSet(Time time) throws FrameLayerException,
       ApplicationLayerException
   {
+    logger.entry(time);
     logger.info("Setting interface clock to [{}]", time);
 
     if (time == null)
@@ -799,6 +810,7 @@ public class ApplicationLayerImpl implements ApplicationLayer,
         DataFrame.CommandType.CmdClockSet, req);
     if (rc != TXStatus.CompleteOk)
       throw new ApplicationLayerException("CMD_CLOCK_SET");
+    logger.exit();
   }
 
   /*
@@ -811,6 +823,7 @@ public class ApplicationLayerImpl implements ApplicationLayer,
    */
   public void dataPacketReceived(CommandType cmd, DataPacket packet)
   {
+    logger.entry(cmd, packet);
     logger.debug("Data packet received for command [{}]", cmd);
 
     if (packet == null)
@@ -1184,6 +1197,7 @@ public class ApplicationLayerImpl implements ApplicationLayer,
     // }
     // }
     asyncCallback.dataPacketReceived(cmd, packet);
+    logger.exit();
   }
 
   /*
@@ -1194,8 +1208,10 @@ public class ApplicationLayerImpl implements ApplicationLayer,
   @Override
   public void destroy()
   {
+    logger.entry();
     logger.debug("Destroying application layer");
     sessionLayer.destroy();
+    logger.exit();
   }
 
   /*
@@ -1216,7 +1232,6 @@ public class ApplicationLayerImpl implements ApplicationLayer,
   public int getChipRev()
   {
     logger.info("Getting chip revision");
-
     return chipRev;
   }
 
@@ -1228,7 +1243,6 @@ public class ApplicationLayerImpl implements ApplicationLayer,
   public ChipType getChipType()
   {
     logger.info("Getting chip type");
-
     return ChipType.getByVal(chipType);
   }
 
@@ -1291,10 +1305,17 @@ public class ApplicationLayerImpl implements ApplicationLayer,
    */
   public Node getNode(int nodeId)
   {
+    logger.entry(nodeId);
     if (!nodeTable.contains(nodeId))
+    {
+      logger.exit(null);
       return null;
-    else
-      return nodeTable.get(nodeId);
+    } else
+    {
+      Node node = nodeTable.get(nodeId);
+      logger.exit(node);
+      return node;
+    }
   }
 
   /*
@@ -1318,6 +1339,7 @@ public class ApplicationLayerImpl implements ApplicationLayer,
       boolean removeNonRepeatingDevices) throws FrameLayerException,
       ApplicationLayerException
   {
+    logger.entry(nodeId, removeBadRepeaters, removeNonRepeatingDevices);
     NodeMask nodeMask;
     DataPacket req = new DataPacket();
     req.addPayload(nodeId);
@@ -1332,6 +1354,7 @@ public class ApplicationLayerImpl implements ApplicationLayer,
 
     nodeMask = new NodeMask(rc.getResponse().getPayload());
 
+    logger.exit(nodeMask);
     return nodeMask;
   }
 
@@ -1372,6 +1395,7 @@ public class ApplicationLayerImpl implements ApplicationLayer,
    */
   public ZWStatistics getStatistics()
   {
+    logger.entry();
     ZWStatistics stats = new ZWStatistics();
 
     stats.bytesReceived = transport.getReceivedBytes();
@@ -1396,6 +1420,7 @@ public class ApplicationLayerImpl implements ApplicationLayer,
     stats.receivedPackets = sstats.receivedPackets;
     stats.receiveTimeouts = sstats.receiveTimeouts;
 
+    logger.exit(stats);
     return stats;
   }
 
@@ -1408,6 +1433,7 @@ public class ApplicationLayerImpl implements ApplicationLayer,
    */
   public String getSupportedSerialCmds()
   {
+    logger.entry();
     StringBuffer retString = new StringBuffer();
     /*
      * ctrlCapabilities format:0 APPL_VERSION,1 APPL_REVISION,2 MAN_ID1,
@@ -1432,6 +1458,8 @@ public class ApplicationLayerImpl implements ApplicationLayer,
         i++;
       }
     }
+
+    logger.exit(retString.toString());
     return retString.toString();
   }
 
@@ -1454,11 +1482,16 @@ public class ApplicationLayerImpl implements ApplicationLayer,
    */
   public boolean isControllerIsRealPrimary()
   {
+    logger.entry();
     if (ctrlCapabilities != null)
     {
-      return ((ctrlCapabilities[0] & CtrlCapabilities.IS_REAL_PRIMARY.get()) != 0);
+      boolean result = ((ctrlCapabilities[0] & CtrlCapabilities.IS_REAL_PRIMARY
+          .get()) != 0);
+      logger.exit(result);
+      return result;
     } else
     {
+      logger.exit(false);
       return false;
     }
   }
@@ -1471,11 +1504,14 @@ public class ApplicationLayerImpl implements ApplicationLayer,
    */
   public boolean isControllerIsSis()
   {
+    logger.entry();
     if ((isControllerIsSuc()) && (isNodeIdServerPresent()))
     {
+      logger.exit(true);
       return true;
     } else
     {
+      logger.exit(false);
       return false;
     }
   }
@@ -1488,11 +1524,15 @@ public class ApplicationLayerImpl implements ApplicationLayer,
    */
   public boolean isControllerIsSuc()
   {
+    logger.entry();
     if (ctrlCapabilities != null)
     {
-      return ((ctrlCapabilities[0] & CtrlCapabilities.IS_SUC.get()) != 0);
+      boolean result = ((ctrlCapabilities[0] & CtrlCapabilities.IS_SUC.get()) != 0);
+      logger.exit(result);
+      return result;
     } else
     {
+      logger.exit(false);
       return false;
     }
   }
@@ -1505,11 +1545,16 @@ public class ApplicationLayerImpl implements ApplicationLayer,
    */
   public boolean isControllerOnOtherNetwork()
   {
+    logger.entry();
     if (ctrlCapabilities != null)
     {
-      return ((ctrlCapabilities[0] & CtrlCapabilities.ON_OTHER_NETWORK.get()) != 0);
+      boolean result = ((ctrlCapabilities[0] & CtrlCapabilities.ON_OTHER_NETWORK
+          .get()) != 0);
+      logger.exit(result);
+      return result;
     } else
     {
+      logger.exit(false);
       return false;
     }
   }
@@ -1523,12 +1568,16 @@ public class ApplicationLayerImpl implements ApplicationLayer,
    */
   public boolean isNodeIdServerPresent()
   {
+    logger.entry();
     if (ctrlCapabilities != null)
     {
-      return ((ctrlCapabilities[0] & CtrlCapabilities.NODEID_SERVER_PRESENT
+      boolean result = ((ctrlCapabilities[0] & CtrlCapabilities.NODEID_SERVER_PRESENT
           .get()) != 0);
+      logger.exit(result);
+      return result;
     } else
     {
+      logger.exit(false);
       return false;
     }
   }
@@ -1611,6 +1660,7 @@ public class ApplicationLayerImpl implements ApplicationLayer,
   private boolean otherSUCNodeId(int nodeId, boolean sucState,
       TXOption[] txOptions, int capabilities) throws FrameLayerException
   {
+    logger.entry(nodeId, sucState, txOptions, capabilities);
     DataPacket req = addPayloadToSUCNodeId(nodeId, sucState, txOptions,
         capabilities);
     TXStatus rc = sessionLayer.requestWithMultipleResponses(
@@ -1620,14 +1670,17 @@ public class ApplicationLayerImpl implements ApplicationLayer,
       if (((rc.getResponses()[1].getLength() >= 1) && (rc.getResponses()[1]
           .getPayload()[0] == SetSucReturnValue.SucSetSucceeded.get())))
       {
+        logger.exit(true);
         return true;
       }
     }
+    logger.exit(false);
     return false;
   }
 
   private void requestNodeInfo(int[] payload, int nid)
   {
+    logger.entry(payload, nid);
     logger.debug("Processing node info for node {}", nid);
     // FuncID|status|nodeId|len|basic|generic|specific|data[0]|data[1],data[2]..data[len-7]....
     Node node = nodeTable.get(nid);
@@ -1650,16 +1703,20 @@ public class ApplicationLayerImpl implements ApplicationLayer,
     nodeTable.add(node);
     requestNodeInfo = false;
     waitForNodeInfoCallbackHandler();
+    logger.exit();
   }
 
   public void setCallbackHandler(ApplicationLayerAsyncCallback handler)
   {
+    logger.entry(handler);
     this.asyncCallback = handler;
+    logger.exit();
   }
 
   private boolean thisSUCNodeId(int nodeId, boolean sucState,
       TXOption[] txOptions, int capabilities) throws FrameLayerException
   {
+    logger.entry(nodeId, sucState, txOptions, capabilities);
     DataPacket req = addPayloadToSUCNodeId(nodeId, sucState, txOptions,
         capabilities);
     TXStatus rc = sessionLayer.requestWithResponse(
@@ -1669,15 +1726,18 @@ public class ApplicationLayerImpl implements ApplicationLayer,
         && ((nodeId == controllerNodeId) || ((res.getLength() >= 1) && (res
             .getPayload()[0] == SetSucReturnValue.SucSetSucceeded.get()))))
     {
+      logger.exit(true);
       return true;
     } else
     {
+      logger.exit(false);
       return false;
     }
   }
 
   private void waitForNodeInfoCallbackHandler()
   {
+    logger.entry();
     if (waitForNodeInfoExecutor != null)
     {
       waitForNodeInfoExecutor.shutdownNow();
@@ -1686,6 +1746,7 @@ public class ApplicationLayerImpl implements ApplicationLayer,
     // RequestNodeInfoEventArgs e = new RequestNodeInfoEventArgs((Node)handler);
     // if (RequestNodeInfoEvent != null) RequestNodeInfoEvent((Node)handler);
     // if (RequestNodeInfoEvent != null) RequestNodeInfoEvent(this, e);
+    logger.exit();
   }
 
   /*
@@ -1698,6 +1759,7 @@ public class ApplicationLayerImpl implements ApplicationLayer,
   public NodeStatus zwaveAddNodeToNetwork(Mode mode)
       throws FrameLayerException, ApplicationLayerException
   {
+    logger.entry(mode);
     DataPacket req = new DataPacket();
     req.addPayload(mode.get());
     TXStatus rc = sessionLayer.requestWithResponse(
@@ -1706,7 +1768,9 @@ public class ApplicationLayerImpl implements ApplicationLayer,
       throw new ApplicationLayerException("CMD_ZWaveADD_NODE_TO_NETWORK:"
           + mode.toString());
 
-    return NodeStatus.getByVal(rc.getResponse().getPayload()[0]);
+    NodeStatus status = NodeStatus.getByVal(rc.getResponse().getPayload()[0]);
+    logger.exit(status);
+    return status;
   }
 
   /*
@@ -1719,6 +1783,7 @@ public class ApplicationLayerImpl implements ApplicationLayer,
   public TXStatus zwaveAssignReturnRoute(int sourceNodeId, int destinationNodeId)
       throws FrameLayerException
   {
+    logger.entry(sourceNodeId, destinationNodeId);
     DataPacket req = new DataPacket();
     req.addPayload(sourceNodeId);
     req.addPayload(destinationNodeId);
@@ -1726,9 +1791,12 @@ public class ApplicationLayerImpl implements ApplicationLayer,
         DataFrame.CommandType.CmdZWaveAssignReturnRoute, req, 2, true);
     if (rc == TXStatus.CompleteOk)
     {
-      return TXStatus.getByVal(rc.getResponses()[1].getPayload()[0]);
+      TXStatus status = TXStatus.getByVal(rc.getResponses()[1].getPayload()[0]);
+      logger.exit(status);
+      return status;
     } else
     {
+      logger.exit(rc);
       return rc;
     }
   }
@@ -1743,6 +1811,7 @@ public class ApplicationLayerImpl implements ApplicationLayer,
   public TXStatus zwaveAssignSucReturnRoute(int destinationNodeId)
       throws FrameLayerException
   {
+    logger.entry(destinationNodeId);
     DataPacket req = new DataPacket();
     req.addPayload(destinationNodeId);
     req.addPayload(0);
@@ -1750,9 +1819,12 @@ public class ApplicationLayerImpl implements ApplicationLayer,
         DataFrame.CommandType.CmdZWaveAssignSucReturnRoute, req, 2, true);
     if (rc == TXStatus.CompleteOk)
     {
-      return TXStatus.getByVal(rc.getResponses()[1].getPayload()[0]);
+      TXStatus status = TXStatus.getByVal(rc.getResponses()[1].getPayload()[0]);
+      logger.exit(status);
+      return status;
     } else
     {
+      logger.exit(rc);
       return rc;
     }
   }
@@ -1767,6 +1839,7 @@ public class ApplicationLayerImpl implements ApplicationLayer,
   public NodeStatus zwaveControllerChange(ControllerChangeMode mode)
       throws FrameLayerException, ApplicationLayerException
   {
+    logger.entry(mode);
     DataPacket req = new DataPacket();
     req.addPayload(mode.get());
     TXStatus rc = sessionLayer.requestWithResponse(
@@ -1774,6 +1847,7 @@ public class ApplicationLayerImpl implements ApplicationLayer,
     if (rc != TXStatus.CompleteOk)
       throw new ApplicationLayerException("CMD_ZWaveCONTROLLER_CHANGE");
     NodeStatus status = NodeStatus.getByVal(rc.getResponse().getPayload()[0]);
+    logger.exit(status);
     return status;
   }
 
@@ -1790,6 +1864,7 @@ public class ApplicationLayerImpl implements ApplicationLayer,
       CreateNewPrimaryControllerMode mode) throws FrameLayerException,
       ApplicationLayerException
   {
+    logger.entry(mode);
     DataPacket req = new DataPacket();
     req.addPayload(mode.get());
     TXStatus rc = sessionLayer.requestWithResponse(
@@ -1797,6 +1872,7 @@ public class ApplicationLayerImpl implements ApplicationLayer,
     if (rc != TXStatus.CompleteOk)
       throw new ApplicationLayerException("CMD_ZWaveCREATE_NEW_PRIMARY");
     NodeStatus status = NodeStatus.getByVal(rc.getResponse().getPayload()[0]);
+    logger.exit(status);
     return status;
   }
 
@@ -1810,15 +1886,19 @@ public class ApplicationLayerImpl implements ApplicationLayer,
   public TXStatus zwaveDeleteReturnRoute(int sourceNodeId)
       throws FrameLayerException
   {
+    logger.entry(sourceNodeId);
     DataPacket req = new DataPacket();
     req.addPayload(sourceNodeId);
     TXStatus rc = sessionLayer.requestWithMultipleResponses(
         DataFrame.CommandType.CmdZWaveDeleteReturnRoute, req, 2, true);
     if (rc == TXStatus.CompleteOk)
     {
-      return TXStatus.getByVal(rc.getResponses()[1].getPayload()[0]);
+      TXStatus status = TXStatus.getByVal(rc.getResponses()[1].getPayload()[0]);
+      logger.exit(status);
+      return status;
     } else
     {
+      logger.exit(rc);
       return rc;
     }
   }
@@ -1833,15 +1913,19 @@ public class ApplicationLayerImpl implements ApplicationLayer,
   public TXStatus zwaveDeleteSucReturnRoute(int sourceNodeId)
       throws FrameLayerException
   {
+    logger.entry(sourceNodeId);
     DataPacket req = new DataPacket();
     req.addPayload(sourceNodeId);
     TXStatus rc = sessionLayer.requestWithMultipleResponses(
         DataFrame.CommandType.CmdZWaveDeleteSucReturnRoute, req, 2, true);
     if (rc == TXStatus.CompleteOk)
     {
-      return TXStatus.getByVal(rc.getResponses()[1].getPayload()[0]);
+      TXStatus status = TXStatus.getByVal(rc.getResponses()[1].getPayload()[0]);
+      logger.exit(status);
+      return status;
     } else
     {
+      logger.exit(rc);
       return rc;
     }
   }
@@ -1856,6 +1940,7 @@ public class ApplicationLayerImpl implements ApplicationLayer,
   public boolean zwaveEnableSuc(boolean enable, int capabilities)
       throws FrameLayerException
   {
+    logger.entry(enable, capabilities);
     DataPacket req = new DataPacket();
     req.addPayload(enable ? 1 : 0);
     req.addPayload(capabilities);
@@ -1865,10 +1950,12 @@ public class ApplicationLayerImpl implements ApplicationLayer,
     {
       if (rc.getResponse().getPayload()[0] != 0)
       {
+        logger.exit(true);
         return true;
       }
     }
 
+    logger.exit(false);
     return false;
   }
 
@@ -1880,6 +1967,7 @@ public class ApplicationLayerImpl implements ApplicationLayer,
   public Node[] zwaveEnumerateNodes() throws FrameLayerException,
       ApplicationLayerException
   {
+    logger.entry();
     logger.debug("Enumerating ZWave nodes");
     synchronized (this)
     {
@@ -1934,8 +2022,9 @@ public class ApplicationLayerImpl implements ApplicationLayer,
        * for (Node n : nodeTable.getList()) { if (n.isNodeListening()) {
        * zwaveNodeManufacturerSpecific(n.getId()); } }
        */
-
-      return nodeTable.getList();
+      Node[] nodes = nodeTable.getList();
+      logger.exit(nodes);
+      return nodes;
     }
   }
 
@@ -1948,6 +2037,7 @@ public class ApplicationLayerImpl implements ApplicationLayer,
   public ControllerCapabilities zwaveGetControllerCapabilities()
       throws ApplicationLayerException, FrameLayerException
   {
+    logger.entry();
     DataPacket req = new DataPacket();
 
     TXStatus rc = sessionLayer.requestWithResponse(
@@ -1960,6 +2050,8 @@ public class ApplicationLayerImpl implements ApplicationLayer,
     secondaryController = ((payload[0] & CtrlCapabilities.IS_SECONDARY.get()) != 0);
     ControllerCapabilities caps = new ControllerCapabilities(payload,
         secondaryController);
+
+    logger.exit(caps);
     return caps;
   }
 
@@ -1973,7 +2065,10 @@ public class ApplicationLayerImpl implements ApplicationLayer,
   public Node zwaveGetNodeProtocolInfo(int nodeId) throws FrameLayerException,
       ApplicationLayerException
   {
-    return zwaveGetNodeProtocolInfo(nodeId, false);
+    logger.entry(nodeId);
+    Node nodeInfo = zwaveGetNodeProtocolInfo(nodeId, false);
+    logger.exit(nodeInfo);
+    return nodeInfo;
   }
 
   /*
@@ -1986,6 +2081,7 @@ public class ApplicationLayerImpl implements ApplicationLayer,
   public Node zwaveGetNodeProtocolInfo(int nodeId, boolean checkIfVirtual)
       throws FrameLayerException, ApplicationLayerException
   {
+    logger.entry(nodeId, checkIfVirtual);
     DataPacket req = new DataPacket();
     req.addPayload(nodeId);
 
@@ -2007,8 +2103,10 @@ public class ApplicationLayerImpl implements ApplicationLayer,
     // type basic : payload[3];
     // type generic : payload[4];
     // type specific : payload[5];
-    return new Node(nodeId, payload[0], payload[1], payload[2], payload[3],
-        payload[4], payload[5], null, isVirtual);
+    Node node = new Node(nodeId, payload[0], payload[1], payload[2],
+        payload[3], payload[4], payload[5], null, isVirtual);
+    logger.exit(node);
+    return node;
   }
 
   /*
@@ -2020,12 +2118,15 @@ public class ApplicationLayerImpl implements ApplicationLayer,
   public int zwaveGetSucNodeId() throws FrameLayerException,
       ApplicationLayerException
   {
+    logger.entry();
     DataPacket req = new DataPacket();
     TXStatus rc = sessionLayer.requestWithResponse(
         DataFrame.CommandType.CmdZWaveGetSucNodeId, req);
     if (rc != TXStatus.CompleteOk)
       throw new ApplicationLayerException("CMD_ZWaveGET_SUC_NODE_ID");
-    return rc.getResponse().getPayload()[0];
+    int nodeId = rc.getResponse().getPayload()[0];
+    logger.exit(nodeId);
+    return nodeId;
   }
 
   /*
@@ -2036,6 +2137,7 @@ public class ApplicationLayerImpl implements ApplicationLayer,
   public VersionInfoType zwaveGetVersion() throws FrameLayerException,
       ApplicationLayerException
   {
+    logger.entry();
     logger.debug("Getting version from ZWave interface");
     DataPacket req = new DataPacket();
 
@@ -2057,12 +2159,14 @@ public class ApplicationLayerImpl implements ApplicationLayer,
     }
     libraryType.library = Library.getByVal(payload[12]);
 
+    logger.exit(libraryType);
     return libraryType;
   }
 
   public NodeMask zwaveGetVirtualNodes() throws FrameLayerException,
       ApplicationLayerException
   {
+    logger.entry();
     NodeMask nodeMask;
     if (libraryType.library == Library.ControllerBridgeLib)
     {
@@ -2078,6 +2182,8 @@ public class ApplicationLayerImpl implements ApplicationLayer,
     {
       nodeMask = new NodeMask();
     }
+
+    logger.exit(nodeMask);
     return nodeMask;
   }
 
@@ -2091,6 +2197,7 @@ public class ApplicationLayerImpl implements ApplicationLayer,
   public boolean zwaveIsFailedNode(int nodeId) throws FrameLayerException,
       ApplicationLayerException
   {
+    logger.entry(nodeId);
     DataPacket req = new DataPacket();
     req.addPayload(nodeId);
 
@@ -2098,7 +2205,10 @@ public class ApplicationLayerImpl implements ApplicationLayer,
         DataFrame.CommandType.CmdZWaveIsFailedNode, req);
     if (rc != TXStatus.CompleteOk)
       throw new ApplicationLayerException("CMD_ZWaveIS_FAILED_NODE");
-    return rc.getResponse().getPayload()[0] == 0 ? false : true;
+
+    boolean status = rc.getResponse().getPayload()[0] == 0 ? false : true;
+    logger.exit(status);
+    return status;
   }
 
   /*
@@ -2111,6 +2221,7 @@ public class ApplicationLayerImpl implements ApplicationLayer,
   public boolean zwaveIsVirtualNode(int nodeId) throws FrameLayerException,
       ApplicationLayerException
   {
+    logger.entry(nodeId);
     if (libraryType.library == Library.ControllerBridgeLib)
     {
       DataPacket req = new DataPacket();
@@ -2121,8 +2232,12 @@ public class ApplicationLayerImpl implements ApplicationLayer,
       if (rc != TXStatus.CompleteOk)
         throw new ApplicationLayerException("CMD_ZWaveIS_VIRTUAL_NODE");
 
-      return (rc.getResponse().getPayload()[0] != 0);
+      boolean virtual = (rc.getResponse().getPayload()[0] != 0);
+      logger.exit(virtual);
+      return virtual;
     }
+
+    logger.exit(false);
     return false;
   }
 
@@ -2135,12 +2250,14 @@ public class ApplicationLayerImpl implements ApplicationLayer,
   public void zwaveLockRoutes(int nodeId) throws FrameLayerException,
       ApplicationLayerException
   {
+    logger.entry(nodeId);
     DataPacket req = new DataPacket();
     req.addPayload(nodeId);
     boolean rc = sessionLayer.requestWithNoResponse(
         DataFrame.CommandType.CmdLockRouteResponse, req);
     if (!rc)
       throw new ApplicationLayerException("CMD_LOCK_ROUTE_RESPONSE");
+    logger.exit();
   }
 
   /*
@@ -2153,6 +2270,7 @@ public class ApplicationLayerImpl implements ApplicationLayer,
   public int[] zwaveMemoryGetBuffer(long offset, int len)
       throws FrameLayerException, ApplicationLayerException
   {
+    logger.entry(offset, len);
     DataPacket req = new DataPacket();
     req.addPayload((int) (offset >> 8));
     req.addPayload((int) (offset & 0xFF));
@@ -2161,7 +2279,10 @@ public class ApplicationLayerImpl implements ApplicationLayer,
         DataFrame.CommandType.CmdMemoryGetBuffer, req);
     if (rc != TXStatus.CompleteOk)
       throw new ApplicationLayerException("CMD_MEMORY_GET_BUFFER");
-    return rc.getResponse().getPayload();
+
+    int[] buffer = rc.getResponse().getPayload();
+    logger.exit(buffer);
+    return buffer;
   }
 
   /*
@@ -2174,14 +2295,20 @@ public class ApplicationLayerImpl implements ApplicationLayer,
   public int zwaveMemoryGetByte(long offset) throws FrameLayerException,
       ApplicationLayerException
   {
+    logger.entry(offset);
     DataPacket req = new DataPacket();
     req.addPayload((int) (offset >> 8));
     req.addPayload((int) (offset & 0xFF));
+
     TXStatus rc = sessionLayer.requestWithResponse(
         DataFrame.CommandType.CmdMemoryGetByte, req);
+
     if (rc != TXStatus.CompleteOk)
       throw new ApplicationLayerException("CMD_MEMORY_GET_BYTE");
-    return rc.getResponse().getPayload()[0];
+
+    int data = rc.getResponse().getPayload()[0];
+    logger.exit(data);
+    return data;
   }
 
   /*
@@ -2193,6 +2320,7 @@ public class ApplicationLayerImpl implements ApplicationLayer,
   public MemoryGetId zwaveMemoryGetId() throws FrameLayerException,
       ApplicationLayerException
   {
+    logger.entry();
     DataPacket req = new DataPacket();
 
     TXStatus rc = sessionLayer.requestWithResponse(
@@ -2205,6 +2333,7 @@ public class ApplicationLayerImpl implements ApplicationLayer,
     int controllerNode = payload[4];
 
     this.memoryGetId = new MemoryGetId(homeId, controllerNode, rc);
+    logger.exit(this.memoryGetId);
     return this.memoryGetId;
   }
 
@@ -2218,6 +2347,7 @@ public class ApplicationLayerImpl implements ApplicationLayer,
   public void zwaveMemoryPutBuffer(long offset, int[] buffer, long length)
       throws FrameLayerException, ApplicationLayerException
   {
+    logger.entry(offset, buffer, length);
     if (length > 66)
       length = 66;
     DataPacket req = new DataPacket();
@@ -2230,6 +2360,7 @@ public class ApplicationLayerImpl implements ApplicationLayer,
         DataFrame.CommandType.CmdMemoryPutBuffer, req, 2, true);
     if (rc != TXStatus.CompleteOk)
       throw new ApplicationLayerException("CMD_MEMORY_PUT_BUFFER");
+    logger.exit();
   }
 
   /*
@@ -2242,18 +2373,21 @@ public class ApplicationLayerImpl implements ApplicationLayer,
   public TXStatus zwaveMemoryPutByte(long offset, int value)
       throws FrameLayerException
   {
+    logger.entry(offset, value);
     DataPacket req = new DataPacket();
     req.addPayload((int) (offset >> 8));
     req.addPayload((int) (offset & 0xFF));
     req.addPayload(value);
     TXStatus rc = sessionLayer.requestWithResponse(
         DataFrame.CommandType.CmdMemoryPutByte, req);
+    logger.exit(rc);
     return rc;
   }
 
   public void zwaveNodeManufacturerSpecific(int nodeId)
       throws FrameLayerException, ApplicationLayerException
   {
+    logger.entry(nodeId);
     logger
         .debug("Requesting manufacturer specific report from node {}", nodeId);
     int[] data = new int[] {
@@ -2261,6 +2395,7 @@ public class ApplicationLayerImpl implements ApplicationLayer,
         CommandManufacturerSpecific.MANUFACTURER_SPECIFIC_GET.get() };
     zwaveSendData(nodeId, data, new TXOption[] {
         TXOption.TransmitOptionAcknowledge, TXOption.TransmitOptionAutoRoute });
+    logger.exit();
   }
 
   /*
@@ -2273,6 +2408,7 @@ public class ApplicationLayerImpl implements ApplicationLayer,
   public ZWaveRediscoveryNeededReturnValue zwaveRediscoveryNeeded(int nodeId)
       throws FrameLayerException
   {
+    logger.entry(nodeId);
     // DataPacket[] res = new DataPacket[3]; // We are receiving 2 responses...
     DataPacket req = new DataPacket();
     req.addPayload(nodeId);
@@ -2285,18 +2421,21 @@ public class ApplicationLayerImpl implements ApplicationLayer,
     {
       if (st == ZWaveRediscoveryNeededReturnValue.LostAccepted)
       {
-        return ZWaveRediscoveryNeededReturnValue.getByVal(rc.getResponses()[2]
-            .getPayload()[0]);
+        ZWaveRediscoveryNeededReturnValue val = ZWaveRediscoveryNeededReturnValue
+            .getByVal(rc.getResponses()[2].getPayload()[0]);
+        logger.exit(val);
+        return val;
       } else
       {
+        logger.exit(st);
         return st;
       }
 
     } else
     {
+      logger.exit(ZWaveRediscoveryNeededReturnValue.LostFailed);
       return ZWaveRediscoveryNeededReturnValue.LostFailed;
     }
-
   }
 
   /*
@@ -2309,6 +2448,7 @@ public class ApplicationLayerImpl implements ApplicationLayer,
   public DataPacket[] zwaveRemoveFailedNodeId(int nodeId)
       throws FrameLayerException
   {
+    logger.entry(nodeId);
     DataPacket req = new DataPacket();
     req.addPayload(nodeId);
     TXStatus rc = sessionLayer.requestWithVariableReturnsAndResponses(
@@ -2327,9 +2467,11 @@ public class ApplicationLayerImpl implements ApplicationLayer,
         }
       } catch (NullPointerException e)
       {
+        logger.exit(rc.getResponses());
         return rc.getResponses();
       }
     }
+    logger.exit(rc.getResponses());
     return rc.getResponses();
   }
 
@@ -2343,6 +2485,7 @@ public class ApplicationLayerImpl implements ApplicationLayer,
   public NodeStatus zwaveRemoveNodeFromNetwork(Mode mode)
       throws FrameLayerException, ApplicationLayerException
   {
+    logger.entry(mode);
     DataPacket req = new DataPacket();
     req.addPayload(mode.get());
     NodeStatus status = NodeStatus.Done;
@@ -2364,6 +2507,7 @@ public class ApplicationLayerImpl implements ApplicationLayer,
       }
       status = NodeStatus.getByVal(rc.getResponse().getPayload()[0]);
     }
+    logger.exit(status);
     return status;
   }
 
@@ -2377,12 +2521,14 @@ public class ApplicationLayerImpl implements ApplicationLayer,
   public boolean zwaveReplaceFailedNode(int nodeId) throws FrameLayerException,
       ApplicationLayerException
   {
+    logger.entry(nodeId);
     DataPacket req = new DataPacket();
     req.addPayload(nodeId);
     boolean rc = sessionLayer.requestWithNoResponse(
         DataFrame.CommandType.CmdZWaveReplaceFailedNode, req);
     if (!rc)
       throw new ApplicationLayerException("CMD_ZWaveReplaceFailedNode");
+    logger.exit(rc);
     return rc;
   }
 
@@ -2395,12 +2541,14 @@ public class ApplicationLayerImpl implements ApplicationLayer,
   public void zwaveReplicationReceiveComplete() throws FrameLayerException,
       ApplicationLayerException
   {
+    logger.entry();
     DataPacket req = new DataPacket();
     boolean rc = sessionLayer.requestWithNoResponse(
         DataFrame.CommandType.CmdZWaveReplicationCommandComplete, req);
     if (!rc)
       throw new ApplicationLayerException(
           "CMD_ZWaveREPLICATION_COMMAND_COMPLETE");
+    logger.exit();
   }
 
   /*
@@ -2413,6 +2561,7 @@ public class ApplicationLayerImpl implements ApplicationLayer,
   public TXStatus zwaveReplicationSend(int nodeId, int[] data,
       TXOption[] txOptions) throws FrameLayerException
   {
+    logger.entry(nodeId, data, txOptions);
     if (data == null)
     {
       throw new NullPointerException("data");
@@ -2431,9 +2580,12 @@ public class ApplicationLayerImpl implements ApplicationLayer,
         DataFrame.CommandType.CmdZWaveReplicationSendData, req, 2, true);
     if (rc == TXStatus.CompleteOk)
     {
-      return TXStatus.getByVal(rc.getResponses()[1].getPayload()[0]);
+      TXStatus status = TXStatus.getByVal(rc.getResponses()[1].getPayload()[0]);
+      logger.exit(status);
+      return status;
     } else
     {
+      logger.exit(rc);
       return rc;
     }
   }
@@ -2447,15 +2599,19 @@ public class ApplicationLayerImpl implements ApplicationLayer,
    */
   public TXStatus zwaveRequestNetworkUpdate() throws FrameLayerException
   {
+    logger.entry();
     DataPacket req = new DataPacket();
     TXStatus rc = sessionLayer.requestWithMultipleResponses(
         DataFrame.CommandType.CmdZWaveRequestNetworkUpdate, req, 2, true,
         TIMEOUT);
     if (rc == TXStatus.CompleteOk)
     {
-      return TXStatus.getByVal(rc.getResponses()[1].getPayload()[0]);
+      TXStatus status = TXStatus.getByVal(rc.getResponses()[1].getPayload()[0]);
+      logger.exit(status);
+      return status;
     } else
     {
+      logger.exit(rc);
       return rc;
     }
   }
@@ -2469,6 +2625,7 @@ public class ApplicationLayerImpl implements ApplicationLayer,
    */
   public TXStatus zwaveRequestNodeInfo(int nodeId) throws FrameLayerException
   {
+    logger.entry();
     logger.debug("Requesting node info from node {}", nodeId);
 
     DataPacket req = new DataPacket();
@@ -2488,6 +2645,7 @@ public class ApplicationLayerImpl implements ApplicationLayer,
       }, TIMEOUT, TimeUnit.MILLISECONDS);
 
     }
+    logger.exit(rc);
     return rc;
   }
 
@@ -2500,6 +2658,7 @@ public class ApplicationLayerImpl implements ApplicationLayer,
   public RequestNeighbor zwaveRequestNodeNeighborUpdate(int nodeId)
       throws FrameLayerException
   {
+    logger.entry(nodeId);
     DataPacket req = new DataPacket();
     req.addPayload(nodeId);
     TXStatus rc = sessionLayer.requestWithMultipleResponses(
@@ -2507,9 +2666,13 @@ public class ApplicationLayerImpl implements ApplicationLayer,
 
     if (rc == TXStatus.CompleteOk)
     {
-      return RequestNeighbor.getByVal(rc.getResponses()[1].getPayload()[0]);
+      RequestNeighbor neighbor = RequestNeighbor.getByVal(rc.getResponses()[1]
+          .getPayload()[0]);
+      logger.exit(neighbor);
+      return neighbor;
     } else
     {
+      logger.exit(RequestNeighbor.UpdateFailed);
       return RequestNeighbor.UpdateFailed;
     }
   }
@@ -2524,6 +2687,7 @@ public class ApplicationLayerImpl implements ApplicationLayer,
   public int zwaveRFPowerLevelSet(int powerLevel) throws FrameLayerException,
       ApplicationLayerException
   {
+    logger.entry(powerLevel);
     DataPacket req = new DataPacket();
     req.addPayload(powerLevel);
     TXStatus rc = sessionLayer.requestWithResponse(
@@ -2532,7 +2696,10 @@ public class ApplicationLayerImpl implements ApplicationLayer,
     {
       throw new ApplicationLayerException("CMD_ZWaveRF_POWER_LEVEL_SET");
     }
-    return rc.getResponse().getPayload()[0];
+
+    int response = rc.getResponse().getPayload()[0];
+    logger.exit(response);
+    return response;
   }
 
   /*
@@ -2545,11 +2712,15 @@ public class ApplicationLayerImpl implements ApplicationLayer,
   public TXStatus zwaveSendData(int nodeId, int[] data, TXOption[] txOptions)
       throws FrameLayerException
   {
+    logger.entry(nodeId, data, txOptions);
     if (data == null)
     {
       throw new NullPointerException("data");
     }
-    return zwaveSendData(nodeId, data, txOptions, TIMEOUT);
+
+    TXStatus status = zwaveSendData(nodeId, data, txOptions, TIMEOUT);
+    logger.exit(status);
+    return status;
   }
 
   /*
@@ -2562,6 +2733,7 @@ public class ApplicationLayerImpl implements ApplicationLayer,
   public TXStatus zwaveSendData(int nodeId, int[] data, TXOption[] txOptions,
       int timeout) throws FrameLayerException
   {
+    logger.entry(nodeId, data, txOptions, timeout);
     if (data == null)
     {
       throw new NullPointerException("data");
@@ -2580,9 +2752,12 @@ public class ApplicationLayerImpl implements ApplicationLayer,
         DataFrame.CommandType.CmdZWaveSendData, req, 2, true, timeout);
     if (rc == TXStatus.CompleteOk)
     {
-      return TXStatus.getByVal(rc.getResponses()[1].getPayload()[0]);
+      TXStatus status = TXStatus.getByVal(rc.getResponses()[1].getPayload()[0]);
+      logger.exit(status);
+      return status;
     } else
     {
+      logger.exit(rc);
       return rc;
     }
   }
@@ -2596,11 +2771,13 @@ public class ApplicationLayerImpl implements ApplicationLayer,
   public void zwaveSendDataAbort() throws FrameLayerException,
       ApplicationLayerException
   {
+    logger.entry();
     DataPacket req = new DataPacket();
     TXStatus rc = sessionLayer.requestWithResponse(
         DataFrame.CommandType.CmdZWaveSendDataAbort, req, true);
     if (rc != TXStatus.CompleteOk)
       throw new ApplicationLayerException("CMD_ZWaveSEND_DATA_ABORT");
+    logger.exit();
   }
 
   /*
@@ -2613,7 +2790,10 @@ public class ApplicationLayerImpl implements ApplicationLayer,
   public TXStatus zwaveSendDataMeta(int nodeId, int[] data, TXOption[] txOptions)
       throws FrameLayerException
   {
-    return zwaveSendDataMeta(nodeId, data, txOptions, TIMEOUT);
+    logger.entry(nodeId, data, txOptions);
+    TXStatus status = zwaveSendDataMeta(nodeId, data, txOptions, TIMEOUT);
+    logger.exit(status);
+    return status;
   }
 
   /*
@@ -2626,6 +2806,7 @@ public class ApplicationLayerImpl implements ApplicationLayer,
   public TXStatus zwaveSendDataMeta(int nodeId, int[] data,
       TXOption[] txOptions, int timeout) throws FrameLayerException
   {
+    logger.entry(nodeId, data, txOptions, timeout);
     if (data == null)
     {
       throw new NullPointerException("data");
@@ -2644,14 +2825,19 @@ public class ApplicationLayerImpl implements ApplicationLayer,
         DataFrame.CommandType.CmdZWaveSendDataMeta, req, 2, true, timeout);
     if (rc != TXStatus.CompleteOk)
     {
+      logger.exit(rc);
       return rc;
     }
-    return TXStatus.getByVal(rc.getResponses()[1].getPayload()[0]);
+
+    TXStatus status = TXStatus.getByVal(rc.getResponses()[1].getPayload()[0]);
+    logger.exit(status);
+    return status;
   }
 
   public TXStatus zwaveSendDataMulti(List<Integer> nodeIdList, int[] data,
       TXOption[] txOptions) throws FrameLayerException
   {
+    logger.entry(nodeIdList, data, txOptions);
     if (nodeIdList == null || data == null)
     {
       throw new NullPointerException("nodeIdList");
@@ -2671,9 +2857,12 @@ public class ApplicationLayerImpl implements ApplicationLayer,
         DataFrame.CommandType.CmdZWaveSendDataMulti, req, 2, true);
     if (rc == TXStatus.CompleteOk)
     {
-      return TXStatus.getByVal(rc.getResponses()[1].getPayload()[0]);
+      TXStatus status = TXStatus.getByVal(rc.getResponses()[1].getPayload()[0]);
+      logger.exit(status);
+      return status;
     } else
     {
+      logger.exit(rc);
       return rc;
     }
   }
@@ -2688,6 +2877,7 @@ public class ApplicationLayerImpl implements ApplicationLayer,
   public TXStatus zwaveSendNodeInformation(int destination, TXOption[] txOptions)
       throws FrameLayerException
   {
+    logger.entry(destination, txOptions);
     int txOptInt = 0;
     for (TXOption txOpt : txOptions)
       txOptInt |= txOpt.get();
@@ -2699,9 +2889,12 @@ public class ApplicationLayerImpl implements ApplicationLayer,
         DataFrame.CommandType.CmdZWaveSendNodeInformation, req, true);
     if (rc != TXStatus.CompleteOk)
     {
-      return TXStatus.getByVal(rc.getResponse().getPayload()[0]);
+      TXStatus status = TXStatus.getByVal(rc.getResponse().getPayload()[0]);
+      logger.exit(status);
+      return status;
     } else
     {
+      logger.exit(rc);
       return rc;
     }
   }
@@ -2717,7 +2910,11 @@ public class ApplicationLayerImpl implements ApplicationLayer,
   public TXStatus zwaveSendSlaveData(int sourceId, int destinationId,
       int[] data, TXOption[] txOptions) throws FrameLayerException
   {
-    return zwaveSendSlaveData(sourceId, destinationId, data, txOptions, TIMEOUT);
+    logger.entry();
+    TXStatus status = zwaveSendSlaveData(sourceId, destinationId, data,
+        txOptions, TIMEOUT);
+    logger.exit(status);
+    return status;
   }
 
   /*
@@ -2731,6 +2928,7 @@ public class ApplicationLayerImpl implements ApplicationLayer,
   public TXStatus zwaveSendSlaveData(int sourceId, int destinationId,
       int[] data, TXOption[] txOptions, int timeout) throws FrameLayerException
   {
+    logger.entry(sourceId, destinationId, data, txOptions, timeout);
     if (data == null)
     {
       throw new NullPointerException("data");
@@ -2753,13 +2951,17 @@ public class ApplicationLayerImpl implements ApplicationLayer,
           DataFrame.CommandType.CmdZWaveSendSlaveData, req, 2, true, timeout);
       if (rc == TXStatus.CompleteOk)
       {
-        return TXStatus.getByVal(rc.getResponses()[1].getPayload()[0]);
+        TXStatus status = TXStatus
+            .getByVal(rc.getResponses()[1].getPayload()[0]);
+        logger.exit(status);
+        return status;
       }
     } else
     {
       // rc = new TXStatus();
       rc = null;
     }
+    logger.exit(rc);
     return rc;
   }
 
@@ -2773,8 +2975,11 @@ public class ApplicationLayerImpl implements ApplicationLayer,
   public TXStatus zwaveSendSlaveNodeInformation(int sourceId,
       int destinationId, TXOption[] txOptions) throws FrameLayerException
   {
-    return zwaveSendSlaveNodeInformation(sourceId, destinationId, txOptions,
-        10000);
+    logger.entry(sourceId, destinationId, txOptions);
+    TXStatus status = zwaveSendSlaveNodeInformation(sourceId, destinationId,
+        txOptions, 10000);
+    logger.exit(status);
+    return status;
   }
 
   /*
@@ -2788,6 +2993,7 @@ public class ApplicationLayerImpl implements ApplicationLayer,
       int destinationId, TXOption[] txOptions, int timeout)
       throws FrameLayerException
   {
+    logger.entry(sourceId, destinationId, txOptions, timeout);
     TXStatus rc;
     if (libraryType.library == Library.ControllerBridgeLib)
     {
@@ -2805,13 +3011,17 @@ public class ApplicationLayerImpl implements ApplicationLayer,
           timeout);
       if (rc == TXStatus.CompleteOk)
       {
-        return TXStatus.getByVal(rc.getResponses()[1].getPayload()[0]);
+        TXStatus status = TXStatus
+            .getByVal(rc.getResponses()[1].getPayload()[0]);
+        logger.exit(status);
+        return status;
       }
     } else
     {
       // rc = new TXStatus();
       rc = null;
     }
+    logger.exit(rc);
     return rc;
   }
 
@@ -2825,6 +3035,7 @@ public class ApplicationLayerImpl implements ApplicationLayer,
   public TXStatus zwaveSendSucId(int nodeId, TXOption[] txOptions)
       throws FrameLayerException
   {
+    logger.entry(nodeId, txOptions);
     int txOptInt = 0;
     for (TXOption txOpt : txOptions)
       txOptInt |= txOpt.get();
@@ -2837,9 +3048,12 @@ public class ApplicationLayerImpl implements ApplicationLayer,
 
     if ((rc == TXStatus.CompleteOk) && (rc.getResponses()[1].getLength() == 1))
     {
-      return TXStatus.getByVal(rc.getResponses()[1].getPayload()[0]);
+      TXStatus status = TXStatus.getByVal(rc.getResponses()[1].getPayload()[0]);
+      logger.exit(status);
+      return status;
     } else
     {
+      logger.exit(rc);
       return rc;
     }
   }
@@ -2853,6 +3067,7 @@ public class ApplicationLayerImpl implements ApplicationLayer,
   public SerialApiCapabilities zwaveSerialApiGetCapabilities()
       throws FrameLayerException, ApplicationLayerException
   {
+    logger.entry();
     DataPacket req = new DataPacket();
 
     TXStatus rc = sessionLayer.requestWithResponse(
@@ -2879,6 +3094,8 @@ public class ApplicationLayerImpl implements ApplicationLayer,
       }
       serialApiCapabilities.getCapabilityMask().store(temp);
     }
+
+    logger.exit(serialApiCapabilities);
     return serialApiCapabilities;
   }
 
@@ -2892,6 +3109,7 @@ public class ApplicationLayerImpl implements ApplicationLayer,
   public int[] zwaveSerialApiSetTimeout(int acknowledgeTimeout, int timeout)
       throws FrameLayerException, ApplicationLayerException
   {
+    logger.entry(acknowledgeTimeout, timeout);
     DataPacket req = new DataPacket();
 
     req.addPayload(acknowledgeTimeout);
@@ -2903,6 +3121,7 @@ public class ApplicationLayerImpl implements ApplicationLayer,
     // Get the payload as it contains the old ackTimeout and byteTimeout which
     // previously was present in the ZW module
     int[] payload = rc.getResponse().getPayload();
+    logger.exit(payload);
     return payload;
   }
 
@@ -2916,11 +3135,13 @@ public class ApplicationLayerImpl implements ApplicationLayer,
   public void zwaveSerialApiSoftReset() throws FrameLayerException,
       ApplicationLayerException
   {
+    logger.entry();
     DataPacket req = new DataPacket();
     TXStatus rc = sessionLayer.requestWithResponse(
         DataFrame.CommandType.CmdSerialApiSoftReset, req, true);
     if (rc != TXStatus.CompleteOk)
       throw new ApplicationLayerException("CMD_SERIAL_API_SOFT_RESET");
+    logger.exit();
   }
 
   /*
@@ -2932,12 +3153,14 @@ public class ApplicationLayerImpl implements ApplicationLayer,
   public void zwaveSetDefault() throws FrameLayerException,
       ApplicationLayerException
   {
+    logger.entry();
     DataPacket req = new DataPacket();
     TXStatus rc = sessionLayer.requestWithResponse(
         DataFrame.CommandType.CmdZWaveSetDefault, req, true);
     if (rc != TXStatus.CompleteOk)
       throw new ApplicationLayerException("CMD_ZWaveSET_DEFAULT");
     zwaveEnumerateNodes();
+    logger.exit();
   }
 
   /*
@@ -2950,12 +3173,14 @@ public class ApplicationLayerImpl implements ApplicationLayer,
   public boolean zwaveSetLearnMode(boolean learnMode)
       throws FrameLayerException, ApplicationLayerException
   {
+    logger.entry(learnMode);
     DataPacket req = new DataPacket();
     req.addPayload(learnMode ? 1 : 0);
     boolean rc = sessionLayer.requestWithNoResponse(
         DataFrame.CommandType.CmdZWaveSetLearnMode, req);
     if (!rc)
       throw new ApplicationLayerException("CMD_ZWaveSET_LEARN_MODE");
+    logger.exit(rc);
     return rc;
   }
 
@@ -2970,6 +3195,7 @@ public class ApplicationLayerImpl implements ApplicationLayer,
       int[] nodeParameter) throws FrameLayerException,
       ApplicationLayerException
   {
+    logger.entry(listening, generic, specific, nodeParameter);
     if (nodeParameter == null)
     {
       throw new NullPointerException("nodeParm");
@@ -2985,6 +3211,7 @@ public class ApplicationLayerImpl implements ApplicationLayer,
     if (!rc)
       throw new ApplicationLayerException(
           "CMD_SERIAL_API_APPL_NODE_INFORMATION");
+    logger.exit();
   }
 
   /*
@@ -2997,6 +3224,7 @@ public class ApplicationLayerImpl implements ApplicationLayer,
   public boolean zwaveSetPromiscuousMode(boolean enable)
       throws FrameLayerException, ApplicationLayerException
   {
+    logger.entry(enable);
     if (libraryType.library == Library.InstallerLib)
     {
       DataPacket req = new DataPacket();
@@ -3011,9 +3239,11 @@ public class ApplicationLayerImpl implements ApplicationLayer,
           DataFrame.CommandType.CmdZWaveSetPromiscuousMode, req);
       if (!rc)
         throw new ApplicationLayerException("CMD_ZWAVE_SET_PROMISCUOUS_MODE");
+      logger.exit(true);
       return true;
     } else
     {
+      logger.exit(false);
       return false;
     }
   }
@@ -3028,12 +3258,14 @@ public class ApplicationLayerImpl implements ApplicationLayer,
   public void zwaveSetRFReceiveMode(int mode) throws FrameLayerException,
       ApplicationLayerException
   {
+    logger.entry(mode);
     DataPacket req = new DataPacket();
     req.addPayload(mode);
     boolean rc = sessionLayer.requestWithNoResponse(
         DataFrame.CommandType.CmdZWaveSetRFReceiveMode, req);
     if (!rc)
       throw new ApplicationLayerException("CMD_ZWaveSET_RF_RECEIVE_MODE");
+    logger.exit();
   }
 
   /*
@@ -3046,6 +3278,7 @@ public class ApplicationLayerImpl implements ApplicationLayer,
   public int zwaveSetSelfAsSuc(boolean sucState, int capabilities)
       throws FrameLayerException, ApplicationLayerException
   {
+    logger.entry(sucState, capabilities);
     int suc = 0;
     if (secondaryController)
       return -1;
@@ -3055,14 +3288,20 @@ public class ApplicationLayerImpl implements ApplicationLayer,
     controllerNodeId = ret.getNodeId();
 
     if (controllerNodeId == 0)
+    {
+      logger.exit(-1);
       return -1;
+    }
 
     if (zwaveSetSucNodeId(controllerNodeId, sucState,
         new TXOption[] { TXOption.TransmitOptionNone }, capabilities))
     {
       suc = controllerNodeId;
+      logger.exit(suc);
       return suc;
     }
+
+    logger.exit(-1);
     return -1;
   }
 
@@ -3076,6 +3315,7 @@ public class ApplicationLayerImpl implements ApplicationLayer,
   public boolean zwaveSetSlaveLearnMode(int node, int mode)
       throws FrameLayerException
   {
+    logger.entry(node, mode);
     if (libraryType.library == Library.ControllerBridgeLib)
     {
       DataPacket req = new DataPacket();
@@ -3086,9 +3326,13 @@ public class ApplicationLayerImpl implements ApplicationLayer,
           DataFrame.CommandType.CmdZWaveSetSlaveLearnMode, req, true);
       if (rc == TXStatus.CompleteOk)
       {
-        return (rc.getResponse().getPayload()[0] != 0);
+        boolean response = (rc.getResponse().getPayload()[0] != 0);
+        logger.exit(response);
+        return response;
       }
     }
+
+    logger.exit(false);
     return false;
   }
 
@@ -3102,6 +3346,7 @@ public class ApplicationLayerImpl implements ApplicationLayer,
       int generic, int specific, int[] nodeParameter)
       throws FrameLayerException, ApplicationLayerException
   {
+    logger.entry(nodeId, listening, generic, specific, nodeParameter);
     if (nodeParameter == null)
     {
       throw new NullPointerException("nodeParameter");
@@ -3121,6 +3366,7 @@ public class ApplicationLayerImpl implements ApplicationLayer,
       if (!rc)
         throw new ApplicationLayerException(
             "CMD_SERIAL_API_APPL_SLAVE_NODE_INFO");
+      logger.exit();
     }
   }
 
@@ -3135,12 +3381,17 @@ public class ApplicationLayerImpl implements ApplicationLayer,
   public boolean zwaveSetSucNodeId(int nodeId, boolean sucState,
       TXOption[] txOptions, int capabilities) throws FrameLayerException
   {
+    logger.entry(nodeId, sucState, txOptions, capabilities);
     if (nodeId == controllerNodeId)
     {
-      return thisSUCNodeId(nodeId, sucState, txOptions, capabilities);
+      boolean value = thisSUCNodeId(nodeId, sucState, txOptions, capabilities);
+      logger.exit(value);
+      return value;
     } else
     {
-      return otherSUCNodeId(nodeId, sucState, txOptions, capabilities);
+      boolean value = otherSUCNodeId(nodeId, sucState, txOptions, capabilities);
+      logger.exit(value);
+      return value;
     }
   }
 
@@ -3153,12 +3404,14 @@ public class ApplicationLayerImpl implements ApplicationLayer,
   public void zwaveStopLearnMode() throws FrameLayerException,
       ApplicationLayerException
   {
+    logger.entry();
     DataPacket req = new DataPacket();
     req.addPayload(Mode.NodeStop.get());
     boolean rc = sessionLayer.requestWithNoResponse(
         DataFrame.CommandType.CmdZWaveAddNodeToNetwork, req);
     if (!rc)
       throw new ApplicationLayerException("CMD_ZWaveADD_NODE_TO_NETWORK");
+    logger.exit();
   }
 
   /*
@@ -3171,9 +3424,12 @@ public class ApplicationLayerImpl implements ApplicationLayer,
   public boolean zwaveStoreHomeId(int homeId, int nodeId)
       throws FrameLayerException
   {
+    logger.entry(homeId, nodeId);
     DataPacket req = new DataPacket();
-    return sessionLayer.requestWithNoResponse(
+    boolean value = sessionLayer.requestWithNoResponse(
         DataFrame.CommandType.CmdStoreHomeId, req);
+    logger.exit(value);
+    return value;
   }
 
   /*
@@ -3186,6 +3442,7 @@ public class ApplicationLayerImpl implements ApplicationLayer,
   public TXStatus zwaveStoreNodeInfo(int nodeId, Node nodeInfo)
       throws FrameLayerException
   {
+    logger.entry(nodeId, nodeInfo);
     if (nodeInfo == null)
     {
       throw new NullPointerException("nodeInfo");
@@ -3204,9 +3461,12 @@ public class ApplicationLayerImpl implements ApplicationLayer,
 
     if (rc == TXStatus.CompleteOk)
     {
-      return TXStatus.getByVal(rc.getResponses()[1].getPayload()[0]);
+      TXStatus status = TXStatus.getByVal(rc.getResponses()[1].getPayload()[0]);
+      logger.exit(status);
+      return status;
     } else
     {
+      logger.exit(rc);
       return rc;
     }
   }
@@ -3222,6 +3482,8 @@ public class ApplicationLayerImpl implements ApplicationLayer,
       int testCount, TXOption[] testTXOptions, int maxLength, int[] testNodeMask)
       throws FrameLayerException
   {
+    logger.entry(testCmd, testDelay, testPayloadLength, testCount,
+        testTXOptions, maxLength, testNodeMask);
     if (testNodeMask == null)
     {
       throw new NullPointerException("testNodeMask");
@@ -3247,10 +3509,13 @@ public class ApplicationLayerImpl implements ApplicationLayer,
         DataFrame.CommandType.CmdSerialApiTest, req, true);
     if (rc != TXStatus.CompleteOk)
     {
+      logger.exit(TXStatus.CompleteFail.get());
       return TXStatus.CompleteFail.get();
     } else
     {
-      return rc.getResponse().getPayload()[0];
+      int response = rc.getResponse().getPayload()[0];
+      logger.exit(response);
+      return response;
     }
   }
 

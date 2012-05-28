@@ -31,17 +31,10 @@ package net.gregrapp.jhouse.interfaces.zwave;
  */
 public class SessionStatistics
 {
-  // <summary>
-  //
-  // </summary>
   public SessionStatistics()
   {
   }
 
-  // <summary>
-  //
-  // </summary>
-  // <param name="stats"></param>
   public SessionStatistics(SessionStatistics stats)
   {
     if (stats == null)
@@ -55,24 +48,13 @@ public class SessionStatistics
     this.receiveTimeouts = stats.receiveTimeouts;
   }
 
-  // <summary>
-  //
-  // </summary>
   int transmittedPackets;
-  // <summary>
-  //
-  // </summary>
+
   int receivedPackets;
-  // <summary>
-  //
-  // </summary>
+
   int duplicatePackets;
-  // <summary>
-  //
-  // </summary>
+
   int asyncPackets;
-  // <summary>
-  //
-  // </summary>
+
   int receiveTimeouts;
 }

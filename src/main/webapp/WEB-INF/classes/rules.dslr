@@ -1,6 +1,6 @@
 package net.gregrapp.jhouse
 expander jhouse.dsl
-
+ 
 rule "Master Bath Door Close / Turn Master Bath Light On"
 when
 	Device 31 value changed to 0
@@ -57,14 +57,14 @@ end
 
 rule "Email When Alarm Armed"
 when
-	Device 51 value changed to 0x02
+	Device 51 value changed to 2
 then
 	Send email to "gdrapp@gmail.com" with subject "Security System ARMED" and message "The security system has been ARMED"
 end
 
 rule "Email When Alarm Disarmed"
 when
-	Device 51 value changed to 0x04
+	Device 51 value changed to 4
 then
 	Send email to "gdrapp@gmail.com" with subject "Security System DISARMED" and message "The security system has been DISARMED"
 end
@@ -73,7 +73,7 @@ rule "Is Sunrise"
 when
 	Is Sunrise
 then
-	Send email to "gdrapp@gmail.com" with subject "SUNRISE" and message "Its SUNRISE"
+	Send email to "gdrapp@gmail.com" with subject "SUNRISE" and message "Its SUNRISE1"
 	Send APNs message to user 1 with text "It's SUNRISE"
 end
 

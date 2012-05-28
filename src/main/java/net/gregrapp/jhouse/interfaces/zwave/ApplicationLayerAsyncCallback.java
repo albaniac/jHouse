@@ -29,14 +29,12 @@ package net.gregrapp.jhouse.interfaces.zwave;
  * @author Greg Rapp
  *
  */
-// <summary>
-// 
-// </summary>
 public interface ApplicationLayerAsyncCallback 
 {
-  // <summary>
-  // 
-  // </summary>
-  // <param name="frame"></param>
+  /**
+   * Data packet received callback
+   * @param cmd command type
+   * @param packet packet
+   */
   void dataPacketReceived(DataFrame.CommandType cmd, DataPacket packet);
 }

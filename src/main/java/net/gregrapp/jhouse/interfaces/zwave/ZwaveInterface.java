@@ -14,9 +14,9 @@ import javax.annotation.PreDestroy;
 
 import net.gregrapp.jhouse.device.drivers.types.DeviceDriver;
 import net.gregrapp.jhouse.device.drivers.types.ZwaveDeviceDriver;
+import net.gregrapp.jhouse.interfaces.AbstractInterface;
 import net.gregrapp.jhouse.interfaces.InterfaceCallback;
 import net.gregrapp.jhouse.interfaces.NodeInterface;
-import net.gregrapp.jhouse.interfaces.TransportInterface;
 import net.gregrapp.jhouse.interfaces.zwave.ApplicationLayerImpl.MemoryGetId;
 import net.gregrapp.jhouse.interfaces.zwave.ApplicationLayerImpl.SerialApiCapabilities;
 import net.gregrapp.jhouse.interfaces.zwave.Constants.CommandBasic;
@@ -34,11 +34,9 @@ import net.gregrapp.jhouse.interfaces.zwave.command.CommandClassHail;
 import net.gregrapp.jhouse.interfaces.zwave.command.CommandClassManufacturerSpecific;
 import net.gregrapp.jhouse.interfaces.zwave.command.CommandClassSensorBinary;
 import net.gregrapp.jhouse.interfaces.zwave.command.CommandClassSwitchMultilevel;
-import net.gregrapp.jhouse.transports.Transport;
-import net.gregrapp.jhouse.transports.TransportException;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.slf4j.ext.XLogger;
+import org.slf4j.ext.XLoggerFactory;
 
 /**
  * Z-Wave network interface
@@ -46,7 +44,7 @@ import org.slf4j.LoggerFactory;
  * @author Greg Rapp
  * 
  */
-public class ZwaveInterface extends TransportInterface implements
+public class ZwaveInterface extends AbstractInterface implements
     ApplicationLayerAsyncCallback, NodeInterface
 {
   // Amount of time that must pass before connection is restarted
@@ -55,8 +53,8 @@ public class ZwaveInterface extends TransportInterface implements
   // Interval between keep alive attempts
   private static final int keepaliveIntervalSeconds = 20;
 
-  private static final Logger logger = LoggerFactory
-      .getLogger(ZwaveInterface.class);
+  private static final XLogger logger = XLoggerFactory
+      .getXLogger(ZwaveInterface.class);
 
   private ApplicationLayer appLayer;
 
@@ -69,13 +67,27 @@ public class ZwaveInterface extends TransportInterface implements
 
   private SessionLayer sessionLayer;
 
-  public ZwaveInterface(Transport transport)
+  // Property - HOST
+  private static final String PROPERTY_HOST = "HOST";
+
+  // Property - PORT
+  private static final String PROPERTY_PORT = "PORT";
+
+  /*
+   * public ZwaveInterface(Transport transport) { super(transport); }
+   */
+  public ZwaveInterface(Map<String, String> properties)
   {
-    super(transport);
+    super(properties);
+
+    logger.entry();
+    this.init();
+    logger.exit();
   }
 
   public void attachDeviceDriver(final DeviceDriver driver)
   {
+    logger.entry(driver);
     if (!(driver instanceof ZwaveDeviceDriver))
     {
       throw new ClassCastException(
@@ -122,10 +134,12 @@ public class ZwaveInterface extends TransportInterface implements
 
       }
     }
+    logger.exit();
   }
 
   private void cmdApplicationCommandHandler(int[] payload)
   {
+    logger.entry(payload);
     int nodeId = payload[1];
 
     if (payload[3] == CommandClass.COMMAND_CLASS_BASIC.get())
@@ -239,15 +253,39 @@ public class ZwaveInterface extends TransportInterface implements
             ((CommandClassHail) device).hail();
       }
     }
+
+    logger.exit();
   }
 
-  public void dataPacketReceived(CommandType cmd, DataPacket packet)
+  public void dataPacketReceived(final CommandType cmd, final DataPacket packet)
   {
-    int[] payload = packet.getPayload();
-    if (cmd == DataFrame.CommandType.CmdApplicationCommandHandler)
+    logger.entry(cmd, packet);
+
+    logger.debug("Creating packet worker thread");
+    Thread thread = new Thread(new Runnable()
     {
-      cmdApplicationCommandHandler(payload);
-    }
+      @Override
+      public void run()
+      {
+        logger.entry();
+
+        final int[] payload = packet.getPayload();
+        logger.trace("Payload = [{}]", payload);
+
+        if (cmd == DataFrame.CommandType.CmdApplicationCommandHandler)
+        {
+          cmdApplicationCommandHandler(payload);
+        }
+
+        logger.exit();
+      }
+    });
+
+    thread.setDaemon(true);
+    logger.debug("Starting packet worker thread");
+    thread.start();
+
+    logger.exit();
   }
 
   /*
@@ -259,9 +297,12 @@ public class ZwaveInterface extends TransportInterface implements
   @PreDestroy
   public void destroy()
   {
+    logger.entry();
     logger.info("Destroying Z-Wave interface");
     interfaceReadyExecutor.shutdownNow();
+    keepaliveExecutor.shutdownNow();
     appLayer.destroy();
+    logger.exit();
   }
 
   /**
@@ -272,6 +313,7 @@ public class ZwaveInterface extends TransportInterface implements
    */
   public String getNodeNeighbors(int nodeId)
   {
+    logger.entry(nodeId);
     String nodes = null;
 
     try
@@ -286,13 +328,14 @@ public class ZwaveInterface extends TransportInterface implements
       logger
           .warn("Error sending routing table request to node [{}]", nodeId, e);
     }
-
+    logger.exit(nodes);
     return nodes;
   }
 
   @Override
   public HashMap<String, HashMap<String, Object>> getNodes()
   {
+    logger.entry();
     HashMap<String, HashMap<String, Object>> nodes = new HashMap<String, HashMap<String, Object>>();
 
     HashMap<String, Object> node;
@@ -315,6 +358,7 @@ public class ZwaveInterface extends TransportInterface implements
       nodes.put(String.valueOf(n.getId()), node);
     }
 
+    logger.exit(nodes);
     return nodes;
   }
 
@@ -325,31 +369,48 @@ public class ZwaveInterface extends TransportInterface implements
    */
   public void init()
   {
+    logger.entry();
+
     // Kill the executor if it's already running
     if (interfaceReadyExecutor != null)
       interfaceReadyExecutor.shutdownNow();
 
     interfaceReadyExecutor = Executors.newSingleThreadScheduledExecutor();
 
-    try
+    if (this.properties != null && this.properties.containsKey(PROPERTY_HOST)
+        && this.properties.containsKey(PROPERTY_PORT))
     {
-      this.transport.init();
-    } catch (TransportException e)
-    {
-      logger.error(
-          "Error opening transport, aborting Z-Wave initialization [{}]",
-          e.getMessage());
-      return;
+      String host = this.properties.get(PROPERTY_HOST);
+      logger.debug("Read property [{}] with value [{}]", PROPERTY_HOST, host);
+
+      int port;
+
+      try
+      {
+        port = Integer.valueOf(this.properties.get(PROPERTY_PORT));
+        logger.debug("Read property [{}] with value [{}]", PROPERTY_PORT, port);
+      } catch (NumberFormatException e)
+      {
+        logger.error(
+            "Property [{}] is invalid - [{}] is not a valid TCP port number",
+            PROPERTY_PORT, this.properties.get(PROPERTY_PORT));
+
+        logger.exit(false);
+        return;
+      }
+
+      FrameLayer frameLayer = new FrameLayerImpl(host, port);
+
+      sessionLayer = new SessionLayerImpl(frameLayer);
+      appLayer = new ApplicationLayerImpl(sessionLayer);
+      appLayer.setCallbackHandler(this);
+      
+      this.zwaveInit();
+
+      this.startKeepalives();
     }
 
-    FrameLayer frameLayer = new FrameLayerImpl(this.transport);
-    sessionLayer = new SessionLayerImpl(frameLayer);
-    appLayer = new ApplicationLayerImpl(sessionLayer);
-    appLayer.setCallbackHandler(this);
-
-    this.zwaveInit();
-
-    this.startKeepalives();
+    logger.exit();
   }
 
   /**
@@ -360,13 +421,17 @@ public class ZwaveInterface extends TransportInterface implements
    */
   public void requestNodeInfo(int nodeId)
   {
+    logger.entry(nodeId);
+    
     try
     {
       appLayer.zwaveRequestNodeInfo(nodeId);
     } catch (FrameLayerException e)
     {
-      logger.error("Error requesting node info from node {}", nodeId, e);
+      logger.error("Error requesting node info from node [{}]", nodeId, e);
     }
+    
+    logger.exit();
   }
 
   /**
@@ -374,6 +439,7 @@ public class ZwaveInterface extends TransportInterface implements
    */
   private void sendKeepalive()
   {
+    logger.entry();
     try
     {
       VersionInfoType zwaveVersion = appLayer.zwaveGetVersion();
@@ -382,12 +448,15 @@ public class ZwaveInterface extends TransportInterface implements
     } catch (FrameLayerException e)
     {
       logger.error("Error retrieving version info from ZWave controller", e);
+      logger.exit();
       return;
     } catch (ApplicationLayerException e)
     {
       logger.error("Error retrieving version info from ZWave controller", e);
+      logger.exit();
       return;
     }
+    logger.exit();
   }
 
   /**
@@ -395,6 +464,7 @@ public class ZwaveInterface extends TransportInterface implements
    */
   private void setInterfaceReady(boolean ready)
   {
+    logger.entry(ready);
     this.interfaceReady = ready;
 
     if (ready && this.drivers != null)
@@ -410,6 +480,7 @@ public class ZwaveInterface extends TransportInterface implements
         }
       }
     }
+    logger.exit();
   }
 
   /**
@@ -417,6 +488,7 @@ public class ZwaveInterface extends TransportInterface implements
    */
   private void startKeepalives()
   {
+    logger.entry();
     logger.debug("Starting keepalive executor");
 
     keepaliveExecutor = Executors.newSingleThreadScheduledExecutor();
@@ -452,6 +524,8 @@ public class ZwaveInterface extends TransportInterface implements
 
       }
     }, 0, keepaliveIntervalSeconds, TimeUnit.SECONDS);
+
+    logger.exit();
   }
 
   /**
@@ -462,6 +536,7 @@ public class ZwaveInterface extends TransportInterface implements
    */
   public boolean zwaveAssignReturnRoute(int nodeId)
   {
+    logger.entry(nodeId);
     TXStatus status = null;
     int controllerNodeId = appLayer.getControllerNodeId();
 
@@ -475,9 +550,14 @@ public class ZwaveInterface extends TransportInterface implements
     }
 
     if (status == TXStatus.CompleteOk)
+    {
+      logger.exit(true);
       return true;
-    else
+    } else
+    {
+      logger.exit(false);
       return false;
+    }
   }
 
   /**
@@ -488,6 +568,7 @@ public class ZwaveInterface extends TransportInterface implements
    */
   public boolean zwaveDeleteReturnRoute(int nodeId)
   {
+    logger.entry(nodeId);
     TXStatus status = null;
 
     try
@@ -500,9 +581,14 @@ public class ZwaveInterface extends TransportInterface implements
     }
 
     if (status == TXStatus.CompleteOk)
+    {
+      logger.exit(true);
       return true;
-    else
+    } else
+    {
+      logger.exit(false);
       return false;
+    }
   }
 
   /**
@@ -510,6 +596,7 @@ public class ZwaveInterface extends TransportInterface implements
    */
   public void zwaveInit()
   {
+    logger.entry();
     try
     {
       VersionInfoType zwaveVersion = appLayer.zwaveGetVersion();
@@ -518,10 +605,12 @@ public class ZwaveInterface extends TransportInterface implements
     } catch (FrameLayerException e)
     {
       logger.error("Error retrieving version info from ZWave controller", e);
+      logger.exit();
       return;
     } catch (ApplicationLayerException e)
     {
       logger.error("Error retrieving version info from ZWave controller", e);
+      logger.exit();
       return;
     }
 
@@ -534,11 +623,13 @@ public class ZwaveInterface extends TransportInterface implements
     {
       logger.error(
           "Error retrieving home ID and node ID from ZWave controller", e);
+      logger.exit();
       return;
     } catch (ApplicationLayerException e)
     {
       logger.error(
           "Error retrieving home ID and node ID from ZWave controller", e);
+      logger.exit();
       return;
     }
 
@@ -559,10 +650,12 @@ public class ZwaveInterface extends TransportInterface implements
     } catch (ApplicationLayerException e)
     {
       logger.error("Error retrieving ZWave controller capabilities", e);
+      logger.exit();
       return;
     } catch (FrameLayerException e)
     {
       logger.error("Error retrieving ZWave controller capabilities", e);
+      logger.exit();
       return;
     }
 
@@ -585,10 +678,12 @@ public class ZwaveInterface extends TransportInterface implements
     } catch (FrameLayerException e)
     {
       logger.error("Error retrieving ZWave serial API capabilities", e);
+      logger.exit();
       return;
     } catch (ApplicationLayerException e)
     {
       logger.error("Error retrieving ZWave serial API capabilities", e);
+      logger.exit();
       return;
     }
 
@@ -607,6 +702,7 @@ public class ZwaveInterface extends TransportInterface implements
     }
 
     setInterfaceReady(true);
+    logger.exit();
   }
 
   /**
@@ -617,6 +713,7 @@ public class ZwaveInterface extends TransportInterface implements
    */
   public boolean zwaveRequestNodeNeighborUpdate(int nodeId)
   {
+    logger.entry(nodeId);
     RequestNeighbor status = null;
 
     try
@@ -629,9 +726,14 @@ public class ZwaveInterface extends TransportInterface implements
     }
 
     if (status == RequestNeighbor.UpdateDone)
+    {
+      logger.exit(true);
       return true;
-    else
+    } else
+    {
+      logger.exit(false);
       return false;
+    }
   }
 
   /**
@@ -643,18 +745,24 @@ public class ZwaveInterface extends TransportInterface implements
    */
   public boolean zwaveSendData(int nodeId, int... data)
   {
+    logger.entry(nodeId, data);
     try
     {
       TXStatus txStatus = appLayer.zwaveSendData(nodeId, data,
           new TXOption[] { TXOption.TransmitOptionAcknowledge,
               TXOption.TransmitOptionAutoRoute });
       if (txStatus == TXStatus.CompleteOk)
+      {
+        logger.exit(true);
         return true;
+      }
     } catch (FrameLayerException e)
     {
+      logger.exit(false);
       return false;
     }
 
+    logger.exit(false);
     return false;
   }
 }

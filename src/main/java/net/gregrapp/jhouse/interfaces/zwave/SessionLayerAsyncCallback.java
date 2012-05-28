@@ -31,10 +31,11 @@ package net.gregrapp.jhouse.interfaces.zwave;
  */
 public interface SessionLayerAsyncCallback
 {
-  // <summary>
-  // 
-  // </summary>
-  // <param name="cmd"></param>
-  // <param name="packet"></param>
+  /**
+   * Data packet received callback
+   * 
+   * @param cmd command type
+   * @param packet packet
+   */
   void dataPacketReceived(DataFrame.CommandType cmd, DataPacket packet);
 }

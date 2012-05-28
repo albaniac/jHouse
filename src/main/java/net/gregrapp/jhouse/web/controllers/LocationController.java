@@ -10,8 +10,8 @@ import java.util.List;
 import net.gregrapp.jhouse.models.UserLocation;
 import net.gregrapp.jhouse.services.LocationService;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.slf4j.ext.XLogger;
+import org.slf4j.ext.XLoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -35,8 +35,8 @@ import org.springframework.web.bind.annotation.RequestMethod;
 @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_LOCATION_USER')")
 public class LocationController
 {
-  private static final Logger logger = LoggerFactory
-      .getLogger(LocationController.class);
+  private static final XLogger logger = XLoggerFactory
+      .getXLogger(LocationController.class);
 
   @Autowired
   private LocationService locationService;
@@ -65,6 +65,7 @@ public class LocationController
    */
   private String getCurrentUsername()
   {
+    logger.entry();
     String username = null;
     Object principal = SecurityContextHolder.getContext().getAuthentication()
         .getPrincipal();
@@ -76,6 +77,7 @@ public class LocationController
       username = principal.toString();
     }
 
+    logger.exit(username);
     return username;
   }
 
@@ -88,6 +90,7 @@ public class LocationController
   @RequestMapping(value = "/user", method = RequestMethod.PUT)
   public void putUserLocation(@RequestBody UserLocation userLocation)
   {
+    logger.entry(userLocation);
     String username = this.getCurrentUsername();
 
     if (username != null && !"".equals(username))
@@ -104,6 +107,8 @@ public class LocationController
     {
       logger.warn("Unable to retrieve username [{}] from SecurityContext", username);
     }
+    
+    logger.exit();
   }
   
   /**
@@ -112,6 +117,8 @@ public class LocationController
   @RequestMapping(value = "/newest", method = RequestMethod.GET)
   public Model getAllNewestLocation()
   {
+    logger.entry();
+    
     Model model = new ExtendedModelMap();
     List<HashMap<String,Object>> locations = new ArrayList<HashMap<String,Object>>();
     
@@ -129,6 +136,7 @@ public class LocationController
     
     model.addAttribute("newestLocations", locations);
     
+    logger.exit(model);
     return model;
   }
 }

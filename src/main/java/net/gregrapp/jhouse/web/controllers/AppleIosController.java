@@ -6,8 +6,8 @@ package net.gregrapp.jhouse.web.controllers;
 import net.gregrapp.jhouse.models.ApnsDevice;
 import net.gregrapp.jhouse.services.AppleApnsService;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.slf4j.ext.XLogger;
+import org.slf4j.ext.XLoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -28,8 +28,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_APPLE_IOS_USER')")
 public class AppleIosController
 {
-  private static final Logger logger = LoggerFactory
-      .getLogger(AppleIosController.class);
+  private static final XLogger logger = XLoggerFactory
+      .getXLogger(AppleIosController.class);
 
   @Autowired
   private AppleApnsService apnsService;
@@ -41,6 +41,7 @@ public class AppleIosController
    */
   private String getCurrentUsername()
   {
+    logger.entry();
     String username = null;
     Object principal = SecurityContextHolder.getContext().getAuthentication()
         .getPrincipal();
@@ -52,6 +53,7 @@ public class AppleIosController
       username = principal.toString();
     }
 
+    logger.exit(username);
     return username;
   }
 
@@ -63,6 +65,7 @@ public class AppleIosController
   @RequestMapping(value = "/device_tokens", method = RequestMethod.PUT)
   public void putDeviceToken(@RequestBody ApnsDevice device)
   {
+    logger.entry(device);
     String username = this.getCurrentUsername();
 
     if (username != null && !"".equals(username))
@@ -77,12 +80,15 @@ public class AppleIosController
     {
       logger.warn("Unable to retrieve username [{}] from SecurityContext", username);
     }
+    logger.exit();
   }
 
   @RequestMapping(value = "/apnsalertbadge")
   public void apnsAlertWithBadge(@RequestParam int userId, @RequestParam String alertBody, @RequestParam int badge)
   {
+    logger.entry(userId, alertBody, badge);
     apnsService.send(userId, alertBody, badge);
+    logger.exit();
   }
 /*
   @RequestMapping(value = "/apnsalert")

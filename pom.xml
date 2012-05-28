@@ -270,6 +270,16 @@
 			<artifactId>apns</artifactId>
 			<version>0.1.6</version>
 		</dependency>
+		<dependency>
+			<groupId>io.netty</groupId>
+			<artifactId>netty</artifactId>
+			<version>3.4.5.Final</version>
+		</dependency>
+		<dependency>
+			<groupId>org.slf4j</groupId>
+			<artifactId>slf4j-ext</artifactId>
+			<version>${org.slf4j-version}</version>
+		</dependency>
 	</dependencies>
 	<build>
 		<plugins>

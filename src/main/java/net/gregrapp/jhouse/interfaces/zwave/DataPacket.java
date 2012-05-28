@@ -40,9 +40,6 @@ public class DataPacket
 
   private static final int BUFFER_SIZE = 100;
 
-  // <summary>
-  // DataPacket()
-  // </summary>
   public DataPacket()
   {
     this.idx = 0;
@@ -50,10 +47,6 @@ public class DataPacket
     this.sequenceNumber = 0;
   }
     
-  // <summary>
-  // DataPacket(int[] payload)
-  // </summary>
-  // <param name="payload"></param>
   public DataPacket(int[] payload)
   {
     if (payload == null)
@@ -62,11 +55,6 @@ public class DataPacket
     this.idx = payload.length; 
   }
   
-  // <summary>
-  // addPayload(int data)
-  // </summary>
-  // <param name="data"></param>
-  // <returns></returns>
   public boolean addPayload(int data)
   {
     if (idx > (buffer.length-1)) return false;
@@ -74,11 +62,6 @@ public class DataPacket
     return true;
   }
 
-  // <summary>
-  // AddPayload(int[] payload)
-  // </summary>
-  // <param name="payload"></param>
-  // <returns></returns>
   public boolean addPayload(int[] payload)
   {
     if (payload == null)
@@ -91,10 +74,6 @@ public class DataPacket
     return true;
   }
 
-  // <summary>
-  // int[] getPayload()
-  // </summary>
-  // <returns></returns>
   public int[] getPayload()
   {
     int[] payload = new int[idx];
@@ -102,50 +81,31 @@ public class DataPacket
     return payload;
   }
   
-  // <summary>
-  // 
-  // </summary>
   public int getLength()
   {
     return idx;
   }
   
-  // <summary>
-  // 
-  // </summary>
   public int getSequenceNumber()
   {
     return sequenceNumber;
   }
 
-  // <summary>
-  // 
-  // </summary>
   public void setSequenceNumber(int value)
   {
     sequenceNumber = value;
   }
 
-  // <summary>
-  // 
-  // </summary>
   public Calendar getTimestamp()
   {
     return timestamp;
   }
 
-  // <summary>
-  // 
-  // </summary>
   public void setTimestamp(Calendar value)
   {
     timestamp = value;
   }
 
-  // <summary>
-  // String
-  // </summary>
-  // <returns></returns>
   @Override
   public String toString()
   {
@@ -161,12 +121,6 @@ public class DataPacket
     return sb.toString();
   }
 
-  // <summary>
-  // 
-  // </summary>
-  // <param name="dp1"></param>
-  // <param name="dp2"></param>
-  // <returns></returns>
   public boolean equals(DataPacket dp1, DataPacket dp2)
   {
     if (!(dp1 instanceof DataPacket) || !(dp2 instanceof DataPacket)) return false;

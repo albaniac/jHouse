@@ -45,6 +45,11 @@ public abstract class ZwaveDeviceDriver extends AbstractDeviceDriver implements
     this.poll();
   }
 
+  /**
+   * Optimize the Z-Wave node
+   * (Node neighbor update + Delete return route + Assign return route)
+   * @return
+   */
   public String optimizeNode()
   {
     StringBuffer status = new StringBuffer();

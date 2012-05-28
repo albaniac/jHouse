@@ -31,5 +31,9 @@ package net.gregrapp.jhouse.interfaces.zwave;
  */
 public interface FrameLayerAsyncCallback 
 {
+  /**
+   * Frame received callback
+   * @param frame data frame
+   */
   void frameReceived(DataFrame frame);
 }

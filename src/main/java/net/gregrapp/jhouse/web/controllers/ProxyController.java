@@ -20,8 +20,8 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.codec.binary.Base64;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.slf4j.ext.XLogger;
+import org.slf4j.ext.XLoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -41,8 +41,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_PROXY_USER','ROLE_WEBCAM_USER')")
 public class ProxyController
 {
-  private static final Logger logger = LoggerFactory
-      .getLogger(ProxyController.class);
+  private static final XLogger logger = XLoggerFactory
+      .getXLogger(ProxyController.class);
 
   @Autowired
   private HttpServletRequest request;
@@ -52,6 +52,8 @@ public class ProxyController
       @RequestParam("user") String user, @RequestParam("pass") String pass,
       HttpServletResponse response)
   {
+    logger.entry(site, user, pass, response);
+    
     BufferedInputStream webToProxyBuf = null;
     BufferedOutputStream proxyToClientBuf = null;
     int oneByte;
@@ -134,5 +136,7 @@ public class ProxyController
     {
       urlConn.disconnect();      
     }
+    
+    logger.exit();
   }
 }

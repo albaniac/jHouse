@@ -32,66 +32,35 @@ package net.gregrapp.jhouse.interfaces.zwave;
 public final class ZWStatistics
 {
   // Transport layer
-  // <summary>
-  // 
-  // </summary>
   int bytesTransmitted;
-  // <summary>
-  // 
-  // </summary>
+
   int bytesReceived;
+
   // Frame layer
-  // <summary>
-  // 
-  // </summary>
   int transmittedAcks;
-  // <summary>
-  // 
-  // </summary>
+
   int transmittedNaks;
-  // <summary>
-  // 
-  // </summary>
+
   int receivedAcks;
-  // <summary>
-  // 
-  // </summary>
+
   int receivedNaks;
-  // <summary>
-  // 
-  // </summary>
+
   int transmittedFrames;
-  // <summary>
-  // 
-  // </summary>
+
   int receivedFrames;
-  // <summary>
-  // 
-  // </summary>
+
   int retransmittedFrames;
-  // <summary>
-  // 
-  // </summary>
+
   int droppedFrames;
+
   // Session layer
-  // <summary>
-  // 
-  // </summary>
   int transmittedPackets;
-  // <summary>
-  // 
-  // </summary>
+
   int receivedPackets;
-  // <summary>
-  // 
-  // </summary>
+
   int duplicatePackets;
-  // <summary>
-  // 
-  // </summary>
+
   int asyncPackets;
-  // <summary>
-  // 
-  // </summary>
+
   int receiveTimeouts;
 }

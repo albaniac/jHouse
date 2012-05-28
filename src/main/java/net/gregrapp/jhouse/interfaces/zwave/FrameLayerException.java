@@ -36,29 +36,20 @@ public class FrameLayerException extends Exception
    */
   private static final long serialVersionUID = 1L;
 
-  // <summary>
-  //
-  // </summary>
   public FrameLayerException()
   {
 
   }
 
-  // <summary>
-  //
-  // </summary>
   public FrameLayerException(String describe)
   {
     super(describe);
   }
 
-  // <summary>
-  //
-  // </summary>
   public FrameLayerException(String describe, Exception innerException)
   {
     // Add any type-specific logic for inner exceptions.
-
+    
     super(describe, innerException);
   }
 

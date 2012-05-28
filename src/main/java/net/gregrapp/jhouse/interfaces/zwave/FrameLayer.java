@@ -53,11 +53,6 @@ public interface FrameLayer
    * @return
    */
   FrameStatistics getStatistics();
-
-  /**
-   * @param enable
-   */
-  void enableTracing(boolean enable);
 }
 
 

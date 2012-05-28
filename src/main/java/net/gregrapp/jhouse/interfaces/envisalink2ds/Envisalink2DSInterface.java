@@ -3,6 +3,7 @@
  */
 package net.gregrapp.jhouse.interfaces.envisalink2ds;
 
+import java.util.Map;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -10,13 +11,11 @@ import java.util.concurrent.TimeUnit;
 import javax.annotation.PreDestroy;
 
 import net.gregrapp.jhouse.device.drivers.types.DeviceDriver;
+import net.gregrapp.jhouse.interfaces.AbstractInterface;
 import net.gregrapp.jhouse.interfaces.InterfaceCallback;
-import net.gregrapp.jhouse.interfaces.TransportInterface;
-import net.gregrapp.jhouse.transports.Transport;
-import net.gregrapp.jhouse.transports.TransportException;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.slf4j.ext.XLogger;
+import org.slf4j.ext.XLoggerFactory;
 
 /**
  * Interface for the Envisalink 2DS DSC security panel interface
@@ -24,7 +23,7 @@ import org.slf4j.LoggerFactory;
  * @author Greg Rapp
  * 
  */
-public class Envisalink2DSInterface extends TransportInterface implements
+public class Envisalink2DSInterface extends AbstractInterface implements
     Envisalink2DSFrameLayerAsyncCallback
 {
   // Amount of time that must pass before connection is restarted
@@ -33,8 +32,14 @@ public class Envisalink2DSInterface extends TransportInterface implements
   // Interval between keep alive attempts
   private static final int keepaliveIntervalSeconds = 20;
 
-  private static final Logger logger = LoggerFactory
-      .getLogger(Envisalink2DSInterface.class);
+  private static final XLogger logger = XLoggerFactory
+      .getXLogger(Envisalink2DSInterface.class);
+
+  // Property - HOST
+  private static final String PROPERTY_HOST = "HOST";
+
+  // Property - PORT
+  private static final String PROPERTY_PORT = "PORT";
 
   private Envisalink2DSFrameLayer frameLayer;
 
@@ -46,10 +51,15 @@ public class Envisalink2DSInterface extends TransportInterface implements
 
   private DeviceDriver panel;
 
-  public Envisalink2DSInterface(Transport transport)
+  public Envisalink2DSInterface(Map<String, String> properties)
   {
-    super(transport);
-    logger.info("Instantiating interface [{}]", this.getClass().getName());
+    super(properties);
+
+    logger.entry();
+
+    this.init();
+
+    logger.exit();
   }
 
   /*
@@ -62,6 +72,8 @@ public class Envisalink2DSInterface extends TransportInterface implements
   @Override
   public void attachDeviceDriver(DeviceDriver driver)
   {
+    logger.entry(driver);
+
     if (!(driver instanceof Envisalink2DSCallback))
     {
       throw new ClassCastException(
@@ -76,21 +88,43 @@ public class Envisalink2DSInterface extends TransportInterface implements
         ((InterfaceCallback) driver).interfaceReady();
       }
     }
+
+    logger.exit();
   }
 
-  private void connect()
+  private boolean connect()
   {
-    try
+    logger.entry();
+
+    if (this.properties != null && this.properties.containsKey(PROPERTY_HOST)
+        && this.properties.containsKey(PROPERTY_PORT))
     {
-      this.transport.init();
-    } catch (TransportException e)
-    {
-      logger.error(
-          "Error opening transport, aborting Envisalink 2DS initialization", e);
+      String host = this.properties.get(PROPERTY_HOST);
+      logger.debug("Read property [{}] with value [{}]", PROPERTY_HOST, host);
+
+      int port;
+
+      try
+      {
+        port = Integer.valueOf(this.properties.get(PROPERTY_PORT));
+        logger.debug("Read property [{}] with value [{}]", PROPERTY_PORT, port);
+      } catch (NumberFormatException e)
+      {
+        logger.error("Property [{}] is invalid - [{}] is not a valid TCP port number",
+            PROPERTY_PORT, this.properties.get(PROPERTY_PORT));
+        logger.exit(false);
+        return false;
+      }
+
+      frameLayer = new Envisalink2DSFrameLayerImpl(host, port);
+      frameLayer.setCallbackHandler(this);
+
+      logger.exit(true);
+      return true;
     }
 
-    frameLayer = new Envisalink2DSFrameLayerImpl(transport);
-    frameLayer.setCallbackHandler(this);
+    logger.exit(false);
+    return false;
   }
 
   /*
@@ -102,14 +136,20 @@ public class Envisalink2DSInterface extends TransportInterface implements
   @PreDestroy
   public void destroy()
   {
+    logger.entry();
+
     logger.info("Destroying Envisalink 2DS interface");
     keepaliveExecutor.shutdownNow();
     frameLayer.destroy();
+
+    logger.exit();
   }
 
   @Override
   public void frameReceived(Envisalink2DSDataFrame frame)
   {
+    logger.entry();
+
     // Set last frame received time to now
     this.lastFrameReceiveTime = System.currentTimeMillis();
 
@@ -220,6 +260,8 @@ public class Envisalink2DSInterface extends TransportInterface implements
       if (panel != null && panel instanceof Envisalink2DSCallback)
         ((Envisalink2DSCallback) panel).codeRequired(partition);
     }
+
+    logger.exit();
   }
 
   /* Replaces multiple whitespace between words with single whitespace */
@@ -236,16 +278,21 @@ public class Envisalink2DSInterface extends TransportInterface implements
   @Override
   public void init()
   {
-    this.connect();
+    logger.entry();
 
-    this.interfaceReady = true;
-
-    if ((panel != null) && (panel instanceof InterfaceCallback))
+    if (this.connect())
     {
-      ((InterfaceCallback) panel).interfaceReady();
+      this.interfaceReady = true;
+
+      if ((panel != null) && (panel instanceof InterfaceCallback))
+      {
+        ((InterfaceCallback) panel).interfaceReady();
+      }
+
+      this.startKeepalives();
     }
 
-    this.startKeepalives();
+    logger.exit();
   }
 
   /**
@@ -255,7 +302,11 @@ public class Envisalink2DSInterface extends TransportInterface implements
    */
   public void sendCommand(String command)
   {
+    logger.entry(command);
+
     this.sendCommand(command, "");
+
+    logger.exit();
   }
 
   /**
@@ -266,6 +317,8 @@ public class Envisalink2DSInterface extends TransportInterface implements
    */
   public void sendCommand(String command, String data)
   {
+    logger.entry(command, data);
+
     try
     {
       frameLayer.write(new Envisalink2DSDataFrame(command, data));
@@ -274,6 +327,8 @@ public class Envisalink2DSInterface extends TransportInterface implements
       logger.warn(
           "Error sending data to DSC security system Envisalink 2DS module", e);
     }
+
+    logger.exit();
   }
 
   /**
@@ -281,6 +336,8 @@ public class Envisalink2DSInterface extends TransportInterface implements
    */
   private void startKeepalives()
   {
+    logger.entry();
+
     logger.debug("Starting keepalive executor");
 
     // Set last frame time to now before we start so we don't freak out when we
@@ -292,6 +349,8 @@ public class Envisalink2DSInterface extends TransportInterface implements
     {
       public void run()
       {
+        logger.entry();
+
         if ((System.currentTimeMillis() - lastFrameReceiveTime) > (keepaliveHoldtimeSeconds * 1000))
         {
           logger.error("Keep alive holdtime expired, resetting transport");
@@ -312,11 +371,14 @@ public class Envisalink2DSInterface extends TransportInterface implements
           if ((System.currentTimeMillis() - lastFrameReceiveTime) > keepaliveIntervalSeconds)
           {
             logger.debug("Sending keep alive request");
-            sendCommand("000");            
+            sendCommand("000");
           }
         }
 
+        logger.exit();
       }
     }, 0, keepaliveIntervalSeconds, TimeUnit.SECONDS);
+
+    logger.exit();
   }
 }

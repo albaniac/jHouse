@@ -23,6 +23,11 @@ import net.gregrapp.jhouse.services.event.calendars.SunriseSunset;
 import org.drools.KnowledgeBase;
 import org.drools.KnowledgeBaseConfiguration;
 import org.drools.KnowledgeBaseFactory;
+import org.drools.SystemEventListenerFactory;
+import org.drools.agent.KnowledgeAgent;
+import org.drools.agent.KnowledgeAgentConfiguration;
+import org.drools.agent.KnowledgeAgentFactory;
+import org.drools.agent.impl.PrintStreamSystemEventListener;
 import org.drools.builder.KnowledgeBuilder;
 import org.drools.builder.KnowledgeBuilderFactory;
 import org.drools.builder.ResourceType;
@@ -31,8 +36,8 @@ import org.drools.event.rule.DebugAgendaEventListener;
 import org.drools.event.rule.DebugWorkingMemoryEventListener;
 import org.drools.io.ResourceFactory;
 import org.drools.runtime.StatefulKnowledgeSession;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.slf4j.ext.XLogger;
+import org.slf4j.ext.XLoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -46,8 +51,8 @@ public class EventServiceImpl implements EventService
   private static final String CONFIG_DRL = "config.drl";
   private static final String CONFIG_NAMESPACE = "net.gregrapp.jhouse.managers.event.EventManager";
   private static final String JHOUSE_DSL = "jhouse.dsl";
-  private static final Logger logger = LoggerFactory
-      .getLogger(EventServiceImpl.class);
+  private static final XLogger logger = XLoggerFactory
+      .getXLogger(EventServiceImpl.class);
   private static final String RULES_FILE = "RULESFILE";
 
   @Autowired
@@ -75,12 +80,14 @@ public class EventServiceImpl implements EventService
   @PreDestroy
   public void destroy()
   {
+    logger.entry();
     logger.info("Halting KnowledgeSession");
     ksession.halt();
     logger.info("Stopping resource change scanner service");
     ResourceFactory.getResourceChangeScannerService().stop();
     logger.info("Canceling TimeEvent timer");
     timeEventTimer.cancel();
+    logger.exit();
   }
 
   /*
@@ -92,22 +99,38 @@ public class EventServiceImpl implements EventService
   @Override
   public void eventCallback(Event event)
   {
+    logger.entry();
+
     logger.debug("New event callback of type: {}", event.getClass().getName());
     ksession.insert(event);
+
+    logger.exit();
   }
 
+  /**
+   * Initialize the service
+   */
   @PostConstruct
   public void init()
   {
+    logger.entry();
+
     initDrools();
     setGlobals();
     setCalendars();
     initTimeEventTimer();
+
+    logger.exit();
   }
 
   private void initDrools()
   {
+    logger.entry();
+
     logger.info("Creating rules engine");
+
+    SystemEventListenerFactory
+        .setSystemEventListener(new PrintStreamSystemEventListener());
 
     logger.debug("Creating new KnowledgeBuilder");
     KnowledgeBuilder kbuilder = KnowledgeBuilderFactory.newKnowledgeBuilder();
@@ -129,10 +152,6 @@ public class EventServiceImpl implements EventService
           ResourceType.DSLR);
     }
 
-    logger.debug("Starting rule file change scanner service");
-    ResourceFactory.getResourceChangeScannerService().setInterval(30);
-    ResourceFactory.getResourceChangeScannerService().start();
-
     if (kbuilder.hasErrors())
     {
       logger.error("Error parsing rules file [{}]: {}", rulesFile, kbuilder
@@ -148,11 +167,35 @@ public class EventServiceImpl implements EventService
     KnowledgeBase kbase = KnowledgeBaseFactory.newKnowledgeBase(kbaseConfig);
     kbase.addKnowledgePackages(kbuilder.getKnowledgePackages());
 
+    /*
+     * ResourceFactory.getResourceChangeNotifierService().setSystemEventListener(
+     * new PrintStreamSystemEventListener());
+     * ResourceFactory.getResourceChangeNotifierService().start();
+     * 
+     * ResourceFactory.getResourceChangeScannerService().setSystemEventListener(
+     * new PrintStreamSystemEventListener());
+     * 
+     * THIS DOESN'T WORK BECAUSE THE KNOWLEDGEAGENT DOESN'T RELOAD THE DSL FILE
+     * WHEN A CHANGE IS DETECTED
+     * logger.debug("Starting rule file change scanner service");
+     * ResourceFactory.getResourceChangeScannerService().setInterval(15);
+     * ResourceFactory.getResourceChangeScannerService().start();
+     */
+
+    KnowledgeAgentConfiguration kaconf = KnowledgeAgentFactory
+        .newKnowledgeAgentConfiguration();
+    kaconf.setProperty("drools.agent.newInstance", "false");
+
+    KnowledgeAgent kagent = KnowledgeAgentFactory.newKnowledgeAgent("jHouse",
+        kbase, kaconf);
+    kbase = kagent.getKnowledgeBase();
+
     logger.debug("Creating new StatefulKnowledgeSession");
     ksession = kbase.newStatefulKnowledgeSession();
 
     ksession.addEventListener(new DebugWorkingMemoryEventListener());
     ksession.addEventListener(new DebugAgendaEventListener());
+    ksession.addEventListener(new DroolsEventListener());
 
     logger.info("Creating new rules engine runner thread");
     Thread kthread = new Thread(new Runnable()
@@ -160,14 +203,21 @@ public class EventServiceImpl implements EventService
       @Override
       public void run()
       {
+        logger.entry();
+
         ksession.fireUntilHalt();
         logger.info("Disposing KnowledgeSession");
         ksession.dispose();
+
+        logger.exit();
       }
     });
+    
     kthread.setDaemon(true);
     logger.info("Starting new rules engine runner thread");
     kthread.start();
+
+    logger.exit();
   }
 
   /**
@@ -175,6 +225,8 @@ public class EventServiceImpl implements EventService
    */
   public void initTimeEventTimer()
   {
+    logger.entry();
+
     timeEventTimer = new Timer(true);
     Calendar now = Calendar.getInstance();
 
@@ -199,6 +251,8 @@ public class EventServiceImpl implements EventService
           @Override
           public void run()
           {
+            logger.entry();
+
             logger.trace("Getting sunset time");
             Calendar sunset = SunriseSunset.getSunset(latitude, longitude);
             sunset.set(Calendar.SECOND, 0);
@@ -235,6 +289,8 @@ public class EventServiceImpl implements EventService
               logger.debug("Firing noon time event");
               eventCallback(new TimeEvent(TimeEvent.TimeEventType.NOON));
             }
+
+            logger.exit();
           }
         }, now.getTime(), 60 * 1000);
 
@@ -244,6 +300,7 @@ public class EventServiceImpl implements EventService
       }
     }
 
+    logger.exit();
   }
 
   /**
@@ -251,6 +308,8 @@ public class EventServiceImpl implements EventService
    */
   private void setCalendars()
   {
+    logger.entry();
+
     String latitudeString = configService.get("LATITUDE");
     String longitudeString = configService.get("LONGITUDE");
 
@@ -270,6 +329,8 @@ public class EventServiceImpl implements EventService
         logger.warn("Invalid LATITUDE or LONGITUDE values in config");
       }
     }
+
+    logger.exit();
   }
 
   /**
@@ -277,9 +338,13 @@ public class EventServiceImpl implements EventService
    */
   private void setGlobals()
   {
+    logger.entry();
+
     logger.debug("Setting StatefulKnowledgeSession globals");
     ksession.setGlobal("email", emailService);
     ksession.setGlobal("device", deviceService);
     ksession.setGlobal("apns", appleApnsService);
+
+    logger.exit();
   }
 }

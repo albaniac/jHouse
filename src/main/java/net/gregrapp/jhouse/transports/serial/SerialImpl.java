@@ -10,11 +10,7 @@ import gnu.io.PortInUseException;
 import gnu.io.SerialPort;
 import gnu.io.UnsupportedCommOperationException;
 
-import java.io.IOException;
 import java.util.List;
-
-import net.gregrapp.jhouse.transports.AbstractTransport;
-import net.gregrapp.jhouse.transports.TransportException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,7 +19,8 @@ import org.slf4j.LoggerFactory;
  * @author Greg Rapp
  * 
  */
-public class SerialImpl extends AbstractTransport
+
+public class SerialImpl
 {
   private static final Logger logger = LoggerFactory
       .getLogger(SerialImpl.class);
@@ -41,21 +38,15 @@ public class SerialImpl extends AbstractTransport
 
   public SerialImpl(List<String> config)
   {
-    super(config);
     logger.info("Instantiating SerialImpl instance");
-    this.serialPortString = this.config.get(0);
+    //this.serialPortString = this.config.get(0);
     logger.debug("Serial port set to {}", this.serialPortString);
-    this.serialBaud = Integer.valueOf(this.config.get(1)).intValue();
+    //this.serialBaud = Integer.valueOf(this.config.get(1)).intValue();
     logger.debug("Serial baud set to {}", this.serialBaud);
   }
 
-  /* (non-Javadoc)
-   * @see net.gregrapp.jhouse.transports.AbstractTransport#destroy()
-   */
-  @Override
   public void destroy()
   {
-    super.destroy();
     logger.info("Closing serial port");
     this.serialPort.close();
   }
@@ -65,7 +56,7 @@ public class SerialImpl extends AbstractTransport
    * 
    * @see net.gregrapp.jhouse.transports.Transport#init()
    */
-  public void init() throws TransportException
+  public void init()
   {
     logger.info("Initialzing instance of transport {}", this.getClass()
         .getName());
@@ -77,10 +68,8 @@ public class SerialImpl extends AbstractTransport
       commPort = portIdentifier.open(this.getClass().getName(), 2000);
     } catch (NoSuchPortException e)
     {
-      throw new TransportException("Port not found", e);
     } catch (PortInUseException e)
     {
-      throw new TransportException("Port already in use", e);
     }
 
     if (commPort instanceof SerialPort)
@@ -91,15 +80,13 @@ public class SerialImpl extends AbstractTransport
         logger.debug("Setting serial port parameters");
         serialPort.setSerialPortParams(this.serialBaud, SerialPort.DATABITS_8,
             SerialPort.STOPBITS_1, SerialPort.PARITY_NONE);
-        this.in = serialPort.getInputStream();
-        this.out = serialPort.getOutputStream();
+        //this.in = serialPort.getInputStream();
+        //this.out = serialPort.getOutputStream();
       } catch (UnsupportedCommOperationException e)
       {
-        throw new TransportException("Error initializing transport", e);
-      } catch (IOException e)
-      {
-        throw new TransportException("Error initializing transport", e);
-      }
+      } //catch (IOException e)
+      //{
+      //}
     }
   }
 

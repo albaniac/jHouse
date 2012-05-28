@@ -16,8 +16,8 @@ import net.gregrapp.jhouse.device.classes.PtzWebcam;
 import net.gregrapp.jhouse.device.classes.Webcam;
 import net.gregrapp.jhouse.device.classes.Webcam.Resolution;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.slf4j.ext.XLogger;
+import org.slf4j.ext.XLoggerFactory;
 import org.springframework.beans.factory.BeanFactoryUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
@@ -41,8 +41,8 @@ import org.springframework.web.bind.annotation.RequestMethod;
 @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_WEBCAM_USER')")
 public class WebcamController
 {
-  private static final Logger logger = LoggerFactory
-      .getLogger(WebcamController.class);
+  private static final XLogger logger = XLoggerFactory
+      .getXLogger(WebcamController.class);
 
   @Autowired
   private ApplicationContext appContext;
@@ -58,6 +58,7 @@ public class WebcamController
   @RequestMapping(method = RequestMethod.GET)
   public Model config()
   {
+    logger.entry();
     Model model = new ExtendedModelMap();
 
     model.addAttribute("listPath", "controllers/webcam/list");
@@ -68,6 +69,7 @@ public class WebcamController
     model.addAttribute("panRightPath", "controllers/webcam/panRight");
     model.addAttribute("panStopPath", "controllers/webcam/panStop");
 
+    logger.exit(model);
     return model;
   }
 
@@ -79,6 +81,7 @@ public class WebcamController
   @RequestMapping(value = "/list", method = RequestMethod.GET)
   public Model list()
   {
+    logger.entry();
     logger.debug("Listing webcam beans");
 
     Model model = new ExtendedModelMap();
@@ -105,6 +108,8 @@ public class WebcamController
       }
     }
     model.addAttribute("webcams", webcams);
+    
+    logger.exit(model);
     return model;
   }
 
@@ -120,6 +125,7 @@ public class WebcamController
   public void panDown(@PathVariable String beanName,
       HttpServletResponse response) throws Exception
   {
+    logger.entry(beanName, response);
     logger.debug("Executing pan down on bean [{}]", beanName);
 
     if (appContext.containsBean(beanName)
@@ -132,6 +138,8 @@ public class WebcamController
     {
       throw new Exception("Invalid bean");
     }
+    
+    logger.exit();
   }
 
   /**
@@ -146,6 +154,7 @@ public class WebcamController
   public void panLeft(@PathVariable String beanName,
       HttpServletResponse response) throws Exception
   {
+    logger.entry(beanName, response);
     logger.debug("Executing pan left on bean [{}]", beanName);
 
     if (appContext.containsBean(beanName)
@@ -158,6 +167,8 @@ public class WebcamController
     {
       throw new Exception("Invalid bean");
     }
+    
+    logger.exit();
   }
 
   /**
@@ -172,6 +183,7 @@ public class WebcamController
   public void panRight(@PathVariable String beanName,
       HttpServletResponse response) throws Exception
   {
+    logger.entry(beanName, response);
     logger.debug("Executing pan right on bean [{}]", beanName);
 
     if (appContext.containsBean(beanName)
@@ -184,6 +196,8 @@ public class WebcamController
     {
       throw new Exception("Invalid bean");
     }
+    
+    logger.exit();
   }
 
   /**
@@ -198,6 +212,7 @@ public class WebcamController
   public void panStop(@PathVariable String beanName,
       HttpServletResponse response) throws Exception
   {
+    logger.entry(beanName, response);
     logger.debug("Executing pan stop on bean [{}]", beanName);
     if (appContext.containsBean(beanName)
         && ((DriverDevice) appContext.getBean(beanName)).getDriver() instanceof PtzWebcam)
@@ -209,6 +224,8 @@ public class WebcamController
     {
       throw new Exception("Invalid bean");
     }
+    
+    logger.exit();
   }
 
   /**
@@ -223,6 +240,7 @@ public class WebcamController
   public void panUp(@PathVariable String beanName, HttpServletResponse response)
       throws Exception
   {
+    logger.entry(beanName, response);
     logger.debug("Executing pan up on bean [{}]", beanName);
 
     if (appContext.containsBean(beanName)
@@ -235,6 +253,8 @@ public class WebcamController
     {
       throw new Exception("Invalid bean");
     }
+    
+    logger.exit();
   }
 
   /**
@@ -249,7 +269,11 @@ public class WebcamController
   public void video(@PathVariable String beanName, HttpServletResponse response)
       throws Exception
   {
+    logger.entry(beanName, response);
+    
     this.video(beanName, Resolution.NORMAL, response);
+    
+    logger.exit();
   }
 
   /**
@@ -267,6 +291,7 @@ public class WebcamController
       @PathVariable Resolution resolution, HttpServletResponse response)
       throws Exception
   {
+    logger.entry(beanName, resolution, response);
     logger.debug("Getting {} resolution video stream for bean [{}]", resolution
         .toString().toLowerCase(), beanName);
 
@@ -281,5 +306,7 @@ public class WebcamController
     {
       throw new Exception("Invalid bean");
     }
+    
+    logger.exit();
   }
 }
