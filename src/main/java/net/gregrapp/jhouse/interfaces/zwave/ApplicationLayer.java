@@ -41,7 +41,6 @@ import net.gregrapp.jhouse.interfaces.zwave.Constants.RequestNeighbor;
 import net.gregrapp.jhouse.interfaces.zwave.Constants.TXOption;
 import net.gregrapp.jhouse.interfaces.zwave.Constants.TXStatus;
 import net.gregrapp.jhouse.interfaces.zwave.Constants.ZWaveRediscoveryNeededReturnValue;
-import net.gregrapp.jhouse.transports.Transport;
 
 /**
  * @author Greg Rapp
@@ -163,12 +162,6 @@ public interface ApplicationLayer
    * @return <code>String</code> of command names
    */
   String getSupportedSerialCmds();
-
-  // <summary>
-  //
-  // </summary>
-  // <returns></returns>
-  Transport getTransport();
 
   /**
    * @return <code>true</code> if this controller is the real primary

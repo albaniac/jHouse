@@ -50,7 +50,6 @@ import net.gregrapp.jhouse.interfaces.zwave.Constants.TXOption;
 import net.gregrapp.jhouse.interfaces.zwave.Constants.TXStatus;
 import net.gregrapp.jhouse.interfaces.zwave.Constants.ZWaveRediscoveryNeededReturnValue;
 import net.gregrapp.jhouse.interfaces.zwave.DataFrame.CommandType;
-import net.gregrapp.jhouse.transports.Transport;
 import net.gregrapp.jhouse.utils.ArrayUtils;
 import net.gregrapp.jhouse.utils.CollectionUtils;
 
@@ -721,8 +720,6 @@ public class ApplicationLayerImpl implements ApplicationLayer,
   private SessionLayer sessionLayer;
 
   private boolean slaveApi;
-
-  private Transport transport;
 
   private ScheduledExecutorService waitForNodeInfoExecutor;
 
@@ -1398,8 +1395,8 @@ public class ApplicationLayerImpl implements ApplicationLayer,
     logger.entry();
     ZWStatistics stats = new ZWStatistics();
 
-    stats.bytesReceived = transport.getReceivedBytes();
-    stats.bytesTransmitted = transport.getTransmittedBytes();
+    //stats.bytesReceived = transport.getReceivedBytes();
+    //stats.bytesTransmitted = transport.getTransmittedBytes();
 
     FrameStatistics fstats = frameLayer.getStatistics();
     stats.receivedAcks = fstats.receivedAcks;
@@ -1461,16 +1458,6 @@ public class ApplicationLayerImpl implements ApplicationLayer,
 
     logger.exit(retString.toString());
     return retString.toString();
-  }
-
-  /*
-   * (non-Javadoc)
-   * 
-   * @see net.gregrapp.jhouse.interfaces.zwave.ApplicationLayer#getTransport()
-   */
-  public Transport getTransport()
-  {
-    return transport;
   }
 
   /*
