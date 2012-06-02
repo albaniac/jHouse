@@ -6,6 +6,7 @@ package net.gregrapp.jhouse.services;
 import java.util.List;
 
 import net.gregrapp.jhouse.device.Device;
+import net.gregrapp.jhouse.device.DriverDevice;
 import net.gregrapp.jhouse.device.classes.DeviceClass;
 
 /**
@@ -50,7 +51,8 @@ public interface DeviceService
    *          the device's ID
    * @param type
    *          type of device to return
-   * @return the device's instance cast to type, null if not found or not assignable to class
+   * @return the device's instance cast to type, null if not found or not
+   *         assignable to class
    */
   public <T extends Device> T get(int deviceId, Class<T> type);
 
@@ -71,6 +73,14 @@ public interface DeviceService
   public List<Device> getDevices();
 
   /**
+   * Get all driver devices of a specific class
+   * 
+   * @param klassName
+   * @return
+   */
+  public List<DriverDevice> getDriverDevicesForClass(String klassName);
+
+  /**
    * Get driver for device, casting the driver to a device class
    * 
    * @param deviceId
@@ -80,5 +90,12 @@ public interface DeviceService
    * @return
    */
   public <T extends DeviceClass> T getDriver(int deviceId, Class<T> type);
+
+  /**
+   * Get all driver based devices
+   * 
+   * @return List of devices
+   */
+  public List<DriverDevice> getDriverDevices();
 
 }

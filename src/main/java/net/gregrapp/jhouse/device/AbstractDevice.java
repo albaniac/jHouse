@@ -28,12 +28,18 @@ public class AbstractDevice implements Device
 
   // Fields
   private int deviceId;
+  
   private String deviceName;
+
   private String deviceText;
+  
   private Long deviceValue;
+  
   @Autowired
   EventService eventService;
+  
   private String floor;
+  
   private Calendar lastChange;
 
   private String room;

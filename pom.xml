@@ -6,7 +6,7 @@
 	<artifactId>jhouse</artifactId>
 	<name>jhouse</name>
 	<packaging>war</packaging>
-	<version>1.1.0.RELEASE</version>
+	<version>1.1.1.SNAPSHOT</version>
 	<properties>
 		<java-version>1.6</java-version>
 		<org.springframework-version>3.1.1.RELEASE</org.springframework-version>
@@ -296,6 +296,16 @@
 				<artifactId>maven-war-plugin</artifactId>
 				<configuration>
 					<warName>jhouse</warName>
+					<webResources>
+						<webResource>
+							<directory>${basedir}/src/main/webapp/WEB-INF</directory>
+							<includes>
+								<include>web.xml</include>
+							</includes>
+							<targetPath>WEB-INF</targetPath>
+							<filtering>true</filtering>
+						</webResource>
+					</webResources>
 				</configuration>
 			</plugin>
 			<plugin>
@@ -325,6 +335,21 @@
 				<source>1.6</source> <target>1.6</target> <aspectLibraries> <aspectLibrary> 
 				<groupId>org.springframework</groupId> <artifactId>spring-aspects</artifactId> 
 				</aspectLibrary> </aspectLibraries> </configuration> </plugin> -->
-		</plugins>
+		</plugins> 
 	</build>
+	
+	 <profiles>
+        <profile>
+            <id>production</id>
+            <properties>
+            	<log4j.location>file:///etc/jhouse/log4j.properties</log4j.location>
+            </properties>
+        </profile>
+        <profile>
+            <id>development</id>
+            <properties>
+            	<log4j.location>file:///Users/grapp/Documents/workspace-sts-2.9.0.RELEASE/jHouse/src/main/resources/log4j.properties</log4j.location>
+            </properties>
+        </profile>
+    </profiles>
 </project>

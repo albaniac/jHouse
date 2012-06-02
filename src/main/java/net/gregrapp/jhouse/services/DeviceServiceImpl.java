@@ -14,8 +14,8 @@ import net.gregrapp.jhouse.device.DriverDevice;
 import net.gregrapp.jhouse.device.classes.DeviceClass;
 import net.gregrapp.jhouse.device.drivers.types.DeviceDriver;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.slf4j.ext.XLogger;
+import org.slf4j.ext.XLoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Service;
@@ -30,12 +30,12 @@ import org.springframework.stereotype.Service;
 @Service
 public class DeviceServiceImpl implements DeviceService
 {
-  private static final Logger logger = LoggerFactory
-      .getLogger(DeviceService.class);
+  private static final XLogger logger = XLoggerFactory
+      .getXLogger(DeviceService.class);
 
   @Autowired
-  ApplicationContext appContext;
-  
+  private ApplicationContext appContext;
+
   /*
    * (non-Javadoc)
    * 
@@ -45,6 +45,8 @@ public class DeviceServiceImpl implements DeviceService
   @Override
   public void execute(int deviceId, String method)
   {
+    logger.entry(deviceId, method);
+
     logger.debug("Executing method [{}] on device [{}]", method, deviceId);
     Device device = get(deviceId);
 
@@ -75,6 +77,7 @@ public class DeviceServiceImpl implements DeviceService
       }
     }
 
+    logger.exit();
   }
 
   /*
@@ -86,6 +89,8 @@ public class DeviceServiceImpl implements DeviceService
   @Override
   public void execute(int deviceId, String method, Object... args)
   {
+    logger.entry(deviceId, method, args);
+
     logger.debug("Executing method [{}] on device [{}]", method, deviceId);
     Device device = get(deviceId);
 
@@ -100,8 +105,7 @@ public class DeviceServiceImpl implements DeviceService
       try
       {
         Method meth = ((DriverDevice) device).getDriver().getClass()
-            .getMethod(method,
-                argClasses.toArray(new Class[0]));
+            .getMethod(method, argClasses.toArray(new Class[0]));
         meth.invoke(device, args);
       } catch (SecurityException e)
       {
@@ -123,6 +127,7 @@ public class DeviceServiceImpl implements DeviceService
       }
     }
 
+    logger.exit();
   }
 
   /*
@@ -132,21 +137,25 @@ public class DeviceServiceImpl implements DeviceService
    */
   public Device get(int deviceId)
   {
+    logger.entry(deviceId);
+
     logger.debug("Getting device [{}]", deviceId);
- 
-    if (appContext.containsBean(BeanLifecycleService.DEVICE_BEAN_NAME_PREFIX+deviceId))
+
+    if (appContext.containsBean(BeanLifecycleService.DEVICE_BEAN_NAME_PREFIX
+        + deviceId))
     {
-      Device device = (Device)appContext.getBean(BeanLifecycleService.DEVICE_BEAN_NAME_PREFIX+deviceId);
+      Device device = (Device) appContext
+          .getBean(BeanLifecycleService.DEVICE_BEAN_NAME_PREFIX + deviceId);
+      logger.exit(device);
       return device;
-    }
-    else
+    } else
     {
       logger.warn("Device [{}] not found", deviceId);
+      logger.exit(null);
       return null;
     }
   }
 
-  
   /*
    * (non-Javadoc)
    * 
@@ -155,18 +164,31 @@ public class DeviceServiceImpl implements DeviceService
    */
   public <T extends Device> T get(int deviceId, Class<T> type)
   {
+    logger.entry(deviceId, type);
+
     Device device = get(deviceId);
     if (type.isAssignableFrom(device.getClass()))
-      return type.cast(get(deviceId));
-    else
+    {
+      logger.exit(device);
+      return type.cast(device);
+    } else
+    {
+      logger.exit(null);
       return null;
+    }
   }
 
-  /* (non-Javadoc)
-   * @see net.gregrapp.jhouse.managers.device.DeviceService#getDeviceClassesForDevice(net.gregrapp.jhouse.device.Device)
+  /*
+   * (non-Javadoc)
+   * 
+   * @see
+   * net.gregrapp.jhouse.managers.device.DeviceService#getDeviceClassesForDevice
+   * (net.gregrapp.jhouse.device.Device)
    */
   public String[] getDeviceClassesForDevice(Device device)
   {
+    logger.entry(device);
+
     logger.debug("Getting device classes for device [{}]", device.getId());
     List<String> klasses = new ArrayList<String>();
 
@@ -185,34 +207,116 @@ public class DeviceServiceImpl implements DeviceService
     String[] strKlasses = klasses.toArray(new String[0]);
     logger.debug("DeviceDriver [{}] has classes: [{}]", ((DriverDevice) device)
         .getDriver().getClass().getSimpleName(), strKlasses);
+
+    logger.exit(strKlasses);
     return strKlasses;
   }
 
-  /* (non-Javadoc)
+  /*
+   * (non-Javadoc)
+   * 
    * @see net.gregrapp.jhouse.managers.device.DeviceService#getDevices()
    */
   @Override
   public List<Device> getDevices()
   {
-    Device[] devices = appContext.getBeansOfType(Device.class).values().toArray(new Device[0]);
-    return Arrays.asList(devices);
+    logger.entry();
+
+    Device[] arrDevices = appContext.getBeansOfType(Device.class).values()
+        .toArray(new Device[0]);
+
+    List<Device> devices = Arrays.asList(arrDevices);
+
+    logger.exit(devices);
+    return devices;
   }
 
-  /* (non-Javadoc)
-   * @see net.gregrapp.jhouse.managers.device.DeviceService#getDriver(int, java.lang.Class)
+  /*
+   * (non-Javadoc)
+   * 
+   * @see net.gregrapp.jhouse.managers.device.DeviceService#getDriver(int,
+   * java.lang.Class)
    */
   public <T extends DeviceClass> T getDriver(int deviceId, Class<T> type)
   {
+    logger.entry(deviceId, type);
+
     Device device = get(deviceId);
     if (device instanceof DriverDevice)
     {
       DeviceDriver driver = ((DriverDevice) device).getDriver();
       if (type.isAssignableFrom(driver.getClass()))
+      {
+        logger.exit(driver);
         return type.cast(driver);
-      else
+      } else
+      {
+        logger.exit(null);
         return null;
-    }
-    else
+      }
+    } else
+    {
+      logger.exit(null);
       return null;
+    }
+  }
+
+  /*
+   * (non-Javadoc)
+   * 
+   * @see net.gregrapp.jhouse.services.DeviceService#getDriverDevices()
+   */
+  @Override
+  public List<DriverDevice> getDriverDevices()
+  {
+    logger.entry();
+
+    DriverDevice[] arrDevices = appContext.getBeansOfType(DriverDevice.class)
+        .values().toArray(new DriverDevice[0]);
+
+    List<DriverDevice> devices = Arrays.asList(arrDevices);
+
+    logger.exit(devices);
+    return devices;
+  }
+
+  /*
+   * (non-Javadoc)
+   * 
+   * @see
+   * net.gregrapp.jhouse.services.DeviceService#getDriverDevicesForClass(java
+   * .lang.String)
+   */
+  @Override
+  public List<DriverDevice> getDriverDevicesForClass(String klassName)
+  {
+    logger.entry(klassName);
+
+    Class<?> klass = null;
+
+    try
+    {
+      klass = Class.forName(klassName);
+    } catch (ClassNotFoundException e)
+    {
+      logger.warn("Class [{}] not found", klassName);
+      logger.exit(null);
+      return null;
+    }
+
+    List<DriverDevice> allDevices = this.getDriverDevices();
+
+    List<DriverDevice> devices = new ArrayList<DriverDevice>();
+
+    for (DriverDevice device : allDevices)
+    {
+      if (klass.isAssignableFrom(device.getDriver().getClass()))
+      {
+        devices.add(device);
+      }
+    }
+
+    logger.exit(devices);
+    return devices;
   }
 }

@@ -17,16 +17,9 @@
 
 	<!-- Root Context: defines shared resources visible to all other web components -->
 
-	<!-- Activates various annotations to be detected in bean classes -->
-<!-- 	<context:annotation-config /> -->
-
 	<context:component-scan base-package="net.gregrapp.jhouse">
 	      <context:exclude-filter type="regex" expression="net\.gregrapp\.jhouse\.web\..*"/>
 	</context:component-scan>
-
-	<!-- Configures the annotation-driven Spring MVC Controller programming 
-		model. Note that, with Spring 3.0, this tag works in Servlet MVC only! -->
-<!-- 	<mvc:annotation-driven /> -->
 
 	<mvc:resources mapping="/resources/**" location="/resources/" />
 
@@ -35,7 +28,4 @@
 
 	<!-- Imports datasource configuration -->
 	<import resource="spring-data.xml" />
-
-	<!-- <security:global-method-security secured-annotations="enabled" /> -->
-
 </beans>

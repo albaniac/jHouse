@@ -17,5 +17,7 @@
 [condition][]Is Sunset=TimeEvent(eventType == TimeEventType.SUNSET)
 [condition][]Is Sunrise=TimeEvent(eventType == TimeEventType.SUNRISE)
 [condition][]Is Noon=TimeEvent(eventType == TimeEventType.NOON)
-[consequence][]Send APNs message to user {id} with text "{body}"=apns.send({id}, "{body}");
+[consequence][]Send APNs message to user {id} with text "{body}" and sound "{sound}"=apns.send({id}, "{body}", "{sound}");
 [consequence][]Send APNs message to user {id} with text "{body}" and badge {badge}=apns.send({id}, "{body}", {badge});
+[consequence][]Send APNs message to user {id} with text "{body}" and sound=apns.send({id}, "{body}", "default");
+[consequence][]Send APNs message to user {id} with text "{body}"=apns.send({id}, "{body}");

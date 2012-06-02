@@ -173,7 +173,12 @@ public class SocketHandler extends SimpleChannelUpstreamHandler
     logger.entry(ctx, e);
 
     logger.debug("Getting message");
-    callback.stringReceived((String) e.getMessage());
+    String message = (String) e.getMessage();
+    
+    // Remove all non-printable characters
+    message = message.replaceAll("\\p{Cntrl}", "");
+    
+    callback.stringReceived(message);
 
     logger.exit();
   }

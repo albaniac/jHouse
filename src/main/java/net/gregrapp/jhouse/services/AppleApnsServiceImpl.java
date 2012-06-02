@@ -17,8 +17,8 @@ import net.gregrapp.jhouse.models.User;
 import net.gregrapp.jhouse.repositories.ApnsDeviceRepository;
 import net.gregrapp.jhouse.repositories.UserRepository;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.slf4j.ext.XLogger;
+import org.slf4j.ext.XLoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Service;
@@ -38,20 +38,27 @@ import com.notnoop.exceptions.RuntimeIOException;
 public class AppleApnsServiceImpl implements AppleApnsService
 {
 
+  // Config key
   private static final String APNS_ENVIRONMENT = "APNS_ENVIRONMENT";
+
+  // Config key
   private static final String CERT_PASSWORD = "CERT_PASSWORD";
+
+  // Config key
   private static final String CERT_PATH = "CERT_PATH";
-  /*
-   * Config keys
-   */
+
+  // Config namepace
   private static final String CONFIG_NAMESPACE = "net.gregrapp.jhouse.services.AppleApnsService";
+
+  // Config key
   private static final String INACTIVE_DEVICE_POLL_MINUTES = "INACTIVE_DEVICE_POLL_MINUTES";
 
-  private static final Logger logger = LoggerFactory
-      .getLogger(AppleApnsServiceImpl.class);
+  private static final XLogger logger = XLoggerFactory
+      .getXLogger(AppleApnsServiceImpl.class);
 
   @Autowired
   private ApnsDeviceRepository apnsDeviceRepository;
+
   private ApnsService apnsService;
 
   @Autowired
@@ -72,9 +79,13 @@ public class AppleApnsServiceImpl implements AppleApnsService
   @PreDestroy
   public void destroy()
   {
+    logger.entry();
+
     logger.info("Destroying Apple Push Notification service");
     apnsService.stop();
     inactiveDeviceExecutor.shutdownNow();
+
+    logger.exit();
   }
 
   /**
@@ -92,6 +103,8 @@ public class AppleApnsServiceImpl implements AppleApnsService
    */
   private void monitorInactiveDevices()
   {
+    logger.entry();
+
     String strPollMinutes = this.configService.get(CONFIG_NAMESPACE,
         INACTIVE_DEVICE_POLL_MINUTES);
     int pollMinutes = DEFAULT_POLL_MINUTES;
@@ -120,6 +133,8 @@ public class AppleApnsServiceImpl implements AppleApnsService
     {
       public void run()
       {
+        logger.entry();
+
         if (apnsDeviceRepository != null)
         {
           try
@@ -138,9 +153,12 @@ public class AppleApnsServiceImpl implements AppleApnsService
                 .error("Unable to connect to APNs inactive device service", e);
           }
         }
+
+        logger.exit();
       }
     }, 1, 60, TimeUnit.MINUTES);
 
+    logger.exit();
   }
 
   /*
@@ -154,6 +172,8 @@ public class AppleApnsServiceImpl implements AppleApnsService
   public void putDevice(String username, String uuid, String token,
       String description)
   {
+    logger.entry(username, uuid, token, description);
+
     ApnsDevice device = apnsDeviceRepository.findByUuid(uuid);
 
     if (device != null)
@@ -190,19 +210,56 @@ public class AppleApnsServiceImpl implements AppleApnsService
                 username);
       }
     }
+
+    logger.exit();
   }
 
+  /*
+   * (non-Javadoc)
+   * 
+   * @see net.gregrapp.jhouse.services.AppleApnsService#send(long,
+   * java.lang.String)
+   */
   @Override
   public void send(long userId, String alertBody)
   {
+    logger.entry(userId, alertBody);
+
     // Call method through Spring proxy so that a transaction is created
-    getSpringProxy().send(userId, alertBody, 0);
+    getSpringProxy().send(userId, alertBody, 0, null);
+
+    logger.exit();
   }
 
+  /*
+   * (non-Javadoc)
+   * 
+   * @see net.gregrapp.jhouse.services.AppleApnsService#send(long,
+   * java.lang.String, int)
+   */
   @Override
-  @Transactional(readOnly = true)
   public void send(long userId, String alertBody, int badge)
   {
+    logger.entry(userId, alertBody, badge);
+
+    // Call method through Spring proxy so that a transaction is created
+    getSpringProxy().send(userId, alertBody, badge, null);
+
+    logger.exit();
+  }
+
+  /*
+   * (non-Javadoc)
+   * 
+   * @see net.gregrapp.jhouse.services.AppleApnsService#send(long,
+   * java.lang.String, int, java.lang.String)
+   */
+  @Override
+  @Transactional(readOnly = true)
+  public void send(long userId, String alertBody, int badge, String sound)
+  {
+    logger.entry(userId, alertBody, badge, sound);
+
     if (userRepository != null)
     {
       User user = userRepository.findOne(userId);
@@ -211,33 +268,72 @@ public class AppleApnsServiceImpl implements AppleApnsService
       {
         logger.warn("Unable to send APNs notification, user ID [{}] not found",
             userId);
+        logger.exit();
         return;
       } else
       {
         for (ApnsDevice device : user.getApnsDevices())
         {
-          this.send(device.getToken(), alertBody, badge);
+          this.send(device.getToken(), alertBody, badge, sound);
         }
       }
     }
+
+    logger.exit();
   }
 
   /*
    * (non-Javadoc)
    * 
-   * @see net.gregrapp.jhouse.services.AppleApnsService#send(java.lang.String,
-   * java.lang.String, int)
+   * @see net.gregrapp.jhouse.services.AppleApnsService#send(long,
+   * java.lang.String, java.lang.String)
    */
   @Override
-  public void send(String token, String alertBody, int badge)
+  public void send(long userId, String alertBody, String sound)
   {
-    logger.debug("Building APNs payload [alertBody={}, badge={}]", alertBody,
-        badge);
-    String payload = APNS.newPayload().alertBody(alertBody).shrinkBody("...")
-        .badge(badge).build();
+    logger.entry(userId, alertBody, sound);
+
+    // Call method through Spring proxy so that a transaction is created
+    getSpringProxy().send(userId, alertBody, 0, sound);
+
+    logger.exit();
+  }
+
+  /**
+   * Send Apple Push Notification service message
+   * 
+   * @param token
+   *          device token
+   * @param alertBody
+   *          alert message
+   * @param badge
+   *          number for application icon badge (0 = no badge)
+   * @param sound
+   *          sound to play (default sound="default")
+   */
+  private void send(String token, String alertBody, int badge, String sound)
+  {
+    logger.entry(token, alertBody, badge, sound);
+
+    logger.debug("Building APNs payload [alertBody={}, badge={}, sound={}]",
+        new Object[] { alertBody, badge, sound });
+
+    String payload = null;
+
+    if (sound == null)
+    {
+      payload = APNS.newPayload().alertBody(alertBody).shrinkBody("...")
+          .badge(badge).build();
+    } else
+    {
+      payload = APNS.newPayload().alertBody(alertBody).shrinkBody("...")
+          .badge(badge).sound(sound).build();
+    }
 
     logger.debug("Sending APNs alert to device [token={}]", token);
     apnsService.push(token, payload);
+
+    logger.exit();
   }
 
   /**
@@ -246,6 +342,8 @@ public class AppleApnsServiceImpl implements AppleApnsService
   @Autowired
   public void setConfigService(ConfigService configService)
   {
+    logger.entry(configService);
+
     logger.debug("Injecting ConfigService");
 
     this.configService = configService;
@@ -258,6 +356,7 @@ public class AppleApnsServiceImpl implements AppleApnsService
     {
       logger
           .error("Unable to initialize Apple APNs service, cert path or cert password not set");
+      logger.exit();
       return;
     }
 
@@ -288,5 +387,7 @@ public class AppleApnsServiceImpl implements AppleApnsService
     // Start polling Apple for inactive devices
     if (apnsService != null)
       this.monitorInactiveDevices();
+
+    logger.exit();
   }
 }

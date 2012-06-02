@@ -18,7 +18,7 @@ public interface AppleApnsService
    * Send Apple Push Notification service message to a user's registered devices
    * 
    * @param userId
-   *          ID of user model
+   *          ID of user
    * @param alertBody
    *          alert message
    */
@@ -28,13 +28,35 @@ public interface AppleApnsService
    * Send Apple Push Notification service message to a user's registered devices
    * 
    * @param userId
-   *          ID of user model
+   *          ID of user
    * @param alertBody
    *          alert message
    * @param badge
    *          number for application icon badge (0 = no badge)
    */
   public void send(long userId, String alertBody, int badge);
+
+  /**
+   * @param userId
+   *          ID of user
+   * @param alertBody
+   *          alert message
+   * @param badge
+   *          number for application icon badge (0 = no badge)
+   * @param sound
+   *          sound to play (default sound="default")
+   */
+  public void send(long userId, String alertBody, int badge, String sound);
+
+  /**
+   * @param userId
+   *          ID of user
+   * @param alertBody
+   *          alert message
+   * @param sound
+   *          sound to play (default sound="default")
+   */
+  public void send(long userId, String alertBody, String sound);
 
   /**
    * Send Apple Push Notification service message
@@ -45,6 +67,9 @@ public interface AppleApnsService
    *          alert message
    * @param badge
    *          number for application icon badge (0 = no badge)
+   * @param sound
+   *          sound to play (default sound="default")
    */
-  public abstract void send(String token, String alertBody, int badge);
+  //public void send(String token, String alertBody, int badge, String sound);
+
 }

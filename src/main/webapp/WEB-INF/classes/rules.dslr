@@ -82,7 +82,7 @@ when
 	Is Noon
 then
 	Send email to "gdrapp@gmail.com" with subject "NOON" and message "Its NOON"
-    Send APNs message to user 1 with text "It's NOON"
+    Send APNs message to user 1 with text "It's NOON" and sound
 end
 
 rule "Is Sunset"
@@ -90,6 +90,6 @@ when
 	Is Sunset
 then
 	Send email to "gdrapp@gmail.com" with subject "SUNSET" and message "Its SUNSET"
-	Send APNs message to user 1 with text "It's SUNSET"
+	Send APNs message to user 1 with text "It's SUNSET" and sound
 end
 

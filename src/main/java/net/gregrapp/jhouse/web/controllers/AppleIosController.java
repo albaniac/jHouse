@@ -35,6 +35,30 @@ public class AppleIosController
   private AppleApnsService apnsService;
 
   /**
+   * Send Apple Push Notification service (APNs) alert
+   * 
+   * @param userId
+   * @param alertBody
+   * @param badge
+   * @param sound
+   */
+  @RequestMapping(value = "/apnsalert", method = RequestMethod.GET)
+  public void apnsAlertWithBadge(@RequestParam int userId,
+      @RequestParam String alertBody,
+      @RequestParam(required = false) Integer badge,
+      @RequestParam(required = false) String sound)
+  {
+    logger.entry(userId, alertBody, badge, sound);
+
+    if (badge == null)
+      badge = 0;
+
+    apnsService.send(userId, alertBody, badge, sound);
+
+    logger.exit();
+  }
+
+  /**
    * Get the currently logged in user
    * 
    * @return the logged in user's principal
@@ -42,6 +66,7 @@ public class AppleIosController
   private String getCurrentUsername()
   {
     logger.entry();
+    
     String username = null;
     Object principal = SecurityContextHolder.getContext().getAuthentication()
         .getPrincipal();
@@ -66,6 +91,7 @@ public class AppleIosController
   public void putDeviceToken(@RequestBody ApnsDevice device)
   {
     logger.entry(device);
+    
     String username = this.getCurrentUsername();
 
     if (username != null && !"".equals(username))
@@ -74,33 +100,16 @@ public class AppleIosController
       logger
           .debug(
               "APNs device details [username={}, uuid={}, token={}, description={}]",
-              new Object[] { username, device.getUuid(), device.getToken(), device.getDescription() });
-      apnsService.putDevice(username, device.getUuid(), device.getToken(), device.getDescription());
+              new Object[] { username, device.getUuid(), device.getToken(),
+                  device.getDescription() });
+      apnsService.putDevice(username, device.getUuid(), device.getToken(),
+          device.getDescription());
     } else
     {
-      logger.warn("Unable to retrieve username [{}] from SecurityContext", username);
+      logger.warn("Unable to retrieve username [{}] from SecurityContext",
+          username);
     }
+    
     logger.exit();
   }
-
-  @RequestMapping(value = "/apnsalertbadge")
-  public void apnsAlertWithBadge(@RequestParam int userId, @RequestParam String alertBody, @RequestParam int badge)
-  {
-    logger.entry(userId, alertBody, badge);
-    apnsService.send(userId, alertBody, badge);
-    logger.exit();
-  }
-/*
-  @RequestMapping(value = "/apnsalert")
-  public void apnsAlert(@RequestParam int userId, @RequestParam String alertBody)
-  {
-    apnsService.send(userId, alertBody);
-  }
-  
-  @RequestMapping(value = "/apnsbadge")
-  public void apnsBadge(@RequestParam int userId, @RequestParam int badge)
-  {
-    apnsService.send(userId, null, badge);
-  }
-*/
 }

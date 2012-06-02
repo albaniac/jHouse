@@ -9,6 +9,7 @@ import java.net.InetSocketAddress;
 import java.util.concurrent.Executors;
 
 import org.jboss.netty.bootstrap.ClientBootstrap;
+import org.jboss.netty.buffer.ChannelBuffers;
 import org.jboss.netty.channel.Channel;
 import org.jboss.netty.channel.ChannelFuture;
 import org.jboss.netty.channel.ChannelHandler;
@@ -16,7 +17,6 @@ import org.jboss.netty.channel.ChannelPipeline;
 import org.jboss.netty.channel.ChannelPipelineFactory;
 import org.jboss.netty.channel.socket.nio.NioClientSocketChannelFactory;
 import org.jboss.netty.handler.codec.frame.DelimiterBasedFrameDecoder;
-import org.jboss.netty.handler.codec.frame.Delimiters;
 import org.jboss.netty.handler.codec.string.StringDecoder;
 import org.jboss.netty.handler.codec.string.StringEncoder;
 import org.jboss.netty.handler.timeout.ReadTimeoutHandler;
@@ -36,7 +36,7 @@ public class Envisalink2DSFrameLayerImpl implements Envisalink2DSFrameLayer,
       .getXLogger(Envisalink2DSFrameLayerImpl.class);
 
   // Reconnect seconds when the server sends nothing
-  private static final int READ_TIMEOUT = 45;
+  private static final int READ_TIMEOUT = 300;
 
   // Delay before a socket reconnection attempt.
   static final int RECONNECT_DELAY = 10;
@@ -79,8 +79,8 @@ public class Envisalink2DSFrameLayerImpl implements Envisalink2DSFrameLayer,
         ChannelPipeline pipeline = pipeline();
 
         // Decoders
-        pipeline.addLast("frameDecoder", new DelimiterBasedFrameDecoder(80,
-            Delimiters.lineDelimiter()));
+        pipeline.addLast("frameDecoder", new DelimiterBasedFrameDecoder(80, true,
+            ChannelBuffers.wrappedBuffer(new byte[] { '\r', '\n' }) ));
         pipeline.addLast("stringDecoder", new StringDecoder());
 
         // Encoder
@@ -186,7 +186,7 @@ public class Envisalink2DSFrameLayerImpl implements Envisalink2DSFrameLayer,
         logger.warn("Data received [{}] but handler not set", data);
       } else
       {
-        if (frame.isValidChecksum())
+        if (frame != null && frame.isValidChecksum())
         {
           this.handler.frameReceived(frame);
         } else

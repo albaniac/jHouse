@@ -69,6 +69,16 @@ public class DriverDevice extends AbstractDevice
   }
 
   /**
+   * Driver index
+   * 
+   * @return the driverIndex
+   */
+  public int getDriverIndex()
+  {
+    return driverIndex;
+  }
+
+  /**
    * @param driver
    *          the driver to register this device with
    */
@@ -77,4 +87,16 @@ public class DriverDevice extends AbstractDevice
     this.driver = driver;
     this.attachToDriver();
   }
+
+  /**
+   * Driver index
+   * 
+   * @param driverIndex
+   *          the driverIndex to set
+   */
+  public void setDriverIndex(int driverIndex)
+  {
+    this.driverIndex = driverIndex;
+  }
+
 }

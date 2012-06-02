@@ -131,7 +131,7 @@ public class BeanLifecycleServiceImpl implements BeanLifecycleService
 
             ConstructorArgumentValues args = new ConstructorArgumentValues();
             args.addIndexedArgumentValue(0, bean.getId());
-            args.addIndexedArgumentValue(1, bean.getValueIndex());
+            args.addIndexedArgumentValue(1, bean.getDriverIndex());
 
             if (bean.getDriver() != null)
             {
@@ -145,11 +145,15 @@ public class BeanLifecycleServiceImpl implements BeanLifecycleService
             beanDefinition.setConstructorArgumentValues(args);
             
             MutablePropertyValues propertyValues = new MutablePropertyValues();
+            
             propertyValues.addPropertyValue("name", bean.getName());
+            
             if (bean.getLocation() != null && bean.getLocation().getFloor() != null)
               propertyValues.addPropertyValue("floor", bean.getLocation().getFloor());
+            
             if (bean.getLocation() != null && bean.getLocation().getRoom() != null)
-              propertyValues.addPropertyValue("room", bean.getLocation().getRoom());            
+              propertyValues.addPropertyValue("room", bean.getLocation().getRoom());   
+            
             beanDefinition.setPropertyValues(propertyValues);
             
             beanDefinition.setBeanClassName(bean.getKlass());

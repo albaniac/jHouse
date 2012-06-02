@@ -19,23 +19,41 @@ import org.springframework.beans.factory.annotation.Autowired;
 /**
  * @author Greg Rapp
  * 
- *         Partition State Value Indices --------------------------------- 10 -
- *         Partition 1 Status 11 - Partition 1 Last Armed By 12 - Partition 1
- *         Last Disarmed By 20 - Partition 2 30 - Partition 3 40 - Partition 4
- *         50 - Partition 5 60 - Partition 6 70 - Partition 7 80 - Partition 8
+ *         Partition State Indices
+ *         --------------------------------- 
+ *         10 - Partition 1 Status 
+ *         11 - Partition 1 Last Armed By 
+ *         12 - Partition 1 Last Disarmed By 
+ *         20 - Partition 2
+ *         30 - Partition 3
+ *         40 - Partition 4
+ *         50 - Partition 5
+ *         60 - Partition 6
+ *         70 - Partition 7
+ *         80 - Partition 8
  * 
- *         Partition State Values ------------------------------ 0x00 -
- *         Partition Ready 0x01 - Partition Not Ready 0x02 - Partition Armed
- *         0x04 - Partition Disarmed 0x08 - Partition Busy 0x10 - Partition
- *         Entry Delay 0x20 - Partition Exit Delay 0x40 - Partition Failed To
- *         Arm 0x80 - Partition In Alarm
+ *         Partition State Values
+ *         ------------------------------ 
+ *         0x00 - Partition Ready
+ *         0x01 - Partition Not Ready
+ *         0x02 - Partition Armed
+ *         0x04 - Partition Disarmed
+ *         0x08 - Partition Busy
+ *         0x10 - Partition Entry Delay
+ *         0x20 - Partition Exit Delay
+ *         0x40 - Partition Failed To Arm
+ *         0x80 - Partition In Alarm
  * 
- *         Zone State Value Indices --------------------------------- 101-164 -
- *         Zone 1-64 State
+ *         Zone State Indices
+ *         --------------------------------- 
+ *         101-164 - Zone 1-64 State
  * 
- *         Zone State Value Bit Field ------------------------------- Cleared |
- *         Set ------------------------------- Bit 0 - Restored | Open Bit 1 -
- *         Alarm Restored | Alarm
+ *         Zone State Value Bit Field
+ *         -------------------------------
+ *         Cleared | Set
+ *         ------------------------------- 
+ *         Bit 0 - Restored | Open
+ *         Bit 1 - Alarm Restored | Alarm
  */
 
 public class Envisalink2DSSecurityPanel extends AbstractDeviceDriver implements
@@ -96,7 +114,6 @@ public class Envisalink2DSSecurityPanel extends AbstractDeviceDriver implements
   @Override
   public void armAway()
   {
-    // TODO Make partition configurable
     driverInterface.sendCommand("030", "1");
   }
 
@@ -108,7 +125,6 @@ public class Envisalink2DSSecurityPanel extends AbstractDeviceDriver implements
   @Override
   public void armNoEntryDelay()
   {
-    // TODO Make partition configurable
     driverInterface.sendCommand("032", "1");
   }
 
@@ -120,7 +136,6 @@ public class Envisalink2DSSecurityPanel extends AbstractDeviceDriver implements
   @Override
   public void armStay()
   {
-    // TODO Make partition configurable
     driverInterface.sendCommand("031", "1");
   }
 
@@ -165,24 +180,11 @@ public class Envisalink2DSSecurityPanel extends AbstractDeviceDriver implements
   /*
    * (non-Javadoc)
    * 
-   * @see net.gregrapp.jhouse.interfaces.envisalink2ds.Envisalink2DSCallback#
-   * broadcastLabels (int, java.lang.String)
-   */
-  /*
-   * @Override public void broadcastLabels(int zone, String label) {
-   * logger.debug("Received label broadcast [{}] for zone [{}]", label, zone); }
-   */
-
-  /*
-   * (non-Javadoc)
-   * 
    * @see net.gregrapp.jhouse.interfaces.InterfaceCallback#interfaceReady()
    */
   @Override
   public void interfaceReady()
   {
-    // Request the current panel status
-    // driverInterface.sendCommand("001");
   }
 
   /*
@@ -194,8 +196,7 @@ public class Envisalink2DSSecurityPanel extends AbstractDeviceDriver implements
   @Override
   public void invalidAccessCode(int partition)
   {
-    // TODO Auto-generated method stub
-
+    logger.warn("Invalid access code supplied for partition [{}]", partition);
   }
 
   @Override
@@ -485,25 +486,4 @@ public class Envisalink2DSSecurityPanel extends AbstractDeviceDriver implements
     updateDeviceValueBitmask(ZONE_INDEX + zone, 0, false);
     updateDeviceText(ZONE_INDEX + zone, "Closed");
   }
-
-  /*
-   * (non-Javadoc)
-   * 
-   * @see net.gregrapp.jhouse.device.classes.SecurityPanel#getZoneLabel(int)
-   */
-  /*
-   * @Override public String getZoneLabel(int zone) throws
-   * IllegalArgumentException { if (zone < 1 || zone > 64) { throw new
-   * IllegalArgumentException("invalid zone"); }
-   * 
-   * String defaultName = "Zone " + String.valueOf(zone);
-   * 
-   * if (configService == null) { return defaultName; }
-   * 
-   * String name = configService.get(this.getClass().getName(),
-   * String.format(ZONE,zone));
-   * 
-   * if (name == null || "".equals(name)) return defaultName; else return name;
-   * }
-   */
 }

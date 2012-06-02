@@ -20,17 +20,17 @@ import javax.persistence.UniqueConstraint;
  */
 @Entity
 @Table(name = "device_beans", uniqueConstraints = { @UniqueConstraint(columnNames = {
-    "driver_id", "valueIndex" }) })
+    "driver_id", "driverIndex" }) })
 public class DeviceBean
 {
 
   private DriverBean driver;
+  private int driverIndex;
   private boolean enabled;
   private Long id;
-  private int valueIndex;
   private String klass;
-  private String name;
   private DeviceLocation location;
+  private String name;
 
   /**
    * Get the driver utilized by this bean
@@ -41,6 +41,17 @@ public class DeviceBean
   public DriverBean getDriver()
   {
     return driver;
+  }
+
+  /**
+   * Driver index for this device
+   * 
+   * @return the index
+   */
+  @Column(nullable = false)
+  public int getDriverIndex()
+  {
+    return driverIndex;
   }
 
   /**
@@ -56,16 +67,6 @@ public class DeviceBean
   }
 
   /**
-   * Driver value index for this device
-   * 
-   * @return the index
-   */
-  public int getValueIndex()
-  {
-    return valueIndex;
-  }
-
-  /**
    * The fully qualified class name for this device
    * 
    * @return the class
@@ -77,10 +78,21 @@ public class DeviceBean
   }
 
   /**
+   * @return the location
+   */
+  @ManyToOne
+  @JoinColumn(name = "location_id")
+  public DeviceLocation getLocation()
+  {
+    return location;
+  }
+
+  /**
    * Get device name
    * 
    * @return the name
    */
+  @Column
   public String getName()
   {
     return name;
@@ -105,6 +117,17 @@ public class DeviceBean
   }
 
   /**
+   * Driver index for this device
+   * 
+   * @param index
+   *          the index to set
+   */
+  public void setDriverIndex(int driverIndex)
+  {
+    this.driverIndex = driverIndex;
+  }
+
+  /**
    * @param enabled
    */
   public void setEnabled(boolean enabled)
@@ -123,27 +146,17 @@ public class DeviceBean
   }
 
   /**
-   * Driver value index for this device
-   * 
-   * @param index
-   *          the index to set
-   */
-  public void setValueIndex(int valueIndex)
-  {
-    this.valueIndex = valueIndex;
-  }
-
-  /**
    * Set the driver utilized by this bean
    * 
    * @param driverInterface
    *          the driver to set
    */
+  /*
   public void setInterface(DriverBean driver)
   {
     this.driver = driver;
   }
-
+*/
   /**
    * The fully qualified class name for this device
    * 
@@ -153,6 +166,15 @@ public class DeviceBean
   public void setKlass(String klass)
   {
     this.klass = klass;
+  }
+
+  /**
+   * @param location
+   *          the location to set
+   */
+  public void setLocation(DeviceLocation location)
+  {
+    this.location = location;
   }
 
   /**
@@ -175,36 +197,21 @@ public class DeviceBean
   public String toString()
   {
     StringBuilder builder = new StringBuilder();
-    builder.append("DeviceBean [driver=");
+    builder.append("DeviceBean [id=");
+    builder.append(id);
+    builder.append(", name=");
+    builder.append(name);
+    builder.append(", driver=");
     builder.append(driver);
     builder.append(", enabled=");
     builder.append(enabled);
-    builder.append(", id=");
-    builder.append(id);
+    builder.append(", index=");
+    builder.append(driverIndex);
     builder.append(", klass=");
     builder.append(klass);
-    builder.append(", name=");
-    builder.append(name);
+    builder.append(", location=");
+    builder.append(location);
     builder.append("]");
     return builder.toString();
-  }
-
-  /**
-   * @return the location
-   */
-  @ManyToOne
-  @JoinColumn(name = "location_id")
-  public DeviceLocation getLocation()
-  {
-    return location;
-  }
-
-  /**
-   * @param location
-   *          the location to set
-   */
-  public void setLocation(DeviceLocation location)
-  {
-    this.location = location;
   }
 }
