@@ -10,18 +10,10 @@ package net.gregrapp.jhouse.interfaces.envisalink2ds;
 public interface Envisalink2DSCallback
 {
   /**
-   * @param zone
-   * @param label
-   */
- // public void broadcastLabels(int zone, String label);
-
-  /**
    * Envisalink 2DS is requesting a security code for the previous request
    * 
-   * @param partition
-   *          partition originating the request
    */
-  public void codeRequired(int partition);
+  public void codeRequired();
 
   /**
    * @param partition

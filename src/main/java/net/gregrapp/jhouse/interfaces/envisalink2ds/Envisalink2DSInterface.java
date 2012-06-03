@@ -92,6 +92,11 @@ public class Envisalink2DSInterface extends AbstractInterface implements
     logger.exit();
   }
 
+  /**
+   * Connect to the Envisalink 2DS
+   * 
+   * @return true if successful, false if unsuccessful
+   */
   private boolean connect()
   {
     logger.entry();
@@ -110,7 +115,8 @@ public class Envisalink2DSInterface extends AbstractInterface implements
         logger.debug("Read property [{}] with value [{}]", PROPERTY_PORT, port);
       } catch (NumberFormatException e)
       {
-        logger.error("Property [{}] is invalid - [{}] is not a valid TCP port number",
+        logger.error(
+            "Property [{}] is invalid - [{}] is not a valid TCP port number",
             PROPERTY_PORT, this.properties.get(PROPERTY_PORT));
         logger.exit(false);
         return false;
@@ -145,120 +151,121 @@ public class Envisalink2DSInterface extends AbstractInterface implements
     logger.exit();
   }
 
+  /*
+   * (non-Javadoc)
+   * 
+   * @see net.gregrapp.jhouse.interfaces.envisalink2ds.
+   * Envisalink2DSFrameLayerAsyncCallback
+   * #frameReceived(net.gregrapp.jhouse.interfaces
+   * .envisalink2ds.Envisalink2DSDataFrame)
+   */
   @Override
   public void frameReceived(Envisalink2DSDataFrame frame)
   {
-    logger.entry();
+    logger.entry(frame);
 
     // Set last frame received time to now
     this.lastFrameReceiveTime = System.currentTimeMillis();
 
     if (frame.getCommand().equals("505")) // Login interaction
     {
-      int type = Integer.parseInt(frame.getData().substring(0, 1));
+      int type = safeParseInt(frame.getData(), 0, 1);
       if (panel != null && panel instanceof Envisalink2DSCallback)
         ((Envisalink2DSCallback) panel).loginInteraction(type);
-    } /*
-       * else if (frame.getCommand().equals("570")) // Label broadcast { int
-       * zone = Integer.parseInt(frame.getData().substring(0, 3)); String label
-       * = itrim(frame.getData().substring(3).trim()); if (panel != null &&
-       * panel instanceof Envisalink2DSCallback) ((Envisalink2DSCallback)
-       * panel).broadcastLabels(zone, label); }
-       */else if (frame.getCommand().equals("601")) // Zone alarm
+    } else if (frame.getCommand().equals("601")) // Zone alarm
     {
-      int partition = Integer.parseInt(frame.getData().substring(0, 1));
-      int zone = Integer.parseInt(frame.getData().substring(1, 4));
+      int partition = safeParseInt(frame.getData(), 0, 1);
+      int zone = safeParseInt(frame.getData(), 1, 4);
       if (panel != null && panel instanceof Envisalink2DSCallback)
         ((Envisalink2DSCallback) panel).zoneAlarm(partition, zone);
     } else if (frame.getCommand().equals("602")) // Zone alarm Restore
     {
-      int partition = Integer.parseInt(frame.getData().substring(0, 1));
-      int zone = Integer.parseInt(frame.getData().substring(1, 4));
+      int partition = safeParseInt(frame.getData(), 0, 1);
+      int zone = safeParseInt(frame.getData(), 1, 4);
       if (panel != null && panel instanceof Envisalink2DSCallback)
         ((Envisalink2DSCallback) panel).zoneAlarmRestore(partition, zone);
     } else if (frame.getCommand().equals("609")) // Zone open
     {
-      int zone = Integer.parseInt(frame.getData().substring(0, 3));
+      int zone = safeParseInt(frame.getData(), 0, 3);
       if (panel != null && panel instanceof Envisalink2DSCallback)
         ((Envisalink2DSCallback) panel).zoneOpen(zone);
     } else if (frame.getCommand().equals("610")) // Zone restored
     {
-      int zone = Integer.parseInt(frame.getData().substring(0, 3));
+      int zone = safeParseInt(frame.getData(), 0, 3);
       if (panel != null && panel instanceof Envisalink2DSCallback)
         ((Envisalink2DSCallback) panel).zoneRestore(zone);
     } else if (frame.getCommand().equals("650")) // Partition ready
     {
-      int partition = Integer.parseInt(frame.getData().substring(0, 1));
+      int partition = safeParseInt(frame.getData(), 0, 1);
       if (panel != null && panel instanceof Envisalink2DSCallback)
         ((Envisalink2DSCallback) panel).partitionReady(partition);
     } else if (frame.getCommand().equals("651")) // Partition not ready
     {
-      int partition = Integer.parseInt(frame.getData().substring(0, 1));
+      int partition = safeParseInt(frame.getData(), 0, 1);
       if (panel != null && panel instanceof Envisalink2DSCallback)
         ((Envisalink2DSCallback) panel).partitionNotReady(partition);
     } else if (frame.getCommand().equals("652")) // Partition armed
     {
-      int partition = Integer.parseInt(frame.getData().substring(0, 1));
-      int mode = Integer.parseInt(frame.getData().substring(1, 2));
+      int partition = safeParseInt(frame.getData(), 0, 1);
+      int mode = safeParseInt(frame.getData(), 1, 2);
       if (panel != null && panel instanceof Envisalink2DSCallback)
         ((Envisalink2DSCallback) panel).paritionArmed(partition, mode);
     } else if (frame.getCommand().equals("654")) // Partition in alarm
     {
-      int partition = Integer.parseInt(frame.getData().substring(0, 1));
+      int partition = safeParseInt(frame.getData(), 0, 1);
       if (panel != null && panel instanceof Envisalink2DSCallback)
         ((Envisalink2DSCallback) panel).partitionInAlarm(partition);
     } else if (frame.getCommand().equals("655")) // Partition disarmed
     {
-      int partition = Integer.parseInt(frame.getData().substring(0, 1));
+      int partition = safeParseInt(frame.getData(), 0, 1);
       if (panel != null && panel instanceof Envisalink2DSCallback)
         ((Envisalink2DSCallback) panel).partitionDisarmed(partition);
     } else if (frame.getCommand().equals("656")) // Exit delay in progress
     {
-      int partition = Integer.parseInt(frame.getData().substring(0, 1));
+      int partition = safeParseInt(frame.getData(), 0, 1);
       if (panel != null && panel instanceof Envisalink2DSCallback)
         ((Envisalink2DSCallback) panel).partitionExitDelay(partition);
     } else if (frame.getCommand().equals("657")) // Entry delay in progress
     {
-      int partition = Integer.parseInt(frame.getData().substring(0, 1));
+      int partition = safeParseInt(frame.getData(), 0, 1);
       if (panel != null && panel instanceof Envisalink2DSCallback)
         ((Envisalink2DSCallback) panel).partitionEntryDelay(partition);
     } else if (frame.getCommand().equals("670")) // Invalid access code
     {
-      int partition = Integer.parseInt(frame.getData().substring(0, 1));
+      int partition = safeParseInt(frame.getData(), 0, 1);
       if (panel != null && panel instanceof Envisalink2DSCallback)
         ((Envisalink2DSCallback) panel).invalidAccessCode(partition);
     } else if (frame.getCommand().equals("672")) // Failed to arm
     {
-      int partition = Integer.parseInt(frame.getData().substring(0, 1));
+      int partition = safeParseInt(frame.getData(), 0, 1);
       if (panel != null && panel instanceof Envisalink2DSCallback)
         ((Envisalink2DSCallback) panel).partitionFailedToArm(partition);
     } else if (frame.getCommand().equals("673")) // Partition busy
     {
-      int partition = Integer.parseInt(frame.getData().substring(0, 1));
+      int partition = safeParseInt(frame.getData(), 0, 1);
       if (panel != null && panel instanceof Envisalink2DSCallback)
         ((Envisalink2DSCallback) panel).partitionBusy(partition);
     } else if (frame.getCommand().equals("700")) // User closing
     {
-      int partition = Integer.parseInt(frame.getData().substring(0, 1));
-      int userCode = Integer.parseInt(frame.getData().substring(1, 5));
+      int partition = safeParseInt(frame.getData(), 0, 1);
+      int userCode = safeParseInt(frame.getData(), 1, 5);
       if (panel != null && panel instanceof Envisalink2DSCallback)
         ((Envisalink2DSCallback) panel).userClosing(partition, userCode);
     } else if (frame.getCommand().equals("701")) // Special closing
     {
-      int partition = Integer.parseInt(frame.getData().substring(0, 1));
+      int partition = safeParseInt(frame.getData(), 0, 1);
       if (panel != null && panel instanceof Envisalink2DSCallback)
         ((Envisalink2DSCallback) panel).specialClosing(partition);
     } else if (frame.getCommand().equals("750")) // User opening
     {
-      int partition = Integer.parseInt(frame.getData().substring(0, 1));
-      int userCode = Integer.parseInt(frame.getData().substring(1, 5));
+      int partition = safeParseInt(frame.getData(), 0, 1);
+      int userCode = safeParseInt(frame.getData(), 1, 5);
       if (panel != null && panel instanceof Envisalink2DSCallback)
         ((Envisalink2DSCallback) panel).userOpening(partition, userCode);
     } else if (frame.getCommand().equals("900")) // Code required
     {
-      int partition = Integer.parseInt(frame.getData().substring(0, 1));
       if (panel != null && panel instanceof Envisalink2DSCallback)
-        ((Envisalink2DSCallback) panel).codeRequired(partition);
+        ((Envisalink2DSCallback) panel).codeRequired();
     }
 
     logger.exit();
@@ -293,6 +300,53 @@ public class Envisalink2DSInterface extends AbstractInterface implements
     }
 
     logger.exit();
+  }
+
+  /**
+   * Safely parse a string of integers
+   * 
+   * @param data
+   *          integer string to parse
+   * @param beginIndex
+   *          the beginning index, inclusive
+   * @param endIndex
+   *          the ending index, exclusive
+   * @return the parsed number or null if invalid
+   */
+  public Integer safeParseInt(String data, int beginIndex, int endIndex)
+  {
+    int retVal = 0;
+
+    if ((beginIndex >= 0) && (endIndex > 0) && (endIndex > beginIndex)
+        && data != null && data.length() >= (endIndex - beginIndex))
+    {
+      String subData = null;
+      try
+      {
+        subData = data.substring(beginIndex, endIndex);
+      } catch (IndexOutOfBoundsException e)
+      {
+        return null;
+      }
+
+      if (subData != null)
+      {
+        try
+        {
+          retVal = Integer.parseInt(subData);
+          return (Integer) retVal;
+        } catch (NumberFormatException e)
+        {
+          return null;
+        }
+      } else
+      {
+        return null;
+      }
+    } else
+    {
+      return null;
+    }
   }
 
   /**

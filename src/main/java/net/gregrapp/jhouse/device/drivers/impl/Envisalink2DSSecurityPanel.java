@@ -137,10 +137,10 @@ public class Envisalink2DSSecurityPanel extends AbstractDeviceDriver implements
    * (int)
    */
   @Override
-  public void codeRequired(int partition)
+  public void codeRequired()
   {
     String code = configService.get(this, CONFIG_CODE);
-    driverInterface.sendCommand("200", String.valueOf(partition) + code);
+    driverInterface.sendCommand("200", code);
   }
 
   /*
