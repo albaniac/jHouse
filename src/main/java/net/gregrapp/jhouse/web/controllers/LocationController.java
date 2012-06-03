@@ -87,7 +87,7 @@ public class LocationController
    * @param latitude
    * @param longitude
    */
-  @RequestMapping(value = "/user", method = RequestMethod.PUT)
+  @RequestMapping(method = RequestMethod.PUT)
   public void putUserLocation(@RequestBody UserLocation userLocation)
   {
     logger.entry(userLocation);
@@ -114,7 +114,7 @@ public class LocationController
   /**
    * Get latest location for user
    */
-  @RequestMapping(value = "/newest", method = RequestMethod.GET)
+  @RequestMapping(method = RequestMethod.GET)
   public Model getAllNewestLocation()
   {
     logger.entry();

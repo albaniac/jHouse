@@ -19,41 +19,23 @@ import org.springframework.beans.factory.annotation.Autowired;
 /**
  * @author Greg Rapp
  * 
- *         Partition State Indices
- *         --------------------------------- 
- *         10 - Partition 1 Status 
- *         11 - Partition 1 Last Armed By 
- *         12 - Partition 1 Last Disarmed By 
- *         20 - Partition 2
- *         30 - Partition 3
- *         40 - Partition 4
- *         50 - Partition 5
- *         60 - Partition 6
- *         70 - Partition 7
- *         80 - Partition 8
+ *         Partition State Indices --------------------------------- 10 -
+ *         Partition 1 Status 11 - Partition 1 Last Armed By 12 - Partition 1
+ *         Last Disarmed By 20 - Partition 2 30 - Partition 3 40 - Partition 4
+ *         50 - Partition 5 60 - Partition 6 70 - Partition 7 80 - Partition 8
  * 
- *         Partition State Values
- *         ------------------------------ 
- *         0x00 - Partition Ready
- *         0x01 - Partition Not Ready
- *         0x02 - Partition Armed
- *         0x04 - Partition Disarmed
- *         0x08 - Partition Busy
- *         0x10 - Partition Entry Delay
- *         0x20 - Partition Exit Delay
- *         0x40 - Partition Failed To Arm
- *         0x80 - Partition In Alarm
+ *         Partition State Values ------------------------------ 0x00 -
+ *         Partition Ready 0x01 - Partition Not Ready 0x02 - Partition Armed
+ *         0x04 - Partition Disarmed 0x08 - Partition Busy 0x10 - Partition
+ *         Entry Delay 0x20 - Partition Exit Delay 0x40 - Partition Failed To
+ *         Arm 0x80 - Partition In Alarm
  * 
- *         Zone State Indices
- *         --------------------------------- 
- *         101-164 - Zone 1-64 State
+ *         Zone State Indices --------------------------------- 101-164 - Zone
+ *         1-64 State
  * 
- *         Zone State Value Bit Field
- *         -------------------------------
- *         Cleared | Set
- *         ------------------------------- 
- *         Bit 0 - Restored | Open
- *         Bit 1 - Alarm Restored | Alarm
+ *         Zone State Value Bit Field ------------------------------- Cleared |
+ *         Set ------------------------------- Bit 0 - Restored | Open Bit 1 -
+ *         Alarm Restored | Alarm
  */
 
 public class Envisalink2DSSecurityPanel extends AbstractDeviceDriver implements
@@ -103,7 +85,15 @@ public class Envisalink2DSSecurityPanel extends AbstractDeviceDriver implements
   public void arm()
   {
     String code = configService.get(this, CONFIG_CODE);
-    driverInterface.sendCommand("033", "1" + code);
+
+    if (code != null)
+    {
+      driverInterface.sendCommand("033", "1" + code);
+    } else
+    {
+      logger.warn("Unable to disarm, config option [{}] is null", CONFIG_CODE);
+    }
+
   }
 
   /*
@@ -149,7 +139,7 @@ public class Envisalink2DSSecurityPanel extends AbstractDeviceDriver implements
   @Override
   public void codeRequired(int partition)
   {
-    String code = configService.get(this.getClass().getName(), CONFIG_CODE);
+    String code = configService.get(this, CONFIG_CODE);
     driverInterface.sendCommand("200", String.valueOf(partition) + code);
   }
 
@@ -161,8 +151,14 @@ public class Envisalink2DSSecurityPanel extends AbstractDeviceDriver implements
   @Override
   public void disarm()
   {
-    String code = configService.get(this.getClass().getName(), CONFIG_CODE);
-    driverInterface.sendCommand("040", "1" + code);
+    String code = configService.get(this, CONFIG_CODE);
+    if (code != null)
+    {
+      driverInterface.sendCommand("040", "1" + code);
+    } else
+    {
+      logger.warn("Unable to disarm, config option [{}] is null", CONFIG_CODE);
+    }
   }
 
   /**
