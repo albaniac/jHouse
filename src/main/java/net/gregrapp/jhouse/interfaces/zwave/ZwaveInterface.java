@@ -404,7 +404,7 @@ public class ZwaveInterface extends AbstractInterface implements
       sessionLayer = new SessionLayerImpl(frameLayer);
       appLayer = new ApplicationLayerImpl(sessionLayer);
       appLayer.setCallbackHandler(this);
-      
+
       this.zwaveInit();
 
       this.startKeepalives();
@@ -422,7 +422,7 @@ public class ZwaveInterface extends AbstractInterface implements
   public void requestNodeInfo(int nodeId)
   {
     logger.entry(nodeId);
-    
+
     try
     {
       appLayer.zwaveRequestNodeInfo(nodeId);
@@ -430,7 +430,7 @@ public class ZwaveInterface extends AbstractInterface implements
     {
       logger.error("Error requesting node info from node [{}]", nodeId, e);
     }
-    
+
     logger.exit();
   }
 
@@ -515,7 +515,7 @@ public class ZwaveInterface extends AbstractInterface implements
         } else
         {
           if ((System.currentTimeMillis() - sessionLayer
-              .getLastFrameReceivedTime()) > keepaliveIntervalSeconds)
+              .getLastFrameReceivedTime()) > (keepaliveIntervalSeconds * 1000))
           {
             logger.debug("Sending keep alive request");
             sendKeepalive();
