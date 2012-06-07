@@ -27,10 +27,10 @@ public class Envisalink2DSInterface extends AbstractInterface implements
     Envisalink2DSFrameLayerAsyncCallback
 {
   // Amount of time that must pass before connection is restarted
-  private static final int keepaliveHoldtimeSeconds = 360;
+  private static final int keepaliveHoldtimeSeconds = 90;
 
   // Interval between keep alive attempts
-  private static final int keepaliveIntervalSeconds = 180;
+  private static final int keepaliveIntervalSeconds = 20;
 
   private static final XLogger logger = XLoggerFactory
       .getXLogger(Envisalink2DSInterface.class);
@@ -420,13 +420,18 @@ public class Envisalink2DSInterface extends AbstractInterface implements
           } catch (InterruptedException e)
           {
           }
+        }
+
+        if ((System.currentTimeMillis() - lastFrameReceiveTime) > (keepaliveIntervalSeconds * 1000))
+        {
+          logger.debug("Sending keep alive request");
+          sendCommand("000");
         } else
         {
-          if ((System.currentTimeMillis() - lastFrameReceiveTime) > (keepaliveIntervalSeconds * 1000))
-          {
-            logger.debug("Sending keep alive request");
-            sendCommand("000");
-          }
+          logger
+              .debug(
+                  "Frame received during the previous [{}] seconds, skipping keepalive",
+                  keepaliveIntervalSeconds);
         }
 
         logger.exit();
