@@ -25,6 +25,9 @@
 
 package net.gregrapp.jhouse.interfaces.zwave;
 
+import static org.jboss.netty.channel.Channels.pipeline;
+
+import java.net.ConnectException;
 import java.net.InetSocketAddress;
 import java.util.Stack;
 import java.util.concurrent.Executors;
@@ -32,19 +35,28 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
+import net.gregrapp.jhouse.utils.ArrayUtils;
+
 import org.jboss.netty.bootstrap.ClientBootstrap;
 import org.jboss.netty.buffer.ChannelBuffer;
 import org.jboss.netty.buffer.ChannelBuffers;
 import org.jboss.netty.channel.Channel;
 import org.jboss.netty.channel.ChannelFuture;
 import org.jboss.netty.channel.ChannelHandler;
+import org.jboss.netty.channel.ChannelHandlerContext;
 import org.jboss.netty.channel.ChannelPipeline;
 import org.jboss.netty.channel.ChannelPipelineFactory;
-import org.jboss.netty.channel.Channels;
+import org.jboss.netty.channel.ChannelStateEvent;
+import org.jboss.netty.channel.ExceptionEvent;
+import org.jboss.netty.channel.MessageEvent;
+import org.jboss.netty.channel.SimpleChannelUpstreamHandler;
 import org.jboss.netty.channel.socket.nio.NioClientSocketChannelFactory;
+import org.jboss.netty.handler.timeout.ReadTimeoutException;
 import org.jboss.netty.handler.timeout.ReadTimeoutHandler;
 import org.jboss.netty.util.HashedWheelTimer;
+import org.jboss.netty.util.Timeout;
 import org.jboss.netty.util.Timer;
+import org.jboss.netty.util.TimerTask;
 import org.slf4j.ext.XLogger;
 import org.slf4j.ext.XLoggerFactory;
 
@@ -52,7 +64,8 @@ import org.slf4j.ext.XLoggerFactory;
  * @author Greg Rapp
  * 
  */
-public class FrameLayerImpl implements FrameLayer, SocketCallback
+public class FrameLayerImpl extends SimpleChannelUpstreamHandler implements
+    FrameLayer
 {
   /**
    * The Data Frame received will be split up into the following states
@@ -96,25 +109,25 @@ public class FrameLayerImpl implements FrameLayer, SocketCallback
 
   private static final XLogger logger = XLoggerFactory
       .getXLogger(FrameLayerImpl.class);
-  
+
   private static final int MAX_FRAME_SIZE = 88;
-  
+
   private static final int MAX_RETRANSMISSION = 3;
-  
+
   private static final int MIN_FRAME_SIZE = 3;
-  
+
   // Reconnect seconds when the server sends nothing
   private static final int READ_TIMEOUT = 45;
-  
+
   // Delay before a socket reconnection attempt
   static final int RECONNECT_DELAY = 10;
-  
-  private final ClientBootstrap bootstrap = null;
-  
+
+  private final ClientBootstrap bootstrap;
+
   private FrameLayerAsyncCallback callbackHandler;
-  
+
   private DataFrame currentDataFrame;
-  
+
   private FrameReceiveState parserState;
 
   private Stack<TransmittedDataFrame> retransmissionStack = new Stack<TransmittedDataFrame>();
@@ -132,7 +145,7 @@ public class FrameLayerImpl implements FrameLayer, SocketCallback
   public FrameLayerImpl(String host, int port)
   {
     logger.entry();
-    
+
     logger.info("Instantiating frame layer");
 
     retransmissionStack = new Stack<TransmittedDataFrame>();
@@ -148,26 +161,39 @@ public class FrameLayerImpl implements FrameLayer, SocketCallback
     socketReconnectTimer = new HashedWheelTimer();
 
     // Configure the client.
-    final ClientBootstrap bootstrap = new ClientBootstrap(
-        new NioClientSocketChannelFactory(Executors.newCachedThreadPool(),
-            Executors.newCachedThreadPool()));
-
-    // Configure the pipeline factory.
+    bootstrap = new ClientBootstrap(new NioClientSocketChannelFactory(
+        Executors.newCachedThreadPool(), Executors.newCachedThreadPool()));
+    /*
+     * // Configure the pipeline factory. bootstrap.setPipelineFactory(new
+     * ChannelPipelineFactory() {
+     * 
+     * private final ChannelHandler socketHandler = new SocketHandler(bootstrap,
+     * socketReconnectTimer, FrameLayerImpl.this); private final ChannelHandler
+     * timeoutHandler = new ReadTimeoutHandler( socketReconnectTimer,
+     * READ_TIMEOUT);
+     * 
+     * public ChannelPipeline getPipeline() throws Exception { return
+     * Channels.pipeline(timeoutHandler, socketHandler); } });
+     */
+    // Configure the pipeline factory
     bootstrap.setPipelineFactory(new ChannelPipelineFactory()
     {
-
-      private final ChannelHandler socketHandler = new SocketHandler(bootstrap,
-          socketReconnectTimer, FrameLayerImpl.this);
-      private final ChannelHandler timeoutHandler = new ReadTimeoutHandler(
-          socketReconnectTimer, READ_TIMEOUT);
-
       public ChannelPipeline getPipeline() throws Exception
       {
-        return Channels.pipeline(timeoutHandler, socketHandler);
+        ChannelPipeline pipeline = pipeline();
+
+        final ChannelHandler timeoutHandler = new ReadTimeoutHandler(
+            socketReconnectTimer, READ_TIMEOUT);
+
+        // Handlers
+        pipeline.addLast("timeoutHandler", timeoutHandler);
+        pipeline.addLast("socketHandler", FrameLayerImpl.this);
+
+        return pipeline;
       }
     });
 
-    // Start the connection attempt.
+    // Configure the remote address and start the connection attempt.
     bootstrap.setOption("remoteAddress", new InetSocketAddress(host, port));
     ChannelFuture future = bootstrap.connect();
 
@@ -179,7 +205,7 @@ public class FrameLayerImpl implements FrameLayer, SocketCallback
       logger.error("Error connecting to host", future.getCause());
       bootstrap.releaseExternalResources();
       socketReconnectTimer.stop();
-      
+
       logger.exit();
       return;
     }
@@ -187,13 +213,85 @@ public class FrameLayerImpl implements FrameLayer, SocketCallback
     logger.exit();
   }
 
+  /*
+   * (non-Javadoc)
+   * 
+   * @see
+   * org.jboss.netty.channel.SimpleChannelUpstreamHandler#channelClosed(org.
+   * jboss.netty.channel.ChannelHandlerContext,
+   * org.jboss.netty.channel.ChannelStateEvent)
+   */
   @Override
-  public void byteReceived(int data)
+  public void channelClosed(ChannelHandlerContext ctx, ChannelStateEvent e)
+      throws Exception
   {
-    logger.entry(data);
+    logger.entry(ctx, e);
 
-    logger.debug("Byte received");
-    parseRawData(0xFF & data);
+    logger.warn("Socket closed [{}:{}]", getRemoteAddress().getHostName(),
+        getRemoteAddress().getPort());
+
+    socketReconnectTimer.newTimeout(new TimerTask()
+    {
+      public void run(Timeout timeout) throws Exception
+      {
+        logger.info("Reconnecting to host [{}:{}]", getRemoteAddress()
+            .getHostName(), getRemoteAddress().getPort());
+
+        ChannelFuture future = bootstrap.connect();
+
+        // Wait until the connection attempt succeeds or fails.
+        socketChannel = future.awaitUninterruptibly().getChannel();
+
+        if (!future.isSuccess())
+        {
+          logger.error("Error reconnecting to host [{}:{}]", new Object[] {
+              getRemoteAddress().getHostName(), getRemoteAddress().getPort(),
+              future.getCause() });
+          bootstrap.releaseExternalResources();
+          return;
+        }
+      }
+    }, RECONNECT_DELAY, TimeUnit.SECONDS);
+
+    logger.exit();
+  }
+
+  /*
+   * (non-Javadoc)
+   * 
+   * @see
+   * org.jboss.netty.channel.SimpleChannelUpstreamHandler#channelConnected(org
+   * .jboss.netty.channel.ChannelHandlerContext,
+   * org.jboss.netty.channel.ChannelStateEvent)
+   */
+  @Override
+  public void channelConnected(ChannelHandlerContext ctx, ChannelStateEvent e)
+      throws Exception
+  {
+    logger.entry(ctx, e);
+
+    logger.info("Connected to host [{}:{}]", getRemoteAddress().getHostName(),
+        getRemoteAddress().getPort());
+
+    logger.exit();
+  }
+
+  /*
+   * (non-Javadoc)
+   * 
+   * @see
+   * org.jboss.netty.channel.SimpleChannelUpstreamHandler#channelDisconnected
+   * (org.jboss.netty.channel.ChannelHandlerContext,
+   * org.jboss.netty.channel.ChannelStateEvent)
+   */
+  @Override
+  public void channelDisconnected(ChannelHandlerContext ctx, ChannelStateEvent e)
+      throws Exception
+  {
+    logger.entry(ctx, e);
+
+    logger.warn("Disconnected from host [{}:{}]", getRemoteAddress()
+        .getHostName(), getRemoteAddress().getPort());
 
     logger.exit();
   }
@@ -283,13 +381,60 @@ public class FrameLayerImpl implements FrameLayer, SocketCallback
       retransmissionTimeoutExecutor.shutdownNow();
     }
 
-    // Shut down socket connection
+    // Close and disconnect the socket
+    socketChannel.close();
+
+    // Clean up the socket
     bootstrap.releaseExternalResources();
 
     // Shut down socket reconnect timer
     socketReconnectTimer.stop();
 
     logger.exit();
+  }
+
+  /*
+   * (non-Javadoc)
+   * 
+   * @see
+   * org.jboss.netty.channel.SimpleChannelUpstreamHandler#exceptionCaught(org
+   * .jboss.netty.channel.ChannelHandlerContext,
+   * org.jboss.netty.channel.ExceptionEvent)
+   */
+  @Override
+  public void exceptionCaught(ChannelHandlerContext ctx, ExceptionEvent e)
+      throws Exception
+  {
+    logger.entry(ctx, e);
+
+    Throwable cause = e.getCause();
+    if (cause instanceof ConnectException)
+    {
+      logger.error("Connect error", cause);
+    }
+    if (cause instanceof ReadTimeoutException)
+    {
+      // The connection was OK but there was no traffic for last period.
+      logger.error("Read timeout");
+    } else
+    {
+      logger.error("General error", cause);
+      cause.printStackTrace();
+    }
+
+    ctx.getChannel().close();
+
+    logger.exit();
+  }
+
+  /**
+   * Get the socket's remote address
+   * 
+   * @return the remote address
+   */
+  private InetSocketAddress getRemoteAddress()
+  {
+    return (InetSocketAddress) bootstrap.getOption("remoteAddress");
   }
 
   /*
@@ -307,6 +452,30 @@ public class FrameLayerImpl implements FrameLayer, SocketCallback
       logger.exit();
       return new FrameStatistics(stats);
     }
+  }
+
+  /*
+   * (non-Javadoc)
+   * 
+   * @see
+   * org.jboss.netty.channel.SimpleChannelUpstreamHandler#messageReceived(org
+   * .jboss.netty.channel.ChannelHandlerContext,
+   * org.jboss.netty.channel.MessageEvent)
+   */
+  @Override
+  public void messageReceived(ChannelHandlerContext ctx, MessageEvent e)
+      throws Exception
+  {
+    logger.entry(ctx, e);
+    logger.debug("Getting message from ChannelBuffer");
+    ChannelBuffer buf = (ChannelBuffer) e.getMessage();
+    while (buf.readable())
+    {
+      int data = buf.readUnsignedByte();
+      logger.trace("Read byte [{}] from buffer", data);
+      parseRawData(0xFF & data);
+    }
+    logger.exit();
   }
 
   private boolean parseRawData(int buffer)
@@ -538,7 +707,7 @@ public class FrameLayerImpl implements FrameLayer, SocketCallback
   {
     logger.entry(frame);
 
-    logger.debug("Writing frame to transport");
+    logger.debug("Writing frame to socket");
     TransmittedDataFrame tdf = new TransmittedDataFrame(frame);
 
     synchronized (this)
@@ -550,7 +719,7 @@ public class FrameLayerImpl implements FrameLayer, SocketCallback
 
       this.writeBytes(data);
 
-      logger.debug("[{}] bytes written to transport", data.length);
+      logger.debug("[{}] bytes written to socket", data.length);
       stats.transmittedFrames++;
 
       // Reset the retransmission timer...
@@ -574,12 +743,15 @@ public class FrameLayerImpl implements FrameLayer, SocketCallback
   {
     logger.entry(data);
 
+    logger.debug("Writing bytes to socket");
+    logger.trace("Data bytes [{}]", ArrayUtils.toHexStringArray(data));
     ChannelBuffer buf = ChannelBuffers.directBuffer(data.length);
     for (int i = 0; i < data.length; i++)
     {
       buf.writeByte(data[i]);
     }
-    if (socketChannel.isConnected())
+
+    if (socketChannel != null && socketChannel.isConnected())
     {
       socketChannel.write(buf);
     } else
@@ -589,4 +761,5 @@ public class FrameLayerImpl implements FrameLayer, SocketCallback
 
     logger.exit();
   }
+
 }
