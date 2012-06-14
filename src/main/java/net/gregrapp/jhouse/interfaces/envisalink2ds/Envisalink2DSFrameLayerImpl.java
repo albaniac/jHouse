@@ -101,9 +101,8 @@ public class Envisalink2DSFrameLayerImpl extends SimpleChannelUpstreamHandler
       }
     });
 
-    // Start the connection attempt.
+    // Configure the remote address and start the connection attempt.
     bootstrap.setOption("remoteAddress", new InetSocketAddress(host, port));
-
     ChannelFuture future = bootstrap.connect();
 
     // Wait until the connection is closed or the connection attempt fails.
@@ -114,6 +113,7 @@ public class Envisalink2DSFrameLayerImpl extends SimpleChannelUpstreamHandler
       logger.error("Error connecting to host", future.getCause());
       bootstrap.releaseExternalResources();
       socketReconnectTimer.stop();
+      
       logger.exit();
       return;
     }
