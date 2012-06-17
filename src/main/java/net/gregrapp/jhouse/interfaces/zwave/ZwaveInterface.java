@@ -4,6 +4,7 @@
 package net.gregrapp.jhouse.interfaces.zwave;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.Executors;
@@ -24,6 +25,7 @@ import net.gregrapp.jhouse.interfaces.zwave.Constants.CommandClass;
 import net.gregrapp.jhouse.interfaces.zwave.Constants.CommandManufacturerSpecific;
 import net.gregrapp.jhouse.interfaces.zwave.Constants.CommandSensorBinary;
 import net.gregrapp.jhouse.interfaces.zwave.Constants.CommandSwitchMultilevel;
+import net.gregrapp.jhouse.interfaces.zwave.Constants.CommandThermostatSetpoint;
 import net.gregrapp.jhouse.interfaces.zwave.Constants.Manufacturer;
 import net.gregrapp.jhouse.interfaces.zwave.Constants.RequestNeighbor;
 import net.gregrapp.jhouse.interfaces.zwave.Constants.TXOption;
@@ -34,6 +36,9 @@ import net.gregrapp.jhouse.interfaces.zwave.command.CommandClassHail;
 import net.gregrapp.jhouse.interfaces.zwave.command.CommandClassManufacturerSpecific;
 import net.gregrapp.jhouse.interfaces.zwave.command.CommandClassSensorBinary;
 import net.gregrapp.jhouse.interfaces.zwave.command.CommandClassSwitchMultilevel;
+import net.gregrapp.jhouse.interfaces.zwave.command.CommandClassThermostatSetpoint;
+import net.gregrapp.jhouse.interfaces.zwave.command.CommandClassThermostatSetpoint.SetpointType;
+import net.gregrapp.jhouse.utils.ArrayUtils;
 
 import org.slf4j.ext.XLogger;
 import org.slf4j.ext.XLoggerFactory;
@@ -252,6 +257,76 @@ public class ZwaveInterface extends AbstractInterface implements
           if (device instanceof CommandClassHail)
             ((CommandClassHail) device).hail();
       }
+    } else if (payload[3] == CommandClass.COMMAND_CLASS_THERMOSTAT_SETPOINT
+        .get())
+    {
+      if (payload[4] == CommandThermostatSetpoint.THERMOSTAT_SETPOINT_REPORT
+          .get())
+      {
+        final int SCALE_MASK = 0x18;
+        final int SCALE_SHIFT = 0x03;
+        // Get the temperature scale (1=Fahrenheit ,0=Celsius)
+        int scale = (payload[6] & SCALE_MASK) >> SCALE_SHIFT;
+
+        // ===========================================================
+        // STUFF BELOW IS NOT NEEDED WITH TRANE THERMOSTAT
+        // MIGHT BE NEEDED SOMETIME DOWN THE ROAD WITH OTHER EQUIPMENT
+        // SO DON'T DELETE THIS STUFF!!
+        /*
+         * final int PRECISION_MASK = 0xe0; final int PRECISION_SHIFT = 0x05; //
+         * Get the temperature precision (number of decimal places) int
+         * precision = (payload[6] & PRECISION_MASK) >> PRECISION_SHIFT;
+         * 
+         * final int SIZE_MASK = 0x07; // Number of bytes in temperature value
+         * int size = (payload[6] & SIZE_MASK);
+         */
+        // ===========================================================
+
+        int setpointType = payload[5];
+        
+        int temperature;
+        // Check to MSB of temperature value to see if it's negative
+        if ((payload[7] & 0x80) == 1)
+        {
+          // The temperature value is actually negative, so handle that
+
+          // TODO This should actually account for the MSB as a sign bit
+          // Need to convert to 2's compliment since temp is negative
+          temperature = 0;
+        } else
+        {
+          // The temperature value isn't negative, so use as is
+          temperature = payload[7];
+        }
+
+        if (scale == 0)
+        {
+          // Temp is in celsius so convert to fahrenheit
+          temperature = (temperature * (9/5)) + 32;
+        }
+        
+        logger.debug("Received THERMOSTAT_SETPOINT_REPORT from node [{}]",
+            nodeId);
+        if (drivers.get(nodeId) != null)
+        {
+          for (Object device : drivers.get(nodeId))
+            if (device instanceof CommandClassThermostatSetpoint)
+              ((CommandClassThermostatSetpoint) device)
+                  .commandClassThermostatSetpointReport(SetpointType.getByVal(setpointType), temperature);
+        }
+      } else if (payload[4] == CommandThermostatSetpoint.THERMOSTAT_SETPOINT_SUPPORTED_REPORT
+          .get())
+      {
+       
+      }
+    } else
+    {
+      logger
+          .info(
+              "Unhandled CmdApplicationCommandHandler packet received [{}], payload {}",
+              String.format("%#04x", payload[3]), ArrayUtils
+                  .toHexStringArray(Arrays.copyOfRange(payload, 4,
+                      payload.length)));
     }
 
     logger.exit();

@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 
 /**
  * Exception that returns an HTTP 400 Bad Request status response
+ * 
  * @author Greg Rapp
  *
  */

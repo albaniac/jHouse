@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 
 /**
  * Exception that returns an HTTP 500 Internal Server Error status response
+ * 
  * @author Greg Rapp
  *
  */

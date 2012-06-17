@@ -25,7 +25,6 @@
 
 package net.gregrapp.jhouse.interfaces.zwave;
 
-import java.util.Arrays;
 import java.util.Hashtable;
 import java.util.List;
 import java.util.concurrent.Executors;
@@ -862,14 +861,6 @@ public class ApplicationLayerImpl implements ApplicationLayer,
           node.setProductType(productType);
           node.setProductId(productId);
         }
-      } else
-      {
-        logger
-            .info(
-                "Unhandled CmdApplicationCommandHandler packet received [{}], payload {}",
-                String.format("%#04x", payload[3]), ArrayUtils
-                    .toHexStringArray(Arrays.copyOfRange(payload, 4,
-                        payload.length)));
       }
     } else if (cmd == DataFrame.CommandType.CmdApplicationSlaveCommandHandler)
     {
@@ -1668,7 +1659,7 @@ public class ApplicationLayerImpl implements ApplicationLayer,
   private void requestNodeInfo(int[] payload, int nid)
   {
     logger.entry(payload, nid);
-    logger.debug("Processing node info for node {}", nid);
+    logger.debug("Processing node info for node [{}]", nid);
     // FuncID|status|nodeId|len|basic|generic|specific|data[0]|data[1],data[2]..data[len-7]....
     Node node = nodeTable.get(nid);
     node.setGeneric(payload[4]);
@@ -1678,7 +1669,7 @@ public class ApplicationLayerImpl implements ApplicationLayer,
       int[] supportedCmdClasses = new int[payload.length - 6];
       for (int i = 0; i < supportedCmdClasses.length; i++)
       {
-        logger.debug("Discovered supported command class for node {}: {}", nid,
+        logger.debug("Discovered supported command class for node [{}]: [{}]", nid,
             CommandClass.getByVal(payload[i + 6]));
         supportedCmdClasses[i] = payload[i + 6];
       }
@@ -2630,7 +2621,6 @@ public class ApplicationLayerImpl implements ApplicationLayer,
           waitForNodeInfoCallbackHandler();
         }
       }, TIMEOUT, TimeUnit.MILLISECONDS);
-
     }
     logger.exit(rc);
     return rc;

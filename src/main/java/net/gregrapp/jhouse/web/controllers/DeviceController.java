@@ -313,7 +313,14 @@ public class DeviceController
     List<Class<?>> klasses = new ArrayList<Class<?>>();
     for (Object obj : action.getArgs())
     {
-      klasses.add(obj.getClass());
+      if (obj instanceof Integer)
+      {
+        // If JSON deserialized an Integer, use as an int instead
+        klasses.add(int.class);
+      } else
+      {
+        klasses.add(obj.getClass());
+      }
     }
 
     Method methodOjbect = null;
